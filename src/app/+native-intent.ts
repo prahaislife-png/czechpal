@@ -1,5 +1,5 @@
 /**
- * Content shared into CzechReply (share extension on iOS, share intent on Android) arrives as an
+ * Content shared into CzechPal (share extension on iOS, share intent on Android) arrives as an
  * `expo-sharing` URL. Send it to the handler screen; every other link passes through untouched.
  */
 export function redirectSystemPath({ path }: { path: string; initial: boolean }) {

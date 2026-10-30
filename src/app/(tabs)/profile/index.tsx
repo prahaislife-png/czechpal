@@ -48,7 +48,7 @@ export default function ProfileScreen() {
           </Text>
         </View>
         <Text variant="footnote" color="label3">
-          CzechReply Pro, with unlimited explanations and history across devices, is coming soon.
+          CzechPal Pro, with unlimited explanations and history across devices, is coming soon.
         </Text>
       </Card>
 
@@ -86,7 +86,7 @@ export default function ProfileScreen() {
       </View>
 
       <Text variant="footnote" color="label3" align="center">
-        CzechReply 1.0 · Demo build
+        CzechPal 1.0 · Demo build
       </Text>
     </ScrollView>
   );

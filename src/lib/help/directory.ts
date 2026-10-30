@@ -5,7 +5,7 @@ import type { Recipient } from '@/lib/compose/templates';
  * The "Find help" directory.
  *
  * Trust is the product, so every listing carries a verification status:
- * - verified:   checked by phone by the CzechReply team on `checkedOn` (English level, insurance, prices)
+ * - verified:   checked by phone by the CzechPal team on `checkedOn` (English level, insurance, prices)
  * - unverified: self-reported by the provider, shown with that label
  * - sample:     made-up demo data that only shows how listings look. Never callable.
  * Rankings are never for sale; paid placement, if it ever exists, is labelled.

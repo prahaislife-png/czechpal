@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "CzechReply",
-    "slug": "czechreply",
+    "name": "CzechPal",
+    "slug": "czechpal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "czechreply",
+    "scheme": "czechpal",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.czechreply.app"
+      "bundleIdentifier": "com.czechpal.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.czechreply.app"
+      "package": "com.czechpal.app"
     },
     "web": {
       "output": "single",
@@ -38,7 +38,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "CzechReply uses the camera to read Czech text you point it at.",
+          "cameraPermission": "CzechPal uses the camera to read Czech text you point it at.",
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": false
         }

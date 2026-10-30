@@ -1,4 +1,4 @@
-# CzechReply design system — master rules
+# CzechPal design system — master rules
 
 Source of truth for every screen. Tokens live in `src/theme/tokens.ts`; this file states the rules they encode.
 Built to the Appllama app-design skill (`.claude/skills/appllama-app-design-skill`) and the ui-ux-pro-max
@@ -6,7 +6,7 @@ recommendation for a trustworthy document-utility product ("document grey + scan
 
 ## Product principle
 
-CzechReply is a personal assistant, not a chatbot. Every analysis answers two questions before anything else:
+CzechPal is a personal assistant, not a chatbot. Every analysis answers two questions before anything else:
 **What happened?** (verdict + "In short") and **What should I do?** (numbered steps). Everything else is secondary.
 
 ## Colour

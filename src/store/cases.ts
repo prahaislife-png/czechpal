@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 
 import { ai, AnalyzeError, type Analysis, type AnalyzeResult, type Category } from '@/lib/ai';
 
@@ -22,6 +22,19 @@ export type CaseItem = {
 };
 
 export const FREE_ANALYSES_PER_MONTH = 5;
+
+const STORAGE_KEY = 'czechpal';
+/** The app was called CzechReply; saved data from before the rename is read once, then moved. */
+const LEGACY_STORAGE_KEY = 'czechreply';
+
+const storage: StateStorage = {
+  getItem: async (name) => (await AsyncStorage.getItem(name)) ?? (await AsyncStorage.getItem(LEGACY_STORAGE_KEY)),
+  setItem: async (name, value) => {
+    await AsyncStorage.setItem(name, value);
+    await AsyncStorage.removeItem(LEGACY_STORAGE_KEY);
+  },
+  removeItem: (name) => AsyncStorage.removeItem(name),
+};
 
 type State = {
   hydrated: boolean;
@@ -107,8 +120,8 @@ export const useStore = create<State & Actions>()(
       };
     },
     {
-      name: 'czechreply',
-      storage: createJSONStorage(() => AsyncStorage),
+      name: STORAGE_KEY,
+      storage: createJSONStorage(() => storage),
       partialize: ({ onboarded, cases, usage }) => ({
         onboarded,
         // Interrupted analyses come back as errors the user can retry; drafts are not kept.

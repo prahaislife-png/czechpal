@@ -36,7 +36,7 @@ export default function HomeScreen() {
       <View style={styles.brandRow}>
         <View style={styles.brand}>
           <FlagMark size={26} />
-          <Text variant="headline">CzechReply</Text>
+          <Text variant="headline">CzechPal</Text>
         </View>
         <Pressable onPress={() => router.navigate('/profile')} hitSlop={8} accessibilityRole="link">
           <Badge label={`${remaining} free left`} tone="neutral" />
@@ -152,7 +152,7 @@ export default function HomeScreen() {
       <View style={styles.trust}>
         <Icon name="lock" size={14} color={colors.label3} />
         <Text variant="footnote" color="label3" style={styles.trustText}>
-          You review everything. CzechReply never sends anything for you.
+          You review everything. CzechPal never sends anything for you.
         </Text>
       </View>
     </ScrollView>

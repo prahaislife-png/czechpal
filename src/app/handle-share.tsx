@@ -10,7 +10,7 @@ import { Text } from '@/components/ui/text';
 import { space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
-/** Landing screen for "Share → CzechReply" from WhatsApp, Mail, Photos or Files. */
+/** Landing screen for "Share → CzechPal" from WhatsApp, Mail, Photos or Files. */
 export default function HandleShareScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -34,7 +34,7 @@ function NothingShared() {
           Nothing to read
         </Text>
         <Text variant="callout" color="label2" align="center">
-          In WhatsApp, Mail or Photos, tap Share and choose CzechReply. Text, screenshots, photos and PDFs open here,
+          In WhatsApp, Mail or Photos, tap Share and choose CzechPal. Text, screenshots, photos and PDFs open here,
           ready to explain.
         </Text>
       </View>

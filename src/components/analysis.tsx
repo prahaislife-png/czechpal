@@ -199,11 +199,11 @@ export function Bullets({ title, items, muted }: { title: string; items: string[
 const cautions = {
   official: {
     title: 'Official matter',
-    body: 'Double-check requirements with the office or a qualified adviser before you act. CzechReply explains the text; it isn’t legal advice.',
+    body: 'Double-check requirements with the office or a qualified adviser before you act. CzechPal explains the text; it isn’t legal advice.',
   },
   medical: {
     title: 'Health information',
-    body: 'Follow what your doctor or pharmacist told you. If anything is unclear, ask them; CzechReply isn’t medical advice.',
+    body: 'Follow what your doctor or pharmacist told you. If anything is unclear, ask them; CzechPal isn’t medical advice.',
   },
 };
 
