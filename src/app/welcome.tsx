@@ -3,30 +3,24 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DocumentPaper } from '@/components/document-paper';
 import { Badge } from '@/components/ui/badge';
 import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { FlagMark } from '@/components/ui/flag-mark';
-import { IconWell } from '@/components/ui/list';
+import { Icon, type IconName } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import type { IconName } from '@/components/ui/icon';
 import { useStore } from '@/store/cases';
-import { layout, motion, space } from '@/theme/tokens';
+import { layout, motion, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
-const letter = `Vážení nájemníci,
-
-dovolujeme si Vás informovat, že ve čtvrtek 12. listopadu proběhne v domě plánovaná oprava vodovodního potrubí. Od 8:00 do 14:00 bude přerušena dodávka vody.`;
-
 const promises: { icon: IconName; title: string; body: string }[] = [
-  { icon: 'translate', title: 'Explains it in plain English', body: 'Letters, bills, emails and messages.' },
-  { icon: 'checkCircle', title: 'Tells you what to do next', body: 'Deadlines, amounts and the steps that matter.' },
-  { icon: 'reply', title: 'Writes your reply in Czech', body: 'Polite, correct, and ready to copy.' },
+  { icon: 'viewfinder', title: 'Point and understand', body: 'Signs, menus, labels, letters and chats.' },
+  { icon: 'checkCircle', title: 'Know what to do', body: 'Deadlines, amounts and the steps that matter.' },
+  { icon: 'reply', title: 'Reply in Czech', body: 'Polite, correct and ready to copy.' },
 ];
 
-// First-run only, so it earns a little choreography: the letter lands, then the answer.
+// First run only, so it earns a little choreography: the sign lands, then the answer.
 const enter = (delay: number) => FadeInDown.duration(motion.slow + 120).delay(delay).easing(motion.easeOut);
 
 export default function WelcomeScreen() {
@@ -47,34 +41,43 @@ export default function WelcomeScreen() {
           <Text variant="headline">CzechReply</Text>
         </Animated.View>
 
-        <View style={styles.vignette} accessibilityLabel="Example: a Czech letter explained in English">
-          <Animated.View entering={enter(80)} style={styles.paperWrap}>
+        <View style={styles.vignette} accessibilityLabel="Example: a Czech parking sign explained in English">
+          <Animated.View entering={enter(80)} style={styles.signWrap}>
             {/* Rotation lives on the child so it never fights the entrance transform. */}
-            <DocumentPaper text={letter} size="small" maxLines={7} style={styles.paperTilt} />
+            <View style={[styles.sign, { backgroundColor: colors.paper, borderColor: colors.paperInk }]}>
+              <Text variant="title3" weight="800" color="paperInk" align="center">
+                ZÁKAZ STÁNÍ
+              </Text>
+              <Text variant="callout" weight="700" color="paperInk" align="center">
+                Po–Pá 7–18 h
+              </Text>
+              <Text variant="caption" weight="700" color="paperInk" align="center">
+                MIMO VOZIDEL ZÁSOBOVÁNÍ
+              </Text>
+            </View>
           </Animated.View>
-          <Animated.View entering={FadeInUp.duration(motion.slow + 120).delay(520).easing(motion.easeOut)} style={styles.answerWrap}>
+          <Animated.View
+            entering={FadeInUp.duration(motion.slow + 120).delay(520).easing(motion.easeOut)}
+            style={styles.answerWrap}>
             <Card raised style={styles.answer}>
-              <Badge label="No action needed" tone="success" icon="checkCircle" />
+              <Badge label="Parking sign" tone="neutral" icon="transport" />
               <Text variant="subhead" weight="500">
-                {'Water is off on Thursday, 8:00⁠–⁠14:00, for repairs. You don’t need to reply.'}
+                No parking on weekdays, 7:00 to 18:00. Evenings and weekends are fine.
               </Text>
             </Card>
           </Animated.View>
         </View>
 
-        <Animated.View entering={enter(200)} style={styles.headline}>
-          <Text variant="largeTitle" accessibilityRole="header">
-            Understand Czech.{'\n'}Reply with confidence.
-          </Text>
-          <Text variant="body" color="label2">
-            For everything that arrives in Czech — from your landlord, your child’s school or the authorities.
+        <Animated.View entering={enter(200)}>
+          <Text variant="title1" accessibilityRole="header">
+            Understand anything written in Czech.
           </Text>
         </Animated.View>
 
         <Animated.View entering={enter(280)} style={styles.promises}>
           {promises.map((p) => (
             <View key={p.title} style={styles.promise}>
-              <IconWell name={p.icon} tone="accent" size={40} />
+              <Icon name={p.icon} size={24} color={colors.accent} style={styles.promiseIcon} />
               <View style={styles.promiseText}>
                 <Text variant="callout" weight="600">
                   {p.title}
@@ -102,13 +105,21 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { paddingHorizontal: layout.gutter, paddingBottom: space.xxl, gap: space.xxxl },
   brand: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  vignette: { height: 230, justifyContent: 'flex-start' },
-  paperWrap: { width: '78%', marginTop: space.sm, marginLeft: space.xs },
-  paperTilt: { transform: [{ rotate: '-2.5deg' }] },
-  answerWrap: { position: 'absolute', right: 0, bottom: 0, width: '72%' },
+  vignette: { height: 236 },
+  signWrap: { width: '62%', marginTop: space.sm, marginLeft: space.lg },
+  sign: {
+    transform: [{ rotate: '-3deg' }],
+    borderWidth: 3,
+    borderRadius: radius.tile,
+    borderCurve: 'continuous',
+    paddingVertical: space.lg,
+    paddingHorizontal: space.md,
+    gap: space.xs,
+  },
+  answerWrap: { position: 'absolute', right: 0, bottom: 0, width: '74%' },
   answer: { gap: space.sm, padding: space.lg },
-  headline: { gap: space.md },
-  promises: { gap: space.lg },
-  promise: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  promises: { gap: space.xl, marginTop: -space.sm },
+  promise: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
+  promiseIcon: { marginTop: 1 },
   promiseText: { flex: 1, gap: 1 },
 });

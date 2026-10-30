@@ -12,6 +12,72 @@
       "sourceType": "github",
       "skillPath": "skills/appllama-usage/SKILL.md",
       "computedHash": "aa07926c5280b696bfad5186e3bb36e461b78f843bf55f523b36521f49f015ec"
+    },
+    "emil-design-eng": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "skillPath": "skills/emil-design-eng/SKILL.md",
+      "computedHash": "77853cec799207f80868c611374c6ed5fdf34a55355c5ab544b59e791c63ad98"
+    },
+    "expo-animation": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/expo/skills/expo-animation/SKILL.md",
+      "computedHash": "b2d30c14da8348ab13f7323b9969fb283f0a5d372133f512390f35a517ecd073"
+    },
+    "expo-design-system": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/expo/skills/expo-design-system/SKILL.md",
+      "computedHash": "c6d7e9d13b5239ed3d46054c42d771e032bef857dddfee88690a1ce2fbd46dc6"
+    },
+    "expo-native-ui": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/expo/skills/expo-native-ui/SKILL.md",
+      "computedHash": "3e66ba8d791219f78c8adcb0cdce84f49a61e9869983762598d7e4122a4e43ae"
+    },
+    "expo-ui": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/expo/skills/expo-ui/SKILL.md",
+      "computedHash": "2e3c35de1205749cdefb65bde7f6142ebb47f5793aa95313a08e55cc6376ac3b"
+    },
+    "mobile-design-review": {
+      "source": "draftbit/mobile-taste-skill",
+      "sourceType": "github",
+      "skillPath": "skills/mobile-design-review/SKILL.md",
+      "computedHash": "833b0192dba980732a5a8e7933fb36fc123a330b60fdd1eb2bd215c1ef7861c4"
+    },
+    "mobile-design-system": {
+      "source": "draftbit/mobile-taste-skill",
+      "sourceType": "github",
+      "skillPath": "skills/mobile-design-system/SKILL.md",
+      "computedHash": "75039907839edb5446144cdf8b10913e78f2c8898da3a9dfad748ff484729960"
+    },
+    "mobile-nav-plan": {
+      "source": "draftbit/mobile-taste-skill",
+      "sourceType": "github",
+      "skillPath": "skills/mobile-nav-plan/SKILL.md",
+      "computedHash": "bef2814d1e071ccfe57e4ec2580767d9e6b5fb50d580325fd47185f0007f39b4"
+    },
+    "mobile-redesign-app": {
+      "source": "draftbit/mobile-taste-skill",
+      "sourceType": "github",
+      "skillPath": "skills/mobile-redesign-app/SKILL.md",
+      "computedHash": "7a3f64c02f5644e95cc822473032cc8ba88300ec741fb356730290af4446a2c1"
+    },
+    "mobile-redesign-screen": {
+      "source": "draftbit/mobile-taste-skill",
+      "sourceType": "github",
+      "skillPath": "skills/mobile-redesign-screen/SKILL.md",
+      "computedHash": "c6e574a7607bed8fb7909f0345b497b2e5acbdc1aafc776930942e61e59ba46b"
+    },
+    "mobile-taste": {
+      "source": "draftbit/mobile-taste-skill",
+      "sourceType": "github",
+      "skillPath": "skills/mobile-taste/SKILL.md",
+      "computedHash": "ef44362f66b5736408c70f63c6ccdb1d2845bc15e458e0bc0cb9d03d990dd798"
     }
   }
 }

@@ -1,61 +1,105 @@
+import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  FadeIn,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 
+import { DocumentPaper } from '@/components/document-paper';
 import { Badge } from '@/components/ui/badge';
-import { Card, SectionHeader } from '@/components/ui/card';
+import { SectionHeader } from '@/components/ui/card';
 import { Icon, type IconName } from '@/components/ui/icon';
-import { IconWell, List } from '@/components/ui/list';
-import { SkeletonLine } from '@/components/ui/skeleton';
+import { List, RowIcon } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
-import type { Analysis, AnalyzeResult, KeyFact, NextStep, Urgency } from '@/lib/ai';
+import type { Analysis, AnalyzeResult, KeyFact, NextStep, TranslatedLine, Urgency } from '@/lib/ai';
 import { ANALYZE_DURATION_MS } from '@/lib/ai/mock-client';
+import type { CaseItem } from '@/store/cases';
 import { motion, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
 const verdictStyle: Record<Urgency, { icon: IconName; tone: 'success' | 'warning' | 'danger' }> = {
   none: { icon: 'checkCircle', tone: 'success' },
-  action: { icon: 'calendar', tone: 'warning' },
+  action: { icon: 'alert', tone: 'warning' },
   urgent: { icon: 'alert', tone: 'danger' },
 };
 
-/* ───────────── What happened? ───────────── */
+/* ───────────── What is it, and what does it mean for me? ───────────── */
 
-export function VerdictCard({ analysis }: { analysis: Analysis }) {
+/** Signature element of the result: the answer set straight on the page, no card around it. */
+export function ResultHero({ analysis }: { analysis: Analysis }) {
   const { colors } = useTheme();
-  const { icon, tone } = verdictStyle[analysis.verdict.urgency];
-  const fg = colors[tone];
-  const bg = colors[`${tone}Soft`];
   return (
-    <Card raised style={styles.verdict}>
-      <View style={[styles.verdictPill, { backgroundColor: bg }]}>
-        <Icon name={icon} size={18} color={fg} />
-        <View style={styles.verdictPillText}>
-          <Text variant="headline" style={{ color: fg }}>
-            {analysis.verdict.label}
-          </Text>
-          {analysis.verdict.detail ? (
-            <Text variant="footnote" style={{ color: fg, opacity: 0.85 }}>
-              {analysis.verdict.detail}
-            </Text>
-          ) : null}
-        </View>
-      </View>
-      <View style={styles.inShort}>
-        <Text variant="caption" color="label3" weight="600">
-          IN SHORT
-        </Text>
-        <Text variant="title3" weight="500" selectable>
-          {analysis.inShort}
+    <View style={styles.hero}>
+      <View style={styles.typeRow}>
+        <Icon name={analysis.category} size={16} color={colors.label2} />
+        <Text variant="footnote" weight="600" color="label2">
+          {analysis.typeLabel}
         </Text>
       </View>
-      <View style={styles.sender}>
-        <Icon name="sender" size={14} color={colors.label3} />
+      <Text variant="title2" weight="600" selectable accessibilityRole="header">
+        {analysis.inShort}
+      </Text>
+      {analysis.verdict && <Verdict verdict={analysis.verdict} />}
+      {analysis.sender ? (
         <Text variant="footnote" color="label2">
           From {analysis.sender}
         </Text>
+      ) : null}
+    </View>
+  );
+}
+
+function Verdict({ verdict }: { verdict: NonNullable<Analysis['verdict']> }) {
+  const { colors } = useTheme();
+  const { icon, tone } = verdictStyle[verdict.urgency];
+  const soft = { success: colors.successSoft, warning: colors.warningSoft, danger: colors.dangerSoft }[tone];
+  return (
+    <View style={[styles.verdict, { backgroundColor: soft }]}>
+      <Icon name={icon} size={18} color={colors[tone]} />
+      <View style={styles.verdictText}>
+        <Text variant="callout" weight="600" color={tone}>
+          {verdict.label}
+        </Text>
+        {verdict.detail ? (
+          <Text variant="footnote" color="label2">
+            {verdict.detail}
+          </Text>
+        ) : null}
       </View>
-    </Card>
+    </View>
+  );
+}
+
+/* ───────────── What it says ───────────── */
+
+export function TranslatedLines({ lines }: { lines: TranslatedLine[] }) {
+  return (
+    <View>
+      <SectionHeader title="What it says" />
+      <List inset={false}>
+        {lines.map((line) => (
+          <View key={line.cs} style={styles.line}>
+            <Text variant="subhead" color="label2" selectable>
+              {line.cs}
+            </Text>
+            <Text variant="headline" selectable>
+              {line.en}
+            </Text>
+            {line.note ? (
+              <Text variant="footnote" color="label3">
+                {line.note}
+              </Text>
+            ) : null}
+          </View>
+        ))}
+      </List>
+    </View>
   );
 }
 
@@ -67,26 +111,22 @@ export function NextSteps({ steps }: { steps: NextStep[] }) {
   const optional = steps.filter((s) => s.kind === 'optional');
   return (
     <View>
-      <SectionHeader title={required.length ? 'What you need to do' : 'Nothing required — but it helps to'} />
-      <Card padded={false}>
-        {[...required, ...optional].map((step, i) => {
+      <SectionHeader title={required.length ? 'What you need to do' : 'Good to know'} />
+      <List>
+        {[...required, ...optional].map((step) => {
           const isRequired = step.kind === 'required';
           return (
-            <View
-              key={step.id}
-              style={[styles.step, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator }]}>
-              <View
-                style={[
-                  styles.stepMarker,
-                  isRequired ? { backgroundColor: colors.accentFill } : { backgroundColor: colors.fill },
-                ]}>
-                {isRequired ? (
-                  <Text variant="footnote" weight="700" color="onAccent" tabular>
-                    {required.indexOf(step) + 1}
-                  </Text>
-                ) : (
-                  <Icon name="check" size={12} color={colors.label2} />
-                )}
+            <View key={step.id} style={styles.step}>
+              <View style={styles.stepMarkerColumn}>
+                <View style={[styles.stepMarker, { backgroundColor: isRequired ? colors.accentFill : colors.fill }]}>
+                  {isRequired ? (
+                    <Text variant="footnote" weight="700" color="onAccent" tabular chrome>
+                      {required.indexOf(step) + 1}
+                    </Text>
+                  ) : (
+                    <Icon name="check" size={12} color={colors.label2} />
+                  )}
+                </View>
               </View>
               <View style={styles.stepText}>
                 <Text variant="callout" weight="600">
@@ -97,16 +137,11 @@ export function NextSteps({ steps }: { steps: NextStep[] }) {
                     {step.detail}
                   </Text>
                 ) : null}
-                {!isRequired && (
-                  <Text variant="caption" color="label3">
-                    Optional
-                  </Text>
-                )}
               </View>
             </View>
           );
         })}
-      </Card>
+      </List>
     </View>
   );
 }
@@ -120,7 +155,7 @@ export function KeyFacts({ facts }: { facts: KeyFact[] }) {
       <List>
         {facts.map((fact) => (
           <View key={fact.id} style={styles.fact}>
-            <IconWell name={fact.icon} />
+            <RowIcon name={fact.icon} />
             <View style={styles.factText}>
               <Text variant="footnote" color="label2">
                 {fact.label}
@@ -141,38 +176,48 @@ export function KeyFacts({ facts }: { facts: KeyFact[] }) {
   );
 }
 
+/** Prose bullets sit on the page: grouping by whitespace, not another card. */
 export function Bullets({ title, items, muted }: { title: string; items: string[]; muted?: boolean }) {
   const { colors } = useTheme();
   return (
     <View>
       <SectionHeader title={title} />
-      <Card style={[styles.bullets, muted && { backgroundColor: colors.surfaceMuted, boxShadow: 'none' }]}>
+      <View style={styles.bullets}>
         {items.map((item) => (
           <View key={item} style={styles.bullet}>
-            <View style={[styles.dot, { backgroundColor: muted ? colors.label3 : colors.label2 }]} />
+            <View style={[styles.dot, { backgroundColor: muted ? colors.label3 : colors.accent }]} />
             <Text variant="callout" color={muted ? 'label2' : 'label'} style={styles.bulletText}>
               {item}
             </Text>
           </View>
         ))}
-      </Card>
+      </View>
     </View>
   );
 }
 
-export function OfficialNotice() {
+const cautions = {
+  official: {
+    title: 'Official matter',
+    body: 'Double-check requirements with the office or a qualified adviser before you act. CzechReply explains the text; it isn’t legal advice.',
+  },
+  medical: {
+    title: 'Health information',
+    body: 'Follow what your doctor or pharmacist told you. If anything is unclear, ask them; CzechReply isn’t medical advice.',
+  },
+};
+
+export function CautionNotice({ kind }: { kind: NonNullable<Analysis['caution']> }) {
   const { colors } = useTheme();
+  const { title, body } = cautions[kind];
   return (
     <View style={[styles.notice, { backgroundColor: colors.warningSoft }]}>
       <Icon name="shield" size={20} color={colors.warning} />
       <View style={styles.noticeText}>
         <Text variant="callout" weight="600" color="warning">
-          Official matter
+          {title}
         </Text>
-        <Text variant="subhead" color="label">
-          Double-check requirements with the office or a qualified adviser before you act. CzechReply explains the letter;
-          it isn’t legal advice.
-        </Text>
+        <Text variant="subhead">{body}</Text>
       </View>
     </View>
   );
@@ -185,20 +230,27 @@ export function DemoNotice({ demo }: { demo: AnalyzeResult['demo'] }) {
       <Badge label="Demo" tone="accent" />
       <Text variant="footnote" color="label2" style={styles.demoText}>
         {demo === 'matched'
-          ? 'Matched to a built-in sample. Live AI analysis turns on when the backend is connected.'
-          : 'This is a sample analysis, not your document. Live AI analysis turns on when the backend is connected.'}
+          ? 'Matched to a built-in sample. Live AI reading turns on when the backend is connected.'
+          : 'This is a sample result, not a reading of your text. Live AI reading turns on when the backend is connected.'}
       </Text>
     </View>
   );
 }
 
-/* ───────────── Analyzing ───────────── */
+/* ───────────── Reading ───────────── */
 
-const stages = ['Reading the Czech text', 'Working out what it means', 'Finding dates, amounts and next steps'];
+const stages = ['Reading the Czech text', 'Working out what it means', 'Finding what matters to you'];
 
-export function AnalyzingView() {
+/**
+ * The text being read, with a scan line passing over it.
+ * Motion purpose: explanation (it shows the app is reading this). Reduce Motion drops the sweep.
+ */
+export function AnalyzingView({ item }: { item: CaseItem }) {
   const { colors } = useTheme();
+  const reduceMotion = useReducedMotion();
   const [stage, setStage] = useState(0);
+  const [height, setHeight] = useState(0);
+  const sweep = useSharedValue(0);
 
   useEffect(() => {
     const step = ANALYZE_DURATION_MS / stages.length;
@@ -206,18 +258,29 @@ export function AnalyzingView() {
     return () => timers.forEach(clearTimeout);
   }, []);
 
+  useEffect(() => {
+    if (!reduceMotion) sweep.set(withRepeat(withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.quad) }), -1, true));
+  }, [sweep, reduceMotion]);
+
+  const lineStyle = useAnimatedStyle(() => ({ transform: [{ translateY: sweep.get() * Math.max(0, height - 2) }] }));
+
   return (
     <View style={styles.analyzing} accessibilityLiveRegion="polite">
-      <View style={styles.analyzingHead}>
-        <Text variant="title2" accessibilityRole="header">
-          Explaining your message
-        </Text>
-        <Text variant="callout" color="label2">
-          This usually takes a few seconds.
-        </Text>
+      <View style={styles.preview} onLayout={(e) => setHeight(e.nativeEvent.layout.height)}>
+        {item.imageUri ? (
+          <Image source={{ uri: item.imageUri }} contentFit="cover" style={styles.previewImage} accessible={false} />
+        ) : (
+          <DocumentPaper text={item.text ?? item.fileName ?? ''} maxLines={9} style={styles.previewPaper} />
+        )}
+        {!reduceMotion && height > 0 && (
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.scanLine, { backgroundColor: colors.accent, boxShadow: `0px 0px 16px ${colors.accent}` }, lineStyle]}
+          />
+        )}
       </View>
 
-      <Card style={styles.stages}>
+      <View style={styles.stages}>
         {stages.map((label, i) => {
           const done = i < stage;
           const active = i === stage;
@@ -238,23 +301,15 @@ export function AnalyzingView() {
             </Animated.View>
           );
         })}
-      </Card>
-
-      {/* Skeleton in the exact shape of the verdict card that replaces it. */}
-      <Card style={styles.skeletonCard}>
-        <SkeletonLine width="55%" height={36} />
-        <SkeletonLine width="30%" height={10} />
-        <SkeletonLine />
-        <SkeletonLine width="92%" />
-        <SkeletonLine width="70%" />
-      </Card>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  verdict: { gap: space.lg },
-  verdictPill: {
+  hero: { gap: space.md, paddingTop: space.sm },
+  typeRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
+  verdict: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: space.sm,
@@ -264,23 +319,16 @@ const styles = StyleSheet.create({
     borderRadius: radius.tile,
     borderCurve: 'continuous',
   },
-  verdictPillText: { gap: 1, flexShrink: 1, marginTop: -1 },
-  inShort: { gap: space.xs },
-  sender: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
-  step: { flexDirection: 'row', gap: space.md, padding: space.lg },
-  stepMarker: {
-    width: 24,
-    height: 24,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 0,
-  },
+  verdictText: { gap: 1, flexShrink: 1 },
+  line: { paddingHorizontal: space.lg, paddingVertical: space.md, gap: 2 },
+  step: { flexDirection: 'row', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md },
+  stepMarkerColumn: { width: 24, alignItems: 'center', paddingTop: 1 },
+  stepMarker: { width: 24, height: 24, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   stepText: { flex: 1, gap: 2 },
-  fact: { flexDirection: 'row', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md },
+  fact: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md },
   factText: { flex: 1, gap: 1 },
   evidence: { marginTop: 2, fontStyle: 'italic' },
-  bullets: { gap: space.md },
+  bullets: { gap: space.md, paddingHorizontal: space.xs },
   bullet: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start' },
   dot: { width: 5, height: 5, borderRadius: 3, marginTop: 9 },
   bulletText: { flex: 1 },
@@ -295,9 +343,11 @@ const styles = StyleSheet.create({
   demo: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, paddingHorizontal: space.xs },
   demoText: { flex: 1 },
   analyzing: { gap: space.xxl },
-  analyzingHead: { gap: space.xs, paddingHorizontal: space.xs },
-  stages: { gap: space.lg },
+  preview: { borderRadius: radius.tile, borderCurve: 'continuous', overflow: 'hidden', maxHeight: 300 },
+  previewImage: { width: '100%', aspectRatio: 4 / 3 },
+  previewPaper: { minHeight: 200 },
+  scanLine: { position: 'absolute', left: 0, right: 0, top: 0, height: 2 },
+  stages: { gap: space.lg, paddingHorizontal: space.xs },
   stage: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   stageIcon: { width: 24, alignItems: 'center' },
-  skeletonCard: { gap: space.md },
 });

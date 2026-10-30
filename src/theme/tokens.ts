@@ -32,6 +32,10 @@ const light = {
   dangerSoft: '#FCE8E6',
   paper: '#FFFEFB',
   paperInk: '#1E2430',
+  /** The viewfinder: the one dark surface in light mode, standing in for the camera. */
+  ink: '#0E1420',
+  onInk: '#F4F6FA',
+  onInk2: 'rgba(244, 246, 250, 0.62)',
   scrim: 'rgba(0, 0, 0, 0.4)',
   shadow: '0px 1px 2px rgba(16, 24, 40, 0.04), 0px 6px 20px rgba(16, 24, 40, 0.06)',
   shadowRaised: '0px 2px 6px rgba(16, 24, 40, 0.06), 0px 16px 40px rgba(16, 24, 40, 0.10)',
@@ -59,6 +63,9 @@ const dark: typeof light = {
   dangerSoft: '#2C1513',
   paper: '#1E222A',
   paperInk: '#E3E7EE',
+  ink: '#1A1F28',
+  onInk: '#F4F6FA',
+  onInk2: 'rgba(244, 246, 250, 0.62)',
   scrim: 'rgba(0, 0, 0, 0.55)',
   shadow: '0px 0px 0px rgba(0, 0, 0, 0)',
   shadowRaised: '0px 12px 32px rgba(0, 0, 0, 0.45)',
@@ -66,6 +73,14 @@ const dark: typeof light = {
 
 export const palettes = { light, dark };
 export type Palette = typeof light;
+
+/** Camera chrome: always light-on-black whatever the theme, because it sits on the live lens image. */
+export const camera = {
+  background: '#000000',
+  foreground: '#FFFFFF',
+  corner: 'rgba(255, 255, 255, 0.92)',
+  glass: 'rgba(12, 14, 18, 0.48)',
+} as const;
 
 /** Czech flag colours — brand mark only, never UI state. */
 export const flag = { blue: '#11457E', red: '#D7141A', white: '#FFFFFF' };

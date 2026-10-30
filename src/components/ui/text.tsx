@@ -14,6 +14,8 @@ type ColorKey = Extract<
   | 'warning'
   | 'danger'
   | 'paperInk'
+  | 'onInk'
+  | 'onInk2'
 >;
 
 export type AppTextProps = TextProps & {
@@ -22,7 +24,11 @@ export type AppTextProps = TextProps & {
   weight?: TextStyle['fontWeight'];
   align?: TextStyle['textAlign'];
   tabular?: boolean;
+  /** Custom chrome (buttons, badges, bar labels): bound Dynamic Type so controls never break. Body text stays unbounded. */
+  chrome?: boolean;
 };
+
+export const CHROME_MAX_SCALE = 1.4;
 
 const webFont = Platform.OS === 'web' ? { fontFamily: 'var(--font-display)' } : null;
 
@@ -32,12 +38,14 @@ export function Text({
   weight,
   align,
   tabular,
+  chrome,
   style,
   ...rest
 }: AppTextProps) {
   const { colors } = useTheme();
   return (
     <RNText
+      maxFontSizeMultiplier={chrome ? CHROME_MAX_SCALE : undefined}
       {...rest}
       style={[
         ramp[variant],

@@ -1,74 +1,102 @@
+import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import {
   AnalyzingView,
   Bullets,
+  CautionNotice,
   DemoNotice,
   KeyFacts,
   NextSteps,
-  OfficialNotice,
-  VerdictCard,
+  ResultHero,
+  TranslatedLines,
 } from '@/components/analysis';
 import { DocumentPaper } from '@/components/document-paper';
 import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { IconWell, List, Row } from '@/components/ui/list';
+import { IconWell } from '@/components/ui/list';
 import { Segmented } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
+import type { Analysis } from '@/lib/ai';
 import { confirm } from '@/lib/dialogs';
 import { useCase, useStore, type CaseItem } from '@/store/cases';
 import { layout, motion, radius, space } from '@/theme/tokens';
 
-type View_ = 'summary' | 'translation' | 'original';
+type Tab = 'summary' | 'english' | 'czech';
 
-const views = [
+const tabs = [
   { value: 'summary', label: 'Summary' },
-  { value: 'translation', label: 'English' },
-  { value: 'original', label: 'Czech' },
+  { value: 'english', label: 'English' },
+  { value: 'czech', label: 'Czech' },
 ] as const;
 
 export default function CaseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const item = useCase(id);
-  // Reveal choreography only for an analysis that finishes while the user watches —
-  // reopening a saved case shows it instantly.
+  // Reveal choreography only for a result that lands while the user watches;
+  // reopening a saved one shows it instantly.
   const [watchedAnalysis] = useState(() => item?.status === 'analyzing');
 
   if (!item) return <Redirect href="/" />;
 
   return (
     <View style={styles.root}>
-      <Stack.Screen options={{ title: item.status === 'ready' ? item.result?.analysis.title : '' }} />
+      <Stack.Screen options={{ title: item.status === 'ready' ? item.result?.analysis.title : 'Reading' }} />
       {item.status === 'ready' && item.result ? (
         <Ready item={item} animate={watchedAnalysis} />
       ) : item.status === 'error' ? (
         <Failed item={item} />
       ) : (
         <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
-          <AnalyzingView />
+          <AnalyzingView item={item} />
         </ScrollView>
       )}
     </View>
   );
 }
 
+function plainTranslation(a: Analysis) {
+  return a.lines?.length ? a.lines.map((l) => l.en).join('\n') : a.translation;
+}
+
 function Ready({ item, animate }: { item: CaseItem; animate: boolean }) {
-  const [view, setView] = useState<View_>('summary');
+  const [tab, setTab] = useState<Tab>('summary');
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
   const result = item.result!;
   const { analysis } = result;
+  const canReply = analysis.replyIntents.length > 0;
 
-  // Explanation, not decoration: sections arrive in reading order, 40 ms apart.
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 1800);
+    return () => clearTimeout(t);
+  }, [copied]);
+
+  // Explanation, not decoration: sections arrive in reading order, 40 ms apart, first view only.
   const enter = (i: number) =>
     animate ? FadeInDown.duration(motion.slow).delay(i * 40).easing(motion.easeOut) : undefined;
 
+  const copyTranslation = async () => {
+    setCopied(true);
+    setCopyError(false);
+    if (process.env.EXPO_OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    try {
+      await Clipboard.setStringAsync(plainTranslation(analysis));
+    } catch {
+      setCopied(false);
+      setCopyError(true);
+    }
+  };
+
   const remove = async () => {
     const ok = await confirm({
-      title: 'Delete this message?',
+      title: 'Delete this?',
       message: 'The explanation and any reply drafts will be removed from this device.',
       confirmLabel: 'Delete',
       destructive: true,
@@ -78,63 +106,70 @@ function Ready({ item, animate }: { item: CaseItem; animate: boolean }) {
     useStore.getState().remove(item.id);
   };
 
+  let section = 1;
+
   return (
     <>
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
-        {/* A stand-in result is labelled before it can be mistaken for a reading of the user's document. */}
+        {/* A stand-in result is labelled before it can be mistaken for a reading of the user's text. */}
         {result.demo === 'sample' && <DemoNotice demo={result.demo} />}
 
         <Animated.View entering={enter(0)}>
-          <VerdictCard analysis={analysis} />
+          <ResultHero analysis={analysis} />
         </Animated.View>
 
         {result.demo === 'matched' && <DemoNotice demo={result.demo} />}
 
-        <Animated.View entering={enter(1)}>
-          <Segmented options={views} value={view} onChange={setView} />
+        <Animated.View entering={enter(section++)}>
+          <Segmented options={tabs} value={tab} onChange={setTab} />
         </Animated.View>
 
-        {view === 'summary' && (
+        {tab === 'summary' && (
           <>
-            {analysis.officialMatter && (
-              <Animated.View entering={enter(2)}>
-                <OfficialNotice />
+            {analysis.caution && (
+              <Animated.View entering={enter(section++)}>
+                <CautionNotice kind={analysis.caution} />
               </Animated.View>
             )}
-            <Animated.View entering={enter(2)}>
-              <NextSteps steps={analysis.nextSteps} />
-            </Animated.View>
-            <Animated.View entering={enter(3)}>
-              <KeyFacts facts={analysis.keyFacts} />
-            </Animated.View>
-            <Animated.View entering={enter(4)}>
+            {analysis.lines?.length ? (
+              <Animated.View entering={enter(section++)}>
+                <TranslatedLines lines={analysis.lines} />
+              </Animated.View>
+            ) : null}
+            {analysis.nextSteps.length > 0 && (
+              <Animated.View entering={enter(section++)}>
+                <NextSteps steps={analysis.nextSteps} />
+              </Animated.View>
+            )}
+            {analysis.keyFacts.length > 0 && (
+              <Animated.View entering={enter(section++)}>
+                <KeyFacts facts={analysis.keyFacts} />
+              </Animated.View>
+            )}
+            <Animated.View entering={enter(section++)}>
               <Bullets title="What it means" items={analysis.meaning} />
             </Animated.View>
             {analysis.notStated.length > 0 && (
-              <Animated.View entering={enter(5)}>
-                <Bullets title="Not mentioned in the letter" items={analysis.notStated} muted />
+              <Animated.View entering={enter(section++)}>
+                <Bullets title="Not mentioned" items={analysis.notStated} muted />
               </Animated.View>
             )}
-            <List>
-              <Row title="Delete this message" icon="trash" destructive chevron={false} onPress={remove} />
-            </List>
+            <Button label="Delete" variant="quietDestructive" size="medium" onPress={remove} style={styles.delete} />
           </>
         )}
 
-        {view === 'translation' && (
+        {tab === 'english' && (
           <Animated.View entering={FadeIn.duration(motion.fast)} style={styles.tab}>
-            <Card>
-              <Text variant="callout" selectable style={styles.longText}>
-                {analysis.translation}
-              </Text>
-            </Card>
-            <Text variant="footnote" color="label3" style={styles.caption}>
+            <Text variant="body" selectable style={styles.longText}>
+              {analysis.translation}
+            </Text>
+            <Text variant="footnote" color="label3">
               Translated by AI. For dates, amounts and names, the Czech original is what counts.
             </Text>
           </Animated.View>
         )}
 
-        {view === 'original' && (
+        {tab === 'czech' && (
           <Animated.View entering={FadeIn.duration(motion.fast)} style={styles.tab}>
             {item.imageUri ? (
               <Image source={{ uri: item.imageUri }} contentFit="cover" style={styles.image} accessibilityLabel="Your photo" />
@@ -145,11 +180,20 @@ function Ready({ item, animate }: { item: CaseItem; animate: boolean }) {
       </ScrollView>
 
       <BottomBar>
-        <Button
-          label="Write a reply"
-          icon="reply"
-          onPress={() => router.push({ pathname: '/reply/[id]', params: { id: item.id } })}
-        />
+        {canReply ? (
+          <Button
+            label="Write a reply"
+            icon="reply"
+            onPress={() => router.push({ pathname: '/reply/[id]', params: { id: item.id } })}
+          />
+        ) : (
+          <Button label={copied ? 'Copied' : 'Copy translation'} icon={copied ? 'check' : 'copy'} onPress={copyTranslation} />
+        )}
+        {copyError && (
+          <Text variant="footnote" color="danger" align="center" accessibilityLiveRegion="polite">
+            Couldn’t copy. Open the English tab and copy the text from there.
+          </Text>
+        )}
       </BottomBar>
     </>
   );
@@ -159,10 +203,10 @@ function Failed({ item }: { item: CaseItem }) {
   const analyze = useStore((s) => s.analyze);
   return (
     <View style={styles.failed}>
-      <IconWell name="alert" tone="danger" size={56} />
+      <IconWell name="alert" tone="danger" />
       <View style={styles.failedText}>
         <Text variant="title2" align="center" accessibilityRole="header">
-          Couldn’t explain this message
+          Couldn’t read this
         </Text>
         <Text variant="callout" color="label2" align="center">
           {item.error ?? 'Something went wrong. Please try again.'}
@@ -171,7 +215,7 @@ function Failed({ item }: { item: CaseItem }) {
       <View style={styles.failedActions}>
         {item.source === 'text' ? (
           <Button
-            label="Paste the full message"
+            label="Type it again"
             onPress={() => {
               router.back();
               router.push('/paste');
@@ -189,10 +233,10 @@ function Failed({ item }: { item: CaseItem }) {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { padding: layout.gutter, paddingBottom: space.huge, gap: space.xxl },
-  tab: { gap: space.md },
-  longText: { lineHeight: 25 },
-  caption: { paddingHorizontal: space.xs },
+  tab: { gap: space.lg },
+  longText: { lineHeight: 26 },
   image: { width: '100%', aspectRatio: 3 / 4, maxHeight: 420, borderRadius: radius.tile },
+  delete: { alignSelf: 'center' },
   failed: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space.xxxl, gap: space.xl },
   failedText: { gap: space.sm, maxWidth: 360 },
   failedActions: { alignSelf: 'stretch', gap: space.xs, maxWidth: layout.maxWidth },

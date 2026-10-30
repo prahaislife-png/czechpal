@@ -1,7 +1,7 @@
 # CzechReply
 
-Understand Czech. Reply with confidence. An AI assistant for foreigners in Czechia: photograph or paste a Czech
-letter, get a plain-English explanation with the next steps, and copy a polite Czech reply.
+Point your phone at anything written in Czech (a sign, a menu, a medicine label, a chat, a letter) and get
+what it says, what it means for you and, when it's a message, a polite reply in Czech.
 
 Expo SDK 58 · Expo Router · React Native · TypeScript · Reanimated · Zustand.
 
@@ -17,11 +17,17 @@ Press `w` for the browser, or scan the QR code with a development build on your 
 ## What's in this build
 
 - **Welcome**: a one-way onboarding door.
-- **Home**: scan, photo, PDF and paste capture, built-in example letters, and recent cases.
-- **Check your message**: a preview plus an optional topic hint.
-- **Analysis**: a verdict, "In short", numbered next steps, source-quoted key details, what it means, what the letter doesn't say, and an official-matter notice. It also has English and Czech views.
-- **Write a reply**: choose an intent and a tone (formal, friendly or short), edit the Czech draft, see its English meaning, then copy it or open it in email.
-- **History and Profile**: a local case history, the free allowance, and privacy controls.
+- **Home**: a viewfinder hero that opens the scanner, Photo, PDF and Type sources, "Try it on" examples, and recent items.
+- **Scanner**: a full-screen camera with the permission request shown at the moment you open it, a shutter haptic and torch, plus Liquid Glass controls on iOS 26.
+- **Results that adapt to what you scanned**:
+  - Signs, menus and labels get a line-by-line translation and a Copy translation button.
+  - Messages get a suggested reply.
+  - Letters get a verdict, numbered steps, quoted key details and a notice for official matters.
+- **Write a reply**: choose an intent and a tone, edit the Czech draft, see its English meaning, then copy it or open it in email.
+- **History and Profile**: a virtualized local history, the free allowance, and privacy controls.
+
+Design commitments live in `MOBILE-DESIGN.md`, visual tokens in `design-system/MASTER.md`, and the audit
+before and after the redesign in `design-baseline.json`.
 
 The AI is **mocked** in `src/lib/ai/mock-client.ts`. Every screen goes through the `AIClient` interface in
 `src/lib/ai/types.ts`, so the Supabase Edge Function backend replaces it in `src/lib/ai/index.ts` without touching the UI.

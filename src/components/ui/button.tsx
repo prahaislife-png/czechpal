@@ -7,7 +7,7 @@ import { Icon, type IconName } from './icon';
 import { PressableScale } from './pressable-scale';
 import { Text } from './text';
 
-type Variant = 'primary' | 'secondary' | 'plain' | 'destructive';
+type Variant = 'primary' | 'secondary' | 'plain' | 'destructive' | 'quietDestructive' | 'onDark';
 
 type Props = {
   label: string;
@@ -40,12 +40,16 @@ export function Button({
     secondary: colors.accentSoft,
     plain: 'transparent',
     destructive: colors.dangerSoft,
+    quietDestructive: 'transparent',
+    onDark: 'transparent',
   }[variant];
   const fg = {
     primary: colors.onAccent,
     secondary: colors.accent,
     plain: colors.accent,
     destructive: colors.danger,
+    quietDestructive: colors.danger,
+    onDark: colors.onInk,
   }[variant];
 
   const inactive = disabled || loading;
@@ -70,7 +74,7 @@ export function Button({
       ) : (
         <View style={styles.row}>
           {icon && <Icon name={icon} size="md" color={fg} />}
-          <Text variant={size === 'large' ? 'headline' : 'subhead'} weight="600" style={{ color: fg }}>
+          <Text variant={size === 'large' ? 'headline' : 'subhead'} weight="600" style={{ color: fg }} chrome>
             {label}
           </Text>
         </View>

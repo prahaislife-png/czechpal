@@ -7,17 +7,27 @@ import { useTheme } from '@/theme/use-theme';
 import { Icon, type IconName } from './icon';
 import { Text } from './text';
 
-/** iOS inset-grouped list. Rows get hairline separators inset past the icon well. */
-export function List({ children, style, ...rest }: ViewProps) {
+const ICON_COLUMN = 24;
+
+/**
+ * iOS inset-grouped list: a flat surface on the grouped background, no shadow.
+ * Hairline separators start where the row text starts.
+ */
+export function List({ children, style, inset = true, ...rest }: ViewProps & { inset?: boolean }) {
   const { colors } = useTheme();
   const items = Children.toArray(children).filter(isValidElement);
   return (
-    <View
-      {...rest}
-      style={[styles.list, { backgroundColor: colors.surface, boxShadow: colors.shadow }, style]}>
+    <View {...rest} style={[styles.list, { backgroundColor: colors.surface }, style]}>
       {items.map((child, i) => (
         <Fragment key={child.key ?? i}>
-          {i > 0 && <View style={[styles.separator, { backgroundColor: colors.separator }]} />}
+          {i > 0 && (
+            <View
+              style={[
+                styles.separator,
+                { backgroundColor: colors.separator, marginLeft: inset ? space.lg + ICON_COLUMN + space.md : space.lg },
+              ]}
+            />
+          )}
           {child}
         </Fragment>
       ))}
@@ -27,7 +37,8 @@ export function List({ children, style, ...rest }: ViewProps) {
 
 type WellTone = 'accent' | 'neutral' | 'success' | 'warning' | 'danger';
 
-export function IconWell({ name, tone = 'neutral', size = 36 }: { name: IconName; tone?: WellTone; size?: number }) {
+/** A single large glyph on a tinted ground. Hero use only (empty and error states), never to lead list rows. */
+export function IconWell({ name, tone = 'neutral', size = 56 }: { name: IconName; tone?: WellTone; size?: number }) {
   const { colors } = useTheme();
   const map = {
     accent: [colors.accentSoft, colors.accent],
@@ -39,7 +50,17 @@ export function IconWell({ name, tone = 'neutral', size = 36 }: { name: IconName
   const [bg, fg] = map[tone];
   return (
     <View style={[styles.well, { width: size, height: size, backgroundColor: bg }]}>
-      <Icon name={name} size={Math.round(size * 0.5)} color={fg} />
+      <Icon name={name} size={Math.round(size * 0.46)} color={fg} />
+    </View>
+  );
+}
+
+/** The leading glyph of a row: naked, fixed width, secondary colour. */
+export function RowIcon({ name, color }: { name: IconName; color?: string }) {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.rowIcon}>
+      <Icon name={name} size={22} color={color ?? colors.label2} />
     </View>
   );
 }
@@ -48,30 +69,18 @@ type RowProps = {
   title: string;
   subtitle?: string;
   icon?: IconName;
-  iconTone?: WellTone;
   value?: string;
   accessory?: React.ReactNode;
+  /** Chevron means "pushes a screen". Off by default; turn on only for rows that navigate. */
   chevron?: boolean;
   destructive?: boolean;
   onPress?: () => void;
   accessibilityHint?: string;
 };
 
-/** List rows highlight their background on press — never scale. */
-export function Row({
-  title,
-  subtitle,
-  icon,
-  iconTone,
-  value,
-  accessory,
-  chevron = true,
-  destructive,
-  onPress,
-  accessibilityHint,
-}: RowProps) {
+/** List rows highlight their background on press, never scale. */
+export function Row({ title, subtitle, icon, value, accessory, chevron, destructive, onPress, accessibilityHint }: RowProps) {
   const { colors } = useTheme();
-  const showChevron = chevron && !!onPress;
   return (
     <Pressable
       onPress={onPress}
@@ -79,7 +88,7 @@ export function Row({
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityHint={accessibilityHint}
       style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.fill }]}>
-      {icon && <IconWell name={icon} tone={destructive ? 'danger' : iconTone} />}
+      {icon && <RowIcon name={icon} color={destructive ? colors.danger : undefined} />}
       <View style={styles.rowText}>
         <Text variant="callout" weight="500" color={destructive ? 'danger' : 'label'} numberOfLines={2}>
           {title}
@@ -96,25 +105,26 @@ export function Row({
         </Text>
       ) : null}
       {accessory}
-      {showChevron && <Icon name="chevronRight" size={14} color={colors.label3} />}
+      {chevron && onPress && <Icon name="chevronRight" size={14} color={colors.label3} />}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   list: { borderRadius: radius.card, borderCurve: 'continuous', overflow: 'hidden' },
-  separator: { height: StyleSheet.hairlineWidth, marginLeft: space.lg + 36 + space.md },
+  separator: { height: StyleSheet.hairlineWidth },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.md,
     paddingHorizontal: space.lg,
     paddingVertical: space.md,
-    minHeight: 60,
+    minHeight: 56,
   },
+  rowIcon: { width: ICON_COLUMN, alignItems: 'center' },
   rowText: { flex: 1, gap: 2 },
   well: {
-    borderRadius: radius.well,
+    borderRadius: radius.card,
     borderCurve: 'continuous',
     alignItems: 'center',
     justifyContent: 'center',

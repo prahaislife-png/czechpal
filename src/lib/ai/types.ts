@@ -1,6 +1,17 @@
 import type { IconName } from '@/components/ui/icon';
 
-export type Category = 'housing' | 'utilities' | 'school' | 'government' | 'work' | 'finance' | 'other';
+export type Category =
+  | 'housing'
+  | 'utilities'
+  | 'school'
+  | 'government'
+  | 'work'
+  | 'finance'
+  | 'health'
+  | 'food'
+  | 'transport'
+  | 'personal'
+  | 'other';
 
 export const categoryLabels: Record<Category, string> = {
   housing: 'Housing',
@@ -9,8 +20,22 @@ export const categoryLabels: Record<Category, string> = {
   government: 'Government',
   work: 'Work',
   finance: 'Finance',
+  health: 'Health',
+  food: 'Food',
+  transport: 'Transport',
+  personal: 'Personal',
   other: 'Other',
 };
+
+/**
+ * What was scanned decides what the result shows:
+ * text = sign, menu, label, notice (translate + explain) · message = chat, SMS, email (reply)
+ * document = letter, bill, form (verdict, steps, deadlines, reply)
+ */
+export type TextKind = 'text' | 'message' | 'document';
+
+/** One line of the source with its translation; signs, menus and labels read best this way. */
+export type TranslatedLine = { cs: string; en: string; note?: string };
 
 /** none = information only · action = something to do by a date · urgent = legal / official deadline */
 export type Urgency = 'none' | 'action' | 'urgent';
@@ -35,19 +60,27 @@ export type ReplyIntent = { id: string; label: string; description: string };
 
 /** The validated, structured result of analyzeDocument(). */
 export type Analysis = {
+  kind: TextKind;
+  /** Plain description of what was scanned: "Parking sign", "Lunch menu", "Message from a neighbour". */
+  typeLabel: string;
   title: string;
   category: Category;
-  sender: string;
-  verdict: { urgency: Urgency; label: string; detail?: string };
+  /** Who it is from, when that is knowable (letters, messages). */
+  sender?: string;
+  /** The one-line answer to "what does this mean for me?". Omitted when nothing applies (a menu). */
+  verdict?: { urgency: Urgency; label: string; detail?: string };
   inShort: string;
+  /** Line-by-line translation for short texts (signs, menus, labels). */
+  lines?: TranslatedLine[];
   meaning: string[];
   keyFacts: KeyFact[];
   nextSteps: NextStep[];
-  /** Things the user might expect the document to say but it doesn't. */
+  /** Things the user might expect the text to say but it doesn't. */
   notStated: string[];
-  /** Immigration, legal or financial matters that need official confirmation. */
-  officialMatter: boolean;
+  /** Matters that need confirmation from an office or a professional. */
+  caution?: 'official' | 'medical';
   translation: string;
+  /** Empty when replying makes no sense (signs, menus, labels). */
   replyIntents: ReplyIntent[];
 };
 

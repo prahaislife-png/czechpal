@@ -53,7 +53,16 @@ const glyphs = {
   government: ['building.columns', 'account_balance'],
   work: ['briefcase', 'work'],
   finance: ['creditcard', 'credit_card'],
+  health: ['cross.case', 'medical_services'],
+  food: ['fork.knife', 'restaurant'],
+  transport: ['car', 'directions_car'],
+  personal: ['bubble.left.and.bubble.right', 'forum'],
   other: ['doc.text', 'description'],
+  viewfinder: ['viewfinder', 'center_focus_strong'],
+  flash: ['bolt.fill', 'flash_on'],
+  flashOff: ['bolt.slash', 'flash_off'],
+  keyboard: ['keyboard', 'keyboard'],
+  settings: ['gearshape', 'settings'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 export type IconName = keyof typeof glyphs;

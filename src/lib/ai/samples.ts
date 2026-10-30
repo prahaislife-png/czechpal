@@ -2,8 +2,8 @@ import type { Analysis, Category } from './types';
 
 /**
  * Demo content. Fictional senders, accounts and reference numbers.
- * Replies are composed from a body per intent so tone changes only the frame,
- * never the facts.
+ * Replies are composed from a body per intent so tone changes only the frame, never the facts.
+ * English UI strings avoid dashes; Czech source text and Czech drafts keep Czech typography.
  */
 
 type Bilingual = { cs: string; en: string };
@@ -12,9 +12,8 @@ type ReplyTemplate = { body: Bilingual; short: Bilingual };
 
 export type Sample = {
   id: string;
-  /** Shown in "Try an example". */
+  /** Shown in "Try it on". */
   label: string;
-  hint: string;
   category: Category;
   keywords: string[];
   original: string;
@@ -24,10 +23,210 @@ export type Sample = {
   replies: Record<string, ReplyTemplate>;
 };
 
+/* ───────────── Everyday text ───────────── */
+
+const parking: Sample = {
+  id: 'parking',
+  label: 'Street sign',
+  category: 'transport',
+  keywords: ['zákaz stání', 'zásobování', 'parkování', 'zóna'],
+  original: `ZÁKAZ STÁNÍ
+Po–Pá 7–18 h
+MIMO VOZIDEL ZÁSOBOVÁNÍ
+Platí od 1. 11. 2026`,
+  analysis: {
+    kind: 'text',
+    typeLabel: 'Parking sign',
+    title: 'No parking on weekdays',
+    category: 'transport',
+    verdict: { urgency: 'action', label: 'Don’t park here weekdays 7:00 to 18:00', detail: 'Delivery vehicles are the exception' },
+    inShort: 'You can’t park here Monday to Friday between 7:00 and 18:00. Evenings and weekends are fine.',
+    lines: [
+      { cs: 'ZÁKAZ STÁNÍ', en: 'No standing', note: 'You may stop briefly to drop someone off, but not leave the car.' },
+      { cs: 'Po–Pá 7–18 h', en: 'Monday to Friday, 7:00 to 18:00' },
+      { cs: 'MIMO VOZIDEL ZÁSOBOVÁNÍ', en: 'Except delivery vehicles' },
+      { cs: 'Platí od 1. 11. 2026', en: 'Valid from 1 November 2026' },
+    ],
+    meaning: [
+      '“Zákaz stání” is stricter than no parking: you can’t wait here with the engine off either.',
+      'Outside those hours, and all weekend, the restriction doesn’t apply.',
+      'Cars parked here during the hours can be fined or towed.',
+    ],
+    keyFacts: [
+      { id: 'when', label: 'Applies', value: 'Mon to Fri, 7:00 to 18:00', icon: 'clock', evidence: 'Po–Pá 7–18 h' },
+      { id: 'except', label: 'Exception', value: 'Delivery vehicles', icon: 'transport', evidence: 'MIMO VOZIDEL ZÁSOBOVÁNÍ' },
+      { id: 'from', label: 'Valid from', value: '1 November 2026', icon: 'calendar', evidence: 'Platí od 1. 11. 2026' },
+    ],
+    nextSteps: [],
+    notStated: ['Whether residents with a parking card are exempt'],
+    translation: `NO STANDING
+Monday to Friday, 7:00 to 18:00
+EXCEPT DELIVERY VEHICLES
+Valid from 1 Nov 2026`,
+    replyIntents: [],
+  },
+  replies: {},
+};
+
+const menu: Sample = {
+  id: 'menu',
+  label: 'Lunch menu',
+  category: 'food',
+  keywords: ['polední menu', 'polévka', 'knedlík', 'řízek', 'menu'],
+  original: `POLEDNÍ MENU
+Po–Pá 11:00–14:00
+
+Polévka: česnečka se sýrem a krutony
+
+1. Svíčková na smetaně, houskový knedlík  169 Kč
+2. Smažený sýr, hranolky, tatarská omáčka  155 Kč
+3. Kuřecí řízek, bramborový salát  159 Kč
+
+K menu polévka zdarma.`,
+  analysis: {
+    kind: 'text',
+    typeLabel: 'Lunch menu',
+    title: 'Weekday lunch menu',
+    category: 'food',
+    inShort: 'A set lunch with three mains from 155 to 169 Kč. Garlic soup comes free with any of them.',
+    lines: [
+      { cs: 'Česnečka se sýrem a krutony', en: 'Garlic soup with cheese and croutons', note: 'Free with every main' },
+      { cs: 'Svíčková na smetaně, houskový knedlík', en: 'Beef sirloin in cream sauce, bread dumplings', note: '169 Kč · the classic Czech dish' },
+      { cs: 'Smažený sýr, hranolky, tatarská omáčka', en: 'Fried cheese, fries, tartar sauce', note: '155 Kč · the vegetarian option' },
+      { cs: 'Kuřecí řízek, bramborový salát', en: 'Chicken schnitzel, potato salad', note: '159 Kč' },
+    ],
+    meaning: [
+      'Polední menu is a cheaper weekday set lunch, served only at lunchtime.',
+      'If you want to try one Czech dish, svíčková is the one.',
+      'Smažený sýr is the only option without meat.',
+    ],
+    keyFacts: [
+      { id: 'hours', label: 'Served', value: 'Mon to Fri, 11:00 to 14:00', icon: 'clock', evidence: 'Po–Pá 11:00–14:00' },
+      { id: 'price', label: 'Mains', value: '155 to 169 Kč, soup included', icon: 'money', evidence: 'K menu polévka zdarma.' },
+    ],
+    nextSteps: [],
+    notStated: ['Allergens', 'Whether you can pay by card'],
+    translation: `LUNCH MENU
+Monday to Friday, 11:00 to 14:00
+
+Soup: garlic soup with cheese and croutons
+
+1. Beef sirloin in cream sauce, bread dumplings  169 CZK
+2. Fried cheese, fries, tartar sauce  155 CZK
+3. Chicken schnitzel, potato salad  159 CZK
+
+Soup free with the menu.`,
+    replyIntents: [],
+  },
+  replies: {},
+};
+
+const medicine: Sample = {
+  id: 'medicine',
+  label: 'Medicine label',
+  category: 'health',
+  keywords: ['tablet', 'užívejte', 'denně', 'dávkování', 'dětí'],
+  original: `Dávkování: 1 tableta 3× denně po jídle.
+Nepřekračujte 6 tablet za 24 hodin.
+Mezi dávkami dodržujte odstup nejméně 4 hodiny.
+Uchovávejte mimo dohled a dosah dětí.`,
+  analysis: {
+    kind: 'text',
+    typeLabel: 'Medicine label',
+    title: 'Dosage instructions',
+    category: 'health',
+    verdict: { urgency: 'action', label: '1 tablet, 3 times a day, after food', detail: 'Never more than 6 in 24 hours' },
+    inShort: 'Take one tablet three times a day after eating, at least 4 hours apart. Don’t take more than 6 in a day.',
+    lines: [
+      { cs: 'Dávkování: 1 tableta 3× denně po jídle.', en: 'Dosage: 1 tablet 3 times a day after meals.' },
+      { cs: 'Nepřekračujte 6 tablet za 24 hodin.', en: 'Do not exceed 6 tablets in 24 hours.' },
+      { cs: 'Mezi dávkami dodržujte odstup nejméně 4 hodiny.', en: 'Keep at least 4 hours between doses.' },
+      { cs: 'Uchovávejte mimo dohled a dosah dětí.', en: 'Keep out of the sight and reach of children.' },
+    ],
+    meaning: ['“Po jídle” means after a meal, not on an empty stomach.', 'The maximum of 6 tablets is a safety limit, not a target.'],
+    keyFacts: [
+      { id: 'dose', label: 'Dose', value: '1 tablet, 3 times a day', icon: 'health', evidence: '1 tableta 3× denně po jídle' },
+      { id: 'max', label: 'Maximum', value: '6 tablets in 24 hours', icon: 'alert', evidence: 'Nepřekračujte 6 tablet za 24 hodin' },
+      { id: 'gap', label: 'Between doses', value: 'At least 4 hours', icon: 'clock', evidence: 'odstup nejméně 4 hodiny' },
+    ],
+    nextSteps: [],
+    notStated: ['How many days you can take it for', 'Whether it is safe with your other medicines'],
+    caution: 'medical',
+    translation: `Dosage: 1 tablet 3 times a day after meals.
+Do not exceed 6 tablets in 24 hours.
+Keep at least 4 hours between doses.
+Keep out of the sight and reach of children.`,
+    replyIntents: [],
+  },
+  replies: {},
+};
+
+const neighbour: Sample = {
+  id: 'neighbour',
+  label: 'Chat message',
+  category: 'personal',
+  keywords: ['vrtačk', 'patra', 'půjčila', 'sobotu', 'ahoj'],
+  original: `Dobrý den, tady Petra ze 3. patra. Nevadilo by vám, kdybych si v sobotu půjčila vaši vrtačku? V neděli večer ji vrátím. Moc děkuji!`,
+  analysis: {
+    kind: 'message',
+    typeLabel: 'Message from a neighbour',
+    title: 'Petra asks to borrow your drill',
+    category: 'personal',
+    sender: 'Petra, 3rd floor',
+    verdict: { urgency: 'none', label: 'A friendly favour', detail: 'Reply when it suits you' },
+    inShort: 'Your neighbour Petra would like to borrow your drill on Saturday and bring it back on Sunday evening.',
+    meaning: [
+      'She writes politely, using “vy”, so a polite reply fits.',
+      'Saying no is completely normal; offering another day is a kind touch.',
+    ],
+    keyFacts: [
+      { id: 'when', label: 'Borrow', value: 'Saturday', icon: 'calendar', evidence: 'v sobotu' },
+      { id: 'back', label: 'Return', value: 'Sunday evening', icon: 'clock', evidence: 'V neděli večer ji vrátím' },
+    ],
+    nextSteps: [],
+    notStated: ['What time on Saturday she would come'],
+    translation:
+      'Hello, it’s Petra from the 3rd floor. Would you mind if I borrowed your drill on Saturday? I’ll bring it back on Sunday evening. Thank you very much!',
+    replyIntents: [
+      { id: 'yes', label: 'Yes, happy to', description: 'Lend it and say she can drop by.' },
+      { id: 'when', label: 'Yes, but when?', description: 'Ask what time she will come.' },
+      { id: 'no', label: 'Sorry, not this weekend', description: 'Decline kindly and offer next week.' },
+    ],
+  },
+  signature: { cs: '[Vaše jméno]', en: '[Your name]' },
+  replies: {
+    yes: {
+      body: {
+        cs: 'samozřejmě, vrtačku si klidně půjčte. Stavte se v sobotu, kdy se vám to hodí.',
+        en: 'of course, feel free to borrow the drill. Drop by on Saturday whenever suits you.',
+      },
+      short: { cs: 'jasně, klidně si ji v sobotu vyzvedněte.', en: 'sure, feel free to pick it up on Saturday.' },
+    },
+    when: {
+      body: {
+        cs: 'vrtačku vám klidně půjčím. V kolik hodin byste si pro ni v sobotu přišla?',
+        en: 'I’m happy to lend you the drill. What time on Saturday would you come for it?',
+      },
+      short: { cs: 'jasně. V kolik hodin si pro ni přijdete?', en: 'sure. What time will you come for it?' },
+    },
+    no: {
+      body: {
+        cs: 'to mě mrzí, ale tento víkend vrtačku potřebuji. Příští týden by to klidně šlo.',
+        en: 'I’m sorry, but I need the drill this weekend. Next week would be fine.',
+      },
+      short: {
+        cs: 'bohužel ji tento víkend potřebuji, příští týden ale klidně.',
+        en: 'unfortunately I need it this weekend, but next week is fine.',
+      },
+    },
+  },
+};
+
+/* ───────────── Letters and documents ───────────── */
+
 const water: Sample = {
   id: 'water',
   label: 'Landlord notice',
-  hint: 'Water shut-off in the building',
   category: 'housing',
   keywords: ['vody', 'voda', 'vodovod', 'nájemník', 'správa domu'],
   original: `Vážení nájemníci,
@@ -41,20 +240,21 @@ Děkujeme za pochopení.
 Správa domu
 Vinohradská 1520/48, Praha 2`,
   analysis: {
+    kind: 'document',
+    typeLabel: 'Notice from building management',
     title: 'Water shut-off notice',
     category: 'housing',
     sender: 'Building management',
     verdict: { urgency: 'none', label: 'No action needed', detail: 'This is an information notice' },
-    inShort:
-      'Water in your building will be off on Thursday 12 November, 8:00⁠–⁠14:00, for planned pipe repairs. You don’t need to reply.',
+    inShort: 'Water in your building will be off on Thursday 12 November, 8:00 to 14:00, for planned repairs. You don’t need to reply.',
     meaning: [
       'Both cold and hot water will be off in the whole building.',
-      'It’s planned maintenance — nothing is wrong with your flat.',
+      'It’s planned maintenance. Nothing is wrong with your flat.',
       'Water may look cloudy for a moment afterwards. Let it run briefly.',
     ],
     keyFacts: [
       { id: 'date', label: 'Date', value: 'Thursday 12 Nov 2026', icon: 'calendar', evidence: 've čtvrtek 12. listopadu 2026' },
-      { id: 'time', label: 'Time', value: '8:00 – 14:00', icon: 'clock', evidence: 'Od 8:00 do 14:00' },
+      { id: 'time', label: 'Time', value: '8:00 to 14:00', icon: 'clock', evidence: 'Od 8:00 do 14:00' },
       { id: 'affects', label: 'Affects', value: 'Cold and hot water, whole building', icon: 'water', evidence: 'v celém domě přerušena dodávka studené i teplé vody' },
       { id: 'from', label: 'From', value: 'Building management, Vinohradská 48', icon: 'sender', evidence: 'Správa domu' },
     ],
@@ -63,12 +263,11 @@ Vinohradská 1520/48, Praha 2`,
       { id: 'run', title: 'Let the tap run after 14:00', detail: 'Only if the water looks cloudy.', kind: 'optional' },
     ],
     notStated: ['Whether the repair could run late', 'Who to contact with questions'],
-    officialMatter: false,
     translation: `Dear tenants,
 
 We would like to inform you that on Thursday 12 November 2026 a planned repair of the water pipes will take place in the building. From 8:00 to 14:00 the supply of cold and hot water will be interrupted in the entire building.
 
-We recommend preparing the water you need in advance. When the supply is restored, the water may be briefly cloudy – please let it run for a while.
+We recommend preparing the water you need in advance. When the supply is restored, the water may be briefly cloudy, so please let it run for a while.
 
 Thank you for your understanding.
 
@@ -111,7 +310,6 @@ Vinohradská 1520/48, Prague 2`,
 const electricity: Sample = {
   id: 'electricity',
   label: 'Electricity bill',
-  hint: 'Yearly settlement with money owed',
   category: 'utilities',
   keywords: ['vyúčtování', 'elektřin', 'nedoplatek', 'záloh', 'odběrné místo'],
   original: `Vyúčtování elektřiny za období 1. 11. 2025 – 31. 10. 2026
@@ -132,12 +330,13 @@ S pozdravem
 Zákaznický servis
 Elektro Vltava a. s.`,
   analysis: {
+    kind: 'document',
+    typeLabel: 'Yearly electricity bill',
     title: 'Electricity bill',
     category: 'utilities',
     sender: 'Elektro Vltava, your supplier',
     verdict: { urgency: 'action', label: 'Pay 1 840 Kč by 20 Nov', detail: 'Bank transfer with the variable symbol' },
-    inShort:
-      'Your yearly electricity bill: you used more than your advances covered, so you owe 1 840 Kč by Friday 20 November.',
+    inShort: 'You used more electricity than your monthly advances covered, so you owe 1 840 Kč by Friday 20 November.',
     meaning: [
       'You pay monthly advances (zálohy). Once a year the supplier compares them with what you actually used.',
       'You used 14 860 Kč of electricity but paid 13 020 Kč in advances.',
@@ -154,7 +353,7 @@ Elektro Vltava a. s.`,
       {
         id: 'pay',
         title: 'Pay 1 840 Kč by 20 November',
-        detail: 'Transfer to 123456789/0300 with variable symbol 5512048873 — that’s how they match your payment.',
+        detail: 'Transfer to 123456789/0300 with variable symbol 5512048873. The symbol is how they match your payment.',
         kind: 'required',
       },
       {
@@ -163,23 +362,22 @@ Elektro Vltava a. s.`,
         detail: 'If you pay advances by standing order, change it before December.',
         kind: 'required',
       },
-      { id: 'meter', title: 'Compare the meter reading with your meter', detail: 'Bills are sometimes based on an estimate.', kind: 'optional' },
+      { id: 'meter', title: 'Compare the reading with your meter', detail: 'Bills are sometimes based on an estimate.', kind: 'optional' },
     ],
     notStated: ['Whether the meter reading was real or estimated', 'What happens if you pay late'],
-    officialMatter: false,
-    translation: `Electricity bill for the period 1 Nov 2025 – 31 Oct 2026
+    translation: `Electricity bill for 1 Nov 2025 to 31 Oct 2026
 
 Dear customer,
 
 Please find enclosed the annual settlement of the electricity supply for the supply point Korunní 812/14, Prague 2.
 
-Total price for the period: 14,860 CZK
-Advances paid: 13,020 CZK
-Amount owed: 1,840 CZK
+Total price for the period: 14 860 CZK
+Advances paid: 13 020 CZK
+Amount owed: 1 840 CZK
 
 Please pay the amount owed by 20 Nov 2026 to account 123456789/0300, variable symbol 5512048873.
 
-From December 2026 your monthly advance increases from 1,085 CZK to 1,240 CZK.
+From December 2026 your monthly advance increases from 1 085 CZK to 1 240 CZK.
 
 Kind regards
 Customer service
@@ -194,31 +392,31 @@ Elektro Vltava a. s.`,
     instalments: {
       body: {
         cs: 'děkuji za zaslané vyúčtování za období 1. 11. 2025 – 31. 10. 2026. Prosím o možnost uhradit nedoplatek ve výši 1 840 Kč ve dvou měsíčních splátkách. Dejte mi prosím vědět, zda je to možné a jaké platební údaje mám použít.\n\nOdběrné místo: Korunní 812/14, Praha 2',
-        en: 'thank you for the bill for 1 Nov 2025 – 31 Oct 2026. Could I please pay the outstanding 1,840 CZK in two monthly instalments? Please let me know if this is possible and which payment details I should use.\n\nSupply point: Korunní 812/14, Prague 2',
+        en: 'thank you for the bill for 1 Nov 2025 to 31 Oct 2026. Could I please pay the outstanding 1 840 CZK in two monthly instalments? Please let me know if this is possible and which payment details I should use.\n\nSupply point: Korunní 812/14, Prague 2',
       },
       short: {
         cs: 'prosím o možnost uhradit nedoplatek 1 840 Kč ve dvou splátkách. Odběrné místo: Korunní 812/14, Praha 2.',
-        en: 'please may I pay the 1,840 CZK balance in two instalments? Supply point: Korunní 812/14, Prague 2.',
+        en: 'please may I pay the 1 840 CZK balance in two instalments? Supply point: Korunní 812/14, Prague 2.',
       },
     },
     explain: {
       body: {
         cs: 'děkuji za zaslané vyúčtování. Prosím o vysvětlení, jak byla vypočtena celková cena 14 860 Kč, a zda vyúčtování vychází ze skutečného odečtu elektroměru, nebo z odhadu.\n\nOdběrné místo: Korunní 812/14, Praha 2',
-        en: 'thank you for the bill. Could you please explain how the total price of 14,860 CZK was calculated, and whether it is based on an actual meter reading or an estimate?\n\nSupply point: Korunní 812/14, Prague 2',
+        en: 'thank you for the bill. Could you please explain how the total price of 14 860 CZK was calculated, and whether it is based on an actual meter reading or an estimate?\n\nSupply point: Korunní 812/14, Prague 2',
       },
       short: {
         cs: 'prosím o vysvětlení výpočtu částky 14 860 Kč. Vychází ze skutečného odečtu, nebo z odhadu?',
-        en: 'please explain how the 14,860 CZK was calculated. Is it based on an actual reading or an estimate?',
+        en: 'please explain how the 14 860 CZK was calculated. Is it based on an actual reading or an estimate?',
       },
     },
     advance: {
       body: {
         cs: 'děkuji za zaslané vyúčtování. Nedoplatek uhradím v termínu. Prosím o ponechání měsíční zálohy ve výši 1 085 Kč, protože očekávám nižší spotřebu.\n\nOdběrné místo: Korunní 812/14, Praha 2',
-        en: 'thank you for the bill. I will pay the outstanding amount on time. Could you please keep my monthly advance at 1,085 CZK, as I expect lower consumption?\n\nSupply point: Korunní 812/14, Prague 2',
+        en: 'thank you for the bill. I will pay the outstanding amount on time. Could you please keep my monthly advance at 1 085 CZK, as I expect lower consumption?\n\nSupply point: Korunní 812/14, Prague 2',
       },
       short: {
         cs: 'nedoplatek uhradím včas. Prosím o ponechání zálohy 1 085 Kč měsíčně.',
-        en: 'I’ll pay the balance on time. Please keep my advance at 1,085 CZK a month.',
+        en: 'I’ll pay the balance on time. Please keep my advance at 1 085 CZK a month.',
       },
     },
   },
@@ -226,8 +424,7 @@ Elektro Vltava a. s.`,
 
 const school: Sample = {
   id: 'school',
-  label: 'School message',
-  hint: 'Class trip — payment and consent',
+  label: 'School note',
   category: 'school',
   keywords: ['rodiče', 'exkurz', 'výlet', 'žáci', 'třídní', 'škol'],
   original: `Vážení rodiče,
@@ -242,12 +439,13 @@ Děkuji.
 Mgr. Jana Horáková
 třídní učitelka 3. B`,
   analysis: {
+    kind: 'document',
+    typeLabel: 'Note from your child’s teacher',
     title: 'School trip to the Technical Museum',
     category: 'school',
     sender: 'Class teacher, 3. B',
     verdict: { urgency: 'action', label: 'Pay and sign by Mon 16 Nov', detail: '350 Kč and the consent form' },
-    inShort:
-      'Class 3. B is visiting the National Technical Museum on Wednesday 18 November. Pay 350 Kč and sign the consent form by Monday 16 November.',
+    inShort: 'Class 3. B is visiting the National Technical Museum on Wednesday 18 November. Pay 350 Kč and sign the consent form by Monday.',
     meaning: [
       'The trip is during school hours: leaving at 8:15, back around 13:00.',
       '350 Kč covers transport and entry.',
@@ -255,17 +453,16 @@ třídní učitelka 3. B`,
     ],
     keyFacts: [
       { id: 'date', label: 'Trip', value: 'Wednesday 18 Nov 2026', icon: 'calendar', evidence: 've středu 18. listopadu 2026' },
-      { id: 'time', label: 'Times', value: 'Leaves 8:15 · back about 13:00', icon: 'clock', evidence: 'Odjezd je v 8:15 od školy, návrat kolem 13:00' },
+      { id: 'time', label: 'Times', value: 'Leaves 8:15, back about 13:00', icon: 'clock', evidence: 'Odjezd je v 8:15 od školy, návrat kolem 13:00' },
       { id: 'cost', label: 'Cost', value: '350 Kč', icon: 'money', evidence: 'Cena exkurze je 350 Kč' },
       { id: 'due', label: 'Deadline', value: 'Monday 16 Nov', icon: 'alert', evidence: 'do pondělí 16. 11.' },
     ],
     nextSteps: [
-      { id: 'sign', title: 'Sign the consent form', detail: 'It came with the letter — your child brings it back to school.', kind: 'required' },
+      { id: 'sign', title: 'Sign the consent form', detail: 'It came with the letter. Your child brings it back to school.', kind: 'required' },
       { id: 'pay', title: 'Pay 350 Kč by Monday', detail: 'Cash in an envelope, or a transfer to the school’s account.', kind: 'required' },
       { id: 'pack', title: 'Pack a snack, a drink and suitable clothes', kind: 'optional' },
     ],
     notStated: ['The school’s account number', 'What to write in the payment message'],
-    officialMatter: false,
     translation: `Dear parents,
 
 On Wednesday 18 November 2026 pupils of class 3. B will go on an excursion to the National Technical Museum. Departure is at 8:15 from the school, return around 13:00.
@@ -317,7 +514,6 @@ Class teacher, 3. B`,
 const residence: Sample = {
   id: 'residence',
   label: 'Government letter',
-  hint: 'Residence permit — documents requested',
   category: 'government',
   keywords: ['ministerstvo', 'pobyt', 'žádost', 'výzva', 'odbor azylové', 'lhůt'],
   original: `Ministerstvo vnitra
@@ -339,20 +535,21 @@ Doklady lze předložit osobně na pracovišti odboru nebo zaslat poštou.
 
 Nebudou-li vady ve stanovené lhůtě odstraněny, bude řízení zastaveno.`,
   analysis: {
+    kind: 'document',
+    typeLabel: 'Letter from the Ministry of the Interior',
     title: 'Residence permit letter',
     category: 'government',
     sender: 'Ministry of the Interior (OAMP)',
     verdict: { urgency: 'urgent', label: 'Respond within 15 days', detail: 'Counted from the day you received it' },
-    inShort:
-      'The Ministry needs two more documents for your residence extension. Send them within 15 days of receiving this letter, or the application will be stopped.',
+    inShort: 'The Ministry needs two more documents for your residence extension. Send them within 15 days of receiving this letter, or the application will be stopped.',
     meaning: [
-      'Your application isn’t refused — it’s incomplete.',
+      'Your application isn’t refused. It’s incomplete.',
       'The 15 days count from the day the letter was delivered to you, not the date it was written.',
       'If you miss the deadline, the proceedings are stopped and you would have to apply again.',
     ],
     keyFacts: [
       { id: 'deadline', label: 'Deadline', value: '15 days from delivery', icon: 'alert', evidence: 'Ve lhůtě 15 dnů ode dne doručení této výzvy' },
-      { id: 'docs', label: 'Documents needed', value: 'Proof of accommodation · employer’s salary confirmation', icon: 'document', evidence: 'doklad o zajištění ubytování … potvrzení zaměstnavatele o výši měsíční mzdy' },
+      { id: 'docs', label: 'Documents needed', value: 'Proof of accommodation, employer’s salary confirmation', icon: 'document', evidence: 'doklad o zajištění ubytování … potvrzení zaměstnavatele o výši měsíční mzdy' },
       { id: 'ref', label: 'Reference number', value: 'OAM-12345-7/DP-2026', icon: 'number', evidence: 'Č. j.: OAM-12345-7/DP-2026' },
       { id: 'how', label: 'How to submit', value: 'In person at an OAMP office, or by post', icon: 'location', evidence: 'předložit osobně na pracovišti odboru nebo zaslat poštou' },
     ],
@@ -371,11 +568,8 @@ Nebudou-li vady ve stanovené lhůtě odstraněny, bude řízení zastaveno.`,
         kind: 'required',
       },
     ],
-    notStated: [
-      'The date you received the letter — check the envelope or delivery slip',
-      'Whether originals or copies are required',
-    ],
-    officialMatter: true,
+    notStated: ['The date you received the letter. Check the envelope or delivery slip', 'Whether originals or copies are required'],
+    caution: 'official',
     translation: `Ministry of the Interior
 Department for Asylum and Migration Policy
 
@@ -436,7 +630,8 @@ If the deficiencies are not remedied within the set deadline, the proceedings wi
   },
 };
 
-export const samples: Sample[] = [water, electricity, school, residence];
+/** Ordered for "Try it on": everyday text first, letters after. */
+export const samples: Sample[] = [parking, menu, neighbour, medicine, water, electricity, school, residence];
 
 export const sampleById = (id?: string) => samples.find((s) => s.id === id);
 

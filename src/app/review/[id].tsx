@@ -7,18 +7,27 @@ import { DocumentPaper } from '@/components/document-paper';
 import { Badge } from '@/components/ui/badge';
 import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
-import { Card, SectionHeader } from '@/components/ui/card';
+import { SectionHeader } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
-import { IconWell } from '@/components/ui/list';
+import { List } from '@/components/ui/list';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { categoryLabels, type Category } from '@/lib/ai';
-import { confirm } from '@/lib/dialogs';
 import { useCase, useRemainingAnalyses, useStore, type CaseItem } from '@/store/cases';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
-const topics: Category[] = ['housing', 'utilities', 'school', 'government', 'work', 'finance'];
+const topics: Category[] = [
+  'transport',
+  'food',
+  'health',
+  'housing',
+  'utilities',
+  'school',
+  'government',
+  'work',
+  'personal',
+];
 
 export default function ReviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,16 +40,7 @@ export default function ReviewScreen() {
 
   if (!item) return <Redirect href="/" />;
 
-  const explain = async () => {
-    if (remaining === 0) {
-      const reset = await confirm({
-        title: 'You’ve used this month’s free explanations',
-        message: 'CzechReply Pro with unlimited explanations is coming soon. In this demo you can reset your allowance.',
-        confirmLabel: 'Reset demo allowance',
-      });
-      if (!reset) return;
-      resetUsage();
-    }
+  const explain = () => {
     analyze(item.id);
     // Replace: coming back to this screen after the analysis would be stale.
     router.replace({ pathname: '/case/[id]', params: { id: item.id } });
@@ -53,6 +53,9 @@ export default function ReviewScreen() {
 
         <View>
           <SectionHeader title="What is it about? (optional)" />
+          <Text variant="footnote" color="label2" style={styles.hintCopy}>
+            A topic helps when the photo is hard to read.
+          </Text>
           <View style={styles.chips}>
             {topics.map((topic) => (
               <Chip
@@ -67,10 +70,24 @@ export default function ReviewScreen() {
       </ScrollView>
 
       <BottomBar>
-        <Button label="Explain this message" onPress={explain} />
-        <Text variant="footnote" color="label3" align="center" tabular>
-          {remaining === 1 ? '1 free explanation left this month' : `${remaining} free explanations left this month`}
-        </Text>
+        {remaining > 0 ? (
+          <>
+            <Button label="Explain" onPress={explain} />
+            <Text variant="footnote" color="label3" align="center" tabular>
+              {remaining === 1
+                ? '1 free explanation left this month'
+                : `${remaining} free explanations left this month`}
+            </Text>
+          </>
+        ) : (
+          // The allowance gate is inline state, not an alert.
+          <>
+            <Text variant="footnote" color="label2" align="center">
+              You’ve used this month’s free explanations. Pro with unlimited explanations is coming soon.
+            </Text>
+            <Button label="Reset demo allowance" variant="secondary" onPress={resetUsage} />
+          </>
+        )}
       </BottomBar>
     </View>
   );
@@ -102,17 +119,19 @@ function Preview({ item }: { item: CaseItem }) {
   }
   if (item.source === 'pdf') {
     return (
-      <Card style={styles.pdf}>
-        <IconWell name="pdf" tone="accent" size={48} />
-        <View style={styles.pdfText}>
-          <Text variant="headline" numberOfLines={2}>
-            {item.fileName ?? 'Document.pdf'}
-          </Text>
-          <Text variant="footnote" color="label2">
-            PDF · every page will be read
-          </Text>
+      <List>
+        <View style={styles.pdf}>
+          <Icon name="pdf" size={32} color={colors.accent} />
+          <View style={styles.pdfText}>
+            <Text variant="headline" numberOfLines={2}>
+              {item.fileName ?? 'Document.pdf'}
+            </Text>
+            <Text variant="footnote" color="label2">
+              PDF · every page will be read
+            </Text>
+          </View>
         </View>
-      </Card>
+      </List>
     );
   }
   return (
@@ -145,8 +164,9 @@ const styles = StyleSheet.create({
   image: { width: '100%', aspectRatio: 3 / 4, maxHeight: 420, borderRadius: radius.tile },
   preview: { gap: space.md },
   detected: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.xs },
-  pdf: { flexDirection: 'row', alignItems: 'center', gap: space.lg },
+  pdf: { flexDirection: 'row', alignItems: 'center', gap: space.lg, padding: space.xl },
   pdfText: { flex: 1, gap: 2 },
+  hintCopy: { paddingHorizontal: space.xs, marginTop: -space.xs, marginBottom: space.md },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   chip: {
     flexDirection: 'row',

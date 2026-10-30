@@ -1,0 +1,53 @@
+{
+  "tool": "mobile-redesign-app",
+  "version": 2,
+  "date": "2026-10-30",
+  "passes": ["static (grep checklist + rubric)", "live (Expo web, 375x812, light + dark)"],
+  "delta": {
+    "designScore": "B -> A",
+    "slopScore": "A -> A",
+    "categories": { "navigation": "C -> A", "typography": "B -> A", "surfaces": "B -> A", "states": "A- -> A", "interaction": "A- -> A", "performance": "A- -> A", "copy": "A- -> A" },
+    "resolved": 12,
+    "new": 0
+  },
+  "designScore": "A",
+  "slopScore": "A",
+  "categories": {
+    "navigation": "A",
+    "screenAnatomy": "A",
+    "typography": "A",
+    "color": "A",
+    "surfaces": "A",
+    "states": "A",
+    "interaction": "A",
+    "forms": "A",
+    "performance": "A",
+    "copy": "A"
+  },
+  "findings": [
+    { "id": "FINDING-001", "impact": "high", "category": "navigation", "summary": "Deep-linked detail routes had no back stack", "status": "fixed", "fix": "unstable_settings anchor '(tabs)' in root layout" },
+    { "id": "FINDING-002", "impact": "high", "category": "navigation", "summary": "IA framed around letters only", "status": "fixed", "fix": "scan route, viewfinder Home, TextKind (text/message/document) driving adaptive results; 8 samples across signs, menus, labels, chats, letters" },
+    { "id": "FINDING-003", "impact": "medium", "category": "surfaces", "tell": 3, "summary": "Card-stack Analysis screen", "status": "fixed", "fix": "hero on the page, prose bullets without cards, flat inset-grouped lists only for steps/lines/facts" },
+    { "id": "FINDING-004", "impact": "medium", "category": "surfaces", "tell": 4, "summary": "Icon chip rows", "status": "fixed", "fix": "RowIcon: naked glyph at fixed 24pt width; IconWell restricted to empty/error heroes" },
+    { "id": "FINDING-005", "impact": "medium", "category": "copy", "tell": 33, "summary": "Dashes in English UI strings", "status": "fixed" },
+    { "id": "FINDING-006", "impact": "medium", "category": "states", "tell": 32, "summary": "Alerts for non-destructive info", "status": "fixed", "fix": "inline privacy copy, in-scanner permission states, inline copy errors, inline allowance gate; notify() removed" },
+    { "id": "FINDING-007", "impact": "medium", "category": "performance", "tell": 13, "summary": "History not virtualized", "status": "fixed", "fix": "SectionList" },
+    { "id": "FINDING-008", "impact": "medium", "category": "typography", "summary": "No font-scale bound on chrome text", "status": "fixed", "fix": "Text chrome prop -> maxFontSizeMultiplier 1.4 on buttons, badges, bar labels" },
+    { "id": "FINDING-009", "impact": "medium", "category": "typography", "summary": "Template title + gray subtitle rhythm", "status": "fixed", "fix": "Home opens on the viewfinder; Welcome headline stands alone" },
+    { "id": "FINDING-010", "impact": "medium", "category": "interaction", "summary": "No immersive scanner", "status": "fixed", "fix": "expo-camera fullScreenModal, primed permission, shutter haptic + flash, torch, Liquid Glass chrome on iOS 26" },
+    { "id": "FINDING-011", "impact": "polish", "category": "surfaces", "summary": "Three identical capture tiles", "status": "fixed", "fix": "one segmented source row" },
+    { "id": "FINDING-012", "impact": "polish", "category": "navigation", "tell": 15, "summary": "Chevron on a non-pushing row", "status": "fixed", "fix": "Row chevron is opt-in; only pushing rows use it" }
+  ],
+  "dismissed": [
+    "ScrollView+map in Home (examples: 8, recent: max 3), Case (fixed sections), Reply (intents: max 3), Review (topics: 9), Welcome (promises: 3): bounded static maps",
+    "Dashes inside Czech source text and Czech reply drafts: verbatim/target-language content where Czech typography uses en dashes for ranges",
+    "Alert in lib/dialogs.ts confirm(): used only for 'Delete' and 'Delete everything' (destructive confirmations)",
+    "Raw camera colours: tokenised as `camera` in theme/tokens.ts; the scanner is light-on-black in every theme by design"
+  ],
+  "unverified": [
+    "Live camera capture, torch and shutter haptic (web pane has no camera granted; needs a phone)",
+    "Liquid Glass rendering (iOS 26 device only; web shows the translucent fallback)",
+    "iOS/Android device checks 14.C: keyboard, splash, scroll perf, 1.3x font scale, edge-to-edge",
+    "Native tab bar and native headers (web preview uses the web fallback)"
+  ]
+}

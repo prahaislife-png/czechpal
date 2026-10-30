@@ -15,7 +15,6 @@ import { Segmented } from '@/components/ui/segmented';
 import { SkeletonLine } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
 import { ai, type ReplyDraft, type Tone } from '@/lib/ai';
-import { notify } from '@/lib/dialogs';
 import { useCase, useStore } from '@/store/cases';
 import { layout, motion, radius, space, type as ramp } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -39,6 +38,7 @@ export default function ReplyScreen() {
   const [draft, setDraft] = useState<ReplyDraft | null>(null);
   const [edited, setEdited] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
   // Web textareas don't auto-grow; native multiline inputs do with scrollEnabled={false}.
   const [editorHeight, setEditorHeight] = useState(EDITOR_MIN_HEIGHT);
   // Uncontrolled editor: edits live in a ref, the draft only seeds it.
@@ -80,13 +80,14 @@ export default function ReplyScreen() {
   // Optimistic: confirm on the same frame as the tap, roll back loudly if the write fails.
   const copy = async () => {
     setCopied(true);
+    setCopyError(false);
     if (process.env.EXPO_OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     try {
       await Clipboard.setStringAsync(text.current);
       useStore.getState().markReplied(item.id);
     } catch {
       setCopied(false);
-      notify('Couldn’t copy the reply', 'Select the text in the reply and copy it manually.');
+      setCopyError(true);
     }
   };
 
@@ -107,7 +108,7 @@ export default function ReplyScreen() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View>
           <SectionHeader title="What do you want to say?" />
-          <List>
+          <List inset={false}>
             {analysis.replyIntents.map((intent) => {
               const selected = intent.id === intentId;
               return (
@@ -198,7 +199,7 @@ export default function ReplyScreen() {
           </Card>
           {edited && (
             <Text variant="footnote" color="warning" style={styles.hint}>
-              You’ve edited the Czech — the English above may no longer match.
+              You’ve edited the Czech, so the English above may no longer match.
             </Text>
           )}
         </View>
@@ -211,6 +212,11 @@ export default function ReplyScreen() {
           onPress={copy}
           disabled={!current}
         />
+        {copyError && (
+          <Text variant="footnote" color="danger" align="center" accessibilityLiveRegion="polite">
+            Couldn’t copy. Select the reply text above and copy it from there.
+          </Text>
+        )}
         <Button label="Open in email" variant="plain" size="medium" icon="mail" onPress={email} disabled={!current} />
       </BottomBar>
     </KeyboardAvoidingView>

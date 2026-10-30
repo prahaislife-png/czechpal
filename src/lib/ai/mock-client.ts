@@ -21,7 +21,7 @@ export const mockClient: AIClient = {
   async analyzeDocument(input: AnalyzeInput): Promise<AnalyzeResult> {
     if (input.kind === 'text' && !input.sampleId && (input.text ?? '').trim().length < 20) {
       await wait(400);
-      throw new AnalyzeError('too_short', 'This message is too short to explain. Paste the whole message, including the greeting.');
+      throw new AnalyzeError('too_short', 'This text is too short to explain. Paste all of it, including any greeting or heading.');
     }
 
     await wait(ANALYZE_DURATION_MS);
@@ -34,6 +34,7 @@ export const mockClient: AIClient = {
       return { analysis: matched.analysis, originalText: input.text ?? matched.original, demo: 'matched', sampleId: matched.id };
     }
 
+    // A photo of an unknown text demos best as a street sign; a topic hint picks a closer sample.
     const fallback = samples.find((s) => s.category === input.hint) ?? samples[0];
     return { analysis: fallback.analysis, originalText: fallback.original, demo: 'sample', sampleId: fallback.id };
   },

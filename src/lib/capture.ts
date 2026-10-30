@@ -2,44 +2,53 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 
-import { notify } from '@/lib/dialogs';
 import { sampleById } from '@/lib/ai/samples';
 import { useStore } from '@/store/cases';
 
-const openReview = (id: string) => router.push({ pathname: '/review/[id]', params: { id } });
+/** Pickers create a draft and return its id (null when cancelled); callers decide how to navigate. */
 
-export async function captureWithCamera() {
-  const permission = await ImagePicker.requestCameraPermissionsAsync();
-  if (!permission.granted) {
-    notify('Camera access is off', 'Allow camera access in Settings to scan letters, or choose a photo instead.');
-    return;
-  }
-  const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.8 });
-  if (result.canceled) return;
-  openReview(useStore.getState().createDraft({ source: 'camera', imageUri: result.assets[0].uri }));
-}
-
-export async function pickFromLibrary() {
+export async function pickImage(): Promise<string | null> {
   const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
-  if (result.canceled) return;
-  openReview(useStore.getState().createDraft({ source: 'library', imageUri: result.assets[0].uri }));
+  if (result.canceled) return null;
+  return useStore.getState().createDraft({ source: 'library', imageUri: result.assets[0].uri });
 }
 
-export async function pickPdf() {
+export async function pickPdf(): Promise<string | null> {
   const result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf', copyToCacheDirectory: true });
-  if (result.canceled) return;
-  const file = result.assets[0];
-  openReview(useStore.getState().createDraft({ source: 'pdf', fileName: file.name }));
+  if (result.canceled) return null;
+  return useStore.getState().createDraft({ source: 'pdf', fileName: result.assets[0].name });
 }
 
-export function openExample(sampleId: string) {
-  const sample = sampleById(sampleId);
-  if (!sample) return;
-  openReview(
-    useStore.getState().createDraft({ source: 'example', sampleId, text: sample.original, hint: sample.category }),
-  );
+export function draftFromPhoto(uri: string) {
+  return useStore.getState().createDraft({ source: 'camera', imageUri: uri });
 }
 
-export function submitPastedText(text: string) {
+export function draftFromText(text: string) {
   return useStore.getState().createDraft({ source: 'text', text });
+}
+
+export function draftFromExample(sampleId: string) {
+  const sample = sampleById(sampleId);
+  if (!sample) return null;
+  return useStore.getState().createDraft({ source: 'example', sampleId, text: sample.original, hint: sample.category });
+}
+
+const review = (id: string) => ({ pathname: '/review/[id]', params: { id } }) as const;
+
+export const openReview = (id: string | null) => {
+  if (id) router.push(review(id));
+};
+
+/**
+ * From a modal (scanner, paste): close it, then continue in the main stack.
+ * Opened from a deep link there is nothing underneath to dismiss to, so take its place instead.
+ */
+export function leaveModalForReview(id: string | null) {
+  if (!id) return;
+  if (router.canDismiss()) {
+    router.dismiss();
+    router.push(review(id));
+  } else {
+    router.replace(review(id));
+  }
 }

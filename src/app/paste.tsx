@@ -1,5 +1,5 @@
 import * as Clipboard from 'expo-clipboard';
-import { router, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
@@ -7,7 +7,7 @@ import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
 import { HeaderTextButton } from '@/components/ui/header-button';
 import { Text } from '@/components/ui/text';
-import { submitPastedText } from '@/lib/capture';
+import { draftFromText, leaveModalForReview } from '@/lib/capture';
 import { layout, radius, space, type as ramp } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
@@ -35,16 +35,7 @@ export default function PasteScreen() {
   };
 
   const submit = () => {
-    const id = submitPastedText(text.current.trim());
-    const review = { pathname: '/review/[id]', params: { id } } as const;
-    // Close the sheet, then continue in the main stack. Opened from a deep link there is
-    // nothing underneath to dismiss to, so take its place instead.
-    if (router.canDismiss()) {
-      router.dismiss();
-      router.push(review);
-    } else {
-      router.replace(review);
-    }
+    leaveModalForReview(draftFromText(text.current.trim()));
   };
 
   return (
@@ -59,7 +50,7 @@ export default function PasteScreen() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.labelRow}>
           <Text variant="subhead" weight="600" color="label2" nativeID="paste-label">
-            Czech message
+            Czech text
           </Text>
           <Pressable onPress={pasteFromClipboard} hitSlop={12} accessibilityRole="button">
             <Text variant="subhead" weight="500" color="accent">
@@ -74,7 +65,7 @@ export default function PasteScreen() {
           multiline
           autoFocus
           textAlignVertical="top"
-          placeholder="Vážený pane, …"
+          placeholder="Napište nebo vložte text…"
           placeholderTextColor={colors.label3}
           accessibilityLabelledBy="paste-label"
           onFocus={() => setFocused(true)}
@@ -90,7 +81,7 @@ export default function PasteScreen() {
           ]}
         />
         <Text variant="footnote" color="label2">
-          Include the greeting and the signature — they help explain who it’s from and how formal to be.
+          A sign, a menu, a chat or a whole letter. For messages, include the greeting and signature so the reply can match.
         </Text>
       </ScrollView>
       <BottomBar inModal>

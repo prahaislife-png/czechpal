@@ -1,18 +1,20 @@
 import { router } from 'expo-router';
 import { useMemo } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CaseRow } from '@/components/case-row';
+import { DocumentPaper } from '@/components/document-paper';
 import { Badge } from '@/components/ui/badge';
 import { SectionHeader } from '@/components/ui/card';
 import { FlagMark } from '@/components/ui/flag-mark';
 import { Icon, type IconName } from '@/components/ui/icon';
-import { IconWell, List, Row } from '@/components/ui/list';
+import { List } from '@/components/ui/list';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
+import { categoryLabels } from '@/lib/ai';
 import { samples } from '@/lib/ai/samples';
-import { captureWithCamera, openExample, pickFromLibrary, pickPdf } from '@/lib/capture';
+import { draftFromExample, openReview, pickImage, pickPdf } from '@/lib/capture';
 import { useRemainingAnalyses, useStore } from '@/store/cases';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -36,46 +38,75 @@ export default function HomeScreen() {
           <FlagMark size={26} />
           <Text variant="headline">CzechReply</Text>
         </View>
-        <Badge label={`${remaining} free left`} tone="neutral" />
+        <Pressable onPress={() => router.navigate('/profile')} hitSlop={8} accessibilityRole="link">
+          <Badge label={`${remaining} free left`} tone="neutral" />
+        </Pressable>
       </View>
 
-      <View style={styles.greeting}>
-        <Text variant="title1" accessibilityRole="header">
-          What Czech message can I help with?
-        </Text>
-        <Text variant="callout" color="label2">
-          Scan a letter, upload a file or paste the text. I’ll explain it and tell you what to do.
-        </Text>
-      </View>
-
-      <View style={styles.capture}>
-        <PressableScale
-          onPress={captureWithCamera}
-          accessibilityRole="button"
-          accessibilityLabel="Scan a letter"
-          accessibilityHint="Opens the camera"
-          style={[styles.hero, { backgroundColor: colors.accentFill, boxShadow: colors.shadowRaised }]}>
-          <View style={styles.heroIcon}>
-            <Icon name="scan" size={26} color={colors.onAccent} />
-          </View>
-          <View style={styles.heroText}>
-            <Text variant="title3" color="onAccent">
-              Scan a letter
-            </Text>
-            <Text variant="subhead" color="onAccent" style={styles.heroSub}>
-              Point your camera at any Czech document
-            </Text>
-          </View>
-          <View style={styles.heroArrow}>
-            <Icon name="arrowRight" size={18} color={colors.onAccent} />
-          </View>
-        </PressableScale>
-
-        <View style={styles.tiles}>
-          <Tile icon="photo" label="Photo" sub="Screenshot or image" onPress={pickFromLibrary} />
-          <Tile icon="pdf" label="PDF" sub="From your files" onPress={pickPdf} />
-          <Tile icon="paste" label="Paste" sub="Email, SMS, chat" onPress={() => router.push('/paste')} />
+      {/* Signature element: the viewfinder. One bold move on this screen; everything else stays quiet. */}
+      <PressableScale
+        onPress={() => router.push('/scan')}
+        accessibilityRole="button"
+        accessibilityLabel="Scan Czech text"
+        accessibilityHint="Opens the camera"
+        style={[styles.viewfinder, { backgroundColor: colors.ink, boxShadow: colors.shadowRaised }]}>
+        <Brackets color={colors.onInk2} />
+        <View style={styles.viewfinderText}>
+          <Text variant="title1" color="onInk" accessibilityRole="header">
+            Point at anything{'\n'}written in Czech
+          </Text>
+          <Text variant="callout" color="onInk2">
+            Signs, menus, labels, letters and messages
+          </Text>
         </View>
+        <View style={styles.viewfinderFoot}>
+          <View style={[styles.shutter, { borderColor: colors.onInk }]}>
+            <View style={[styles.shutterCore, { backgroundColor: colors.accentFill }]}>
+              <Icon name="camera" size={20} color={colors.onAccent} />
+            </View>
+          </View>
+          <Text variant="subhead" weight="600" color="onInk">
+            Scan
+          </Text>
+        </View>
+      </PressableScale>
+
+      <List inset={false} style={styles.sources}>
+        <View style={styles.sourceRow}>
+          <Source icon="photo" label="Photo" onPress={async () => openReview(await pickImage())} />
+          <View style={[styles.sourceDivider, { backgroundColor: colors.separator }]} />
+          <Source icon="pdf" label="PDF" onPress={async () => openReview(await pickPdf())} />
+          <View style={[styles.sourceDivider, { backgroundColor: colors.separator }]} />
+          <Source icon="keyboard" label="Type" onPress={() => router.push('/paste')} />
+        </View>
+      </List>
+
+      <View>
+        <SectionHeader title="Try it on" />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.examples}
+          style={styles.examplesBleed}>
+          {samples.map((s) => (
+            <PressableScale
+              key={s.id}
+              onPress={() => openReview(draftFromExample(s.id))}
+              accessibilityRole="button"
+              accessibilityLabel={`Try it on: ${s.label}`}
+              style={styles.example}>
+              <DocumentPaper text={s.original} size="small" maxLines={7} style={styles.examplePaper} />
+              <View style={styles.exampleText}>
+                <Text variant="subhead" weight="600" numberOfLines={1}>
+                  {s.label}
+                </Text>
+                <Text variant="caption" color="label2" weight="400">
+                  {categoryLabels[s.category]}
+                </Text>
+              </View>
+            </PressableScale>
+          ))}
+        </ScrollView>
       </View>
 
       {recent.length > 0 && (
@@ -83,11 +114,11 @@ export default function HomeScreen() {
           <SectionHeader
             title="Recent"
             action={
-              <PressableScale pressedScale={1} onPress={() => router.navigate('/history')} hitSlop={12} accessibilityRole="link">
-                <Text variant="subhead" color="accent" weight="500">
+              <Pressable onPress={() => router.navigate('/history')} hitSlop={12} accessibilityRole="link">
+                <Text variant="subhead" color="accent" weight="500" chrome>
                   See all
                 </Text>
-              </PressableScale>
+              </Pressable>
             }
           />
           <List>
@@ -97,15 +128,6 @@ export default function HomeScreen() {
           </List>
         </View>
       )}
-
-      <View>
-        <SectionHeader title="Try an example" />
-        <List>
-          {samples.map((s) => (
-            <Row key={s.id} icon={s.category} title={s.label} subtitle={s.hint} onPress={() => openExample(s.id)} />
-          ))}
-        </List>
-      </View>
 
       <View style={styles.trust}>
         <Icon name="lock" size={14} color={colors.label3} />
@@ -117,73 +139,70 @@ export default function HomeScreen() {
   );
 }
 
-function Tile({ icon, label, sub, onPress }: { icon: IconName; label: string; sub: string; onPress: () => void }) {
+function Source({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
   const { colors } = useTheme();
   return (
-    <PressableScale
+    <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${label}: ${sub}`}
-      style={[styles.tile, { backgroundColor: colors.surface, boxShadow: colors.shadow }]}>
-      <IconWell name={icon} tone="accent" />
-      <View style={styles.tileText}>
-        <Text variant="callout" weight="600">
-          {label}
-        </Text>
-        <Text variant="caption" color="label2" weight="400" numberOfLines={2}>
-          {sub}
-        </Text>
-      </View>
-    </PressableScale>
+      style={({ pressed }) => [styles.source, pressed && { backgroundColor: colors.fill }]}>
+      <Icon name={icon} size={22} color={colors.accent} />
+      <Text variant="subhead" weight="600" chrome>
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
+/** Viewfinder corner marks, the visual link between this card and the scanner it opens. */
+function Brackets({ color }: { color: string }) {
+  const arm = { position: 'absolute', width: 22, height: 22, borderColor: color } as const;
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <View style={[arm, { top: 16, left: 16, borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: 10 }]} />
+      <View style={[arm, { top: 16, right: 16, borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 10 }]} />
+      <View style={[arm, { bottom: 16, left: 16, borderBottomWidth: 2, borderLeftWidth: 2, borderBottomLeftRadius: 10 }]} />
+      <View style={[arm, { bottom: 16, right: 16, borderBottomWidth: 2, borderRightWidth: 2, borderBottomRightRadius: 10 }]} />
+    </View>
+  );
+}
+
+const EXAMPLE_WIDTH = 148;
+
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: layout.gutter, paddingBottom: space.huge, gap: space.xxxl },
+  content: { paddingHorizontal: layout.gutter, paddingBottom: space.huge, gap: space.xxl },
   brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 },
   brand: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  greeting: { gap: space.sm, marginTop: -space.md },
-  capture: { gap: space.md },
-  hero: {
+  viewfinder: {
     borderRadius: radius.card,
     borderCurve: 'continuous',
-    padding: space.xl,
-    minHeight: 136,
+    paddingHorizontal: space.xxl + space.sm,
+    paddingTop: space.huge + space.sm,
+    paddingBottom: space.xxl + space.sm,
+    gap: space.xxxl,
+    minHeight: 268,
     justifyContent: 'space-between',
-    gap: space.lg,
   },
-  heroIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.tile,
-    borderCurve: 'continuous',
-    backgroundColor: 'rgba(255, 255, 255, 0.16)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroText: { gap: 2, paddingRight: 48 },
-  heroSub: { opacity: 0.82 },
-  heroArrow: {
-    position: 'absolute',
-    right: space.xl,
-    bottom: space.xl,
-    width: 36,
-    height: 36,
+  viewfinderText: { gap: space.sm },
+  viewfinderFoot: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  shutter: {
+    width: 56,
+    height: 56,
     borderRadius: radius.pill,
-    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tiles: { flexDirection: 'row', gap: space.md },
-  tile: {
-    flex: 1,
-    borderRadius: radius.card,
-    borderCurve: 'continuous',
-    padding: space.md + 2,
-    gap: space.md,
-    minHeight: 112,
-  },
-  tileText: { gap: 2 },
-  trust: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, marginTop: -space.sm },
+  shutterCore: { width: 44, height: 44, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  sources: { marginTop: -space.md },
+  sourceRow: { flexDirection: 'row', alignItems: 'stretch' },
+  source: { flex: 1, minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
+  sourceDivider: { width: StyleSheet.hairlineWidth, marginVertical: space.md },
+  examplesBleed: { marginHorizontal: -layout.gutter },
+  examples: { paddingHorizontal: layout.gutter, gap: space.md },
+  example: { width: EXAMPLE_WIDTH, gap: space.sm },
+  examplePaper: { height: 132, overflow: 'hidden' },
+  exampleText: { gap: 1, paddingHorizontal: space.xxs },
+  trust: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
   trustText: { flexShrink: 1 },
 });

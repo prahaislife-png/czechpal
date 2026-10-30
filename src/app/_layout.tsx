@@ -13,6 +13,9 @@ import { useTheme } from '@/theme/use-theme';
 
 SplashScreen.preventAutoHideAsync();
 
+// Deep links to a case, review or reply land with Home underneath, so back always has somewhere to go.
+export const unstable_settings = { anchor: '(tabs)' };
+
 export default function RootLayout() {
   const { scheme, colors } = useTheme();
   const hydrated = useStore((s) => s.hydrated);
@@ -51,10 +54,15 @@ export default function RootLayout() {
 
             <Stack.Protected guard={onboarded}>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="review/[id]" options={{ title: 'Check your message' }} />
+              <Stack.Screen
+                name="scan"
+                // Fade into the camera on device; on web the fade leaves a stale transformed layer.
+                options={{ presentation: 'fullScreenModal', headerShown: false, animation: process.env.EXPO_OS === 'web' ? 'none' : 'fade' }}
+              />
+              <Stack.Screen name="review/[id]" options={{ title: 'Check the text' }} />
               <Stack.Screen name="case/[id]" options={{ title: '' }} />
               <Stack.Screen name="reply/[id]" options={{ presentation: 'modal', title: 'Write a reply' }} />
-              <Stack.Screen name="paste" options={{ presentation: 'modal', title: 'Paste a message' }} />
+              <Stack.Screen name="paste" options={{ presentation: 'modal', title: 'Type or paste' }} />
             </Stack.Protected>
           </Stack>
         </View>

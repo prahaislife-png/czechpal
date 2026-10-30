@@ -13,7 +13,7 @@ export function HeaderTextButton({ label, onPress = () => router.back() }: { lab
       hitSlop={12}
       accessibilityRole="button"
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
-      <Text variant="body" color="accent">
+      <Text variant="body" color="accent" chrome>
         {label}
       </Text>
     </Pressable>

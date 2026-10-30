@@ -52,7 +52,7 @@ function TabButton({ icon, label, isFocused, ref, ...props }: ButtonProps) {
       accessibilityState={{ selected: isFocused }}
       style={styles.tab}>
       <Icon name={icon} size={24} color={tint} />
-      <Text variant="caption" style={{ color: tint, fontSize: 10, lineHeight: 12 }}>
+      <Text variant="caption" style={{ color: tint, fontSize: 10, lineHeight: 12 }} chrome>
         {label}
       </Text>
     </Pressable>

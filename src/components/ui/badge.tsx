@@ -22,7 +22,7 @@ export function Badge({ label, tone = 'neutral', icon }: { label: string; tone?:
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>
       {icon && <Icon name={icon} size={12} color={fg} />}
-      <Text variant="caption" weight="600" style={{ color: fg }} numberOfLines={1}>
+      <Text variant="caption" weight="600" style={{ color: fg }} numberOfLines={1} chrome>
         {label}
       </Text>
     </View>

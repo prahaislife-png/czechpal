@@ -2,7 +2,10 @@ import { Alert } from 'react-native';
 
 const isWeb = process.env.EXPO_OS === 'web';
 
-/** Native alert on device; the browser's dialog on web, where RN's Alert is a no-op. */
+/**
+ * Destructive confirmations only (everything else is inline state).
+ * Native alert on device; the browser's dialog on web, where RN's Alert is a no-op.
+ */
 export function confirm(opts: {
   title: string;
   message?: string;
@@ -18,9 +21,4 @@ export function confirm(opts: {
       { text: opts.confirmLabel, style: opts.destructive ? 'destructive' : 'default', onPress: () => resolve(true) },
     ]),
   );
-}
-
-export function notify(title: string, message?: string) {
-  if (isWeb) window.alert([title, message].filter(Boolean).join('\n\n'));
-  else Alert.alert(title, message);
 }

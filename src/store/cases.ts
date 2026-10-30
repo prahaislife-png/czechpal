@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { ai, AnalyzeError, type AnalyzeResult, type Category } from '@/lib/ai';
+import { ai, AnalyzeError, type Analysis, type AnalyzeResult, type Category } from '@/lib/ai';
 
 export type CaseSource = 'camera' | 'library' | 'pdf' | 'text' | 'example';
 
@@ -117,6 +117,31 @@ export const useStore = create<State & Actions>()(
           .map((c) => (c.status === 'analyzing' ? { ...c, status: 'error' as const, error: 'The analysis was interrupted.' } : c)),
         usage,
       }),
+      // v1: analyses gained `kind`, `typeLabel` and `caution` (replacing `officialMatter`).
+      version: 1,
+      migrate: (persisted, from) => {
+        const state = persisted as { cases?: CaseItem[] };
+        if (from < 1 && state.cases) {
+          state.cases = state.cases.map((c) => {
+            const a = c.result?.analysis as (Analysis & { officialMatter?: boolean }) | undefined;
+            if (!c.result || !a) return c;
+            const { officialMatter, ...rest } = a;
+            return {
+              ...c,
+              result: {
+                ...c.result,
+                analysis: {
+                  ...rest,
+                  kind: a.kind ?? 'document',
+                  typeLabel: a.typeLabel ?? 'Letter',
+                  caution: a.caution ?? (officialMatter ? 'official' : undefined),
+                },
+              },
+            };
+          });
+        }
+        return state as State & Actions;
+      },
       onRehydrateStorage: () => () => useStore.setState({ hydrated: true }),
     },
   ),

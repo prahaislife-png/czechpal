@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
-import { confirm, notify } from '@/lib/dialogs';
+import { confirm } from '@/lib/dialogs';
 import { FREE_ANALYSES_PER_MONTH, useRemainingAnalyses, useStore } from '@/store/cases';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -19,9 +19,9 @@ export default function ProfileScreen() {
 
   const deleteAll = async () => {
     const ok = await confirm({
-      title: 'Delete all messages?',
-      message: `This removes ${caseCount === 1 ? '1 message' : `${caseCount} messages`} and their replies from this device. It can’t be undone.`,
-      confirmLabel: 'Delete all',
+      title: 'Delete everything?',
+      message: `This removes ${caseCount === 1 ? '1 item' : `${caseCount} items`} and their replies from this device. It can’t be undone.`,
+      confirmLabel: 'Delete everything',
       destructive: true,
     });
     if (ok) clearAll();
@@ -48,48 +48,41 @@ export default function ProfileScreen() {
           </Text>
         </View>
         <Text variant="footnote" color="label3">
-          CzechReply Pro — unlimited explanations and saved cases across devices — is coming soon.
+          CzechReply Pro, with unlimited explanations and history across devices, is coming soon.
         </Text>
       </Card>
 
       <View>
         <SectionHeader title="Preferences" />
         <List>
-          <Row icon="globe" title="Explanations in" value="English" chevron={false} />
-        </List>
-      </View>
-
-      <View>
-        <SectionHeader title="Privacy" />
-        <List>
-          <Row
-            icon="shield"
-            title="How your data is handled"
-            onPress={() =>
-              notify(
-                'How your data is handled',
-                'Messages are kept on this device. When live analysis is switched on, a message is sent securely for analysis only after you tap Explain — and nothing is ever sent to anyone on your behalf.',
-              )
-            }
-          />
-          <Row icon="trash" title="Delete all messages" destructive chevron={false} onPress={deleteAll} />
+          <Row icon="globe" title="Explanations in" value="English" />
         </List>
       </View>
 
       <View>
         <SectionHeader title="Demo" />
         <List>
-          <Row icon="refresh" title="Reset free explanations" chevron={false} onPress={resetUsage} />
+          <Row icon="refresh" title="Reset free explanations" onPress={resetUsage} />
           <Row
             icon="star"
             title="Show the welcome screen again"
-            chevron={false}
             onPress={() => {
               resetOnboarding();
               router.replace('/welcome');
             }}
           />
         </List>
+      </View>
+
+      <View>
+        <SectionHeader title="Privacy" />
+        <List>
+          <Row icon="trash" title="Delete everything" destructive onPress={deleteAll} />
+        </List>
+        <Text variant="footnote" color="label2" style={styles.footer}>
+          Everything you scan is kept on this device. Once live reading is on, a text is sent for analysis only after
+          you tap Explain, and nothing is ever sent to anyone on your behalf.
+        </Text>
       </View>
 
       <Text variant="footnote" color="label3" align="center">
@@ -106,4 +99,5 @@ const styles = StyleSheet.create({
   meter: { gap: space.sm },
   track: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: radius.pill },
+  footer: { paddingHorizontal: space.lg, marginTop: space.sm },
 });
