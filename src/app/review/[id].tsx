@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { List } from '@/components/ui/list';
-import { PressableScale } from '@/components/ui/pressable-scale';
+import { Chip } from '@/components/ui/chip';
 import { Text } from '@/components/ui/text';
 import { categoryLabels, type Category } from '@/lib/ai';
 import { useCase, useRemainingAnalyses, useStore, type CaseItem } from '@/store/cases';
@@ -60,6 +60,7 @@ export default function ReviewScreen() {
             {topics.map((topic) => (
               <Chip
                 key={topic}
+                role="checkbox"
                 label={categoryLabels[topic]}
                 selected={item.hint === topic}
                 onPress={() => setHint(item.id, item.hint === topic ? undefined : topic)}
@@ -142,22 +143,6 @@ function Preview({ item }: { item: CaseItem }) {
   );
 }
 
-function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
-  const { colors } = useTheme();
-  return (
-    <PressableScale
-      onPress={onPress}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: selected }}
-      style={[styles.chip, { backgroundColor: selected ? colors.accentFill : colors.fill }]}>
-      {selected && <Icon name="check" size={14} color={colors.onAccent} />}
-      <Text variant="subhead" weight={selected ? '600' : '500'} color={selected ? 'onAccent' : 'label'}>
-        {label}
-      </Text>
-    </PressableScale>
-  );
-}
-
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { padding: layout.gutter, gap: space.xxl },
@@ -168,12 +153,4 @@ const styles = StyleSheet.create({
   pdfText: { flex: 1, gap: 2 },
   hintCopy: { paddingHorizontal: space.xs, marginTop: -space.xs, marginBottom: space.md },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.xs,
-    minHeight: 40,
-    paddingHorizontal: space.lg,
-    borderRadius: radius.pill,
-  },
 });

@@ -63,6 +63,19 @@ const glyphs = {
   flashOff: ['bolt.slash', 'flash_off'],
   keyboard: ['keyboard', 'keyboard'],
   settings: ['gearshape', 'settings'],
+  qrcode: ['qrcode', 'qr_code'],
+  phone: ['phone.fill', 'call'],
+  message: ['message', 'sms'],
+  compose: ['square.and.pencil', 'edit_square'],
+  help: ['lifepreserver', 'support'],
+  share: ['square.and.arrow.up', 'share'],
+  emergency: ['staroflife.fill', 'emergency'],
+  doctor: ['stethoscope', 'stethoscope'],
+  trades: ['wrench.and.screwdriver', 'handyman'],
+  accountant: ['percent', 'calculate'],
+  legal: ['building.columns', 'gavel'],
+  speaker: ['speaker.wave.2', 'volume_up'],
+  verified: ['checkmark.seal.fill', 'verified'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 export type IconName = keyof typeof glyphs;

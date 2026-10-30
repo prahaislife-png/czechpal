@@ -322,7 +322,7 @@ Celková cena za období: 14 860 Kč
 Zaplacené zálohy: 13 020 Kč
 Nedoplatek: 1 840 Kč
 
-Nedoplatek prosím uhraďte do 20. 11. 2026 na účet 123456789/0300, variabilní symbol 5512048873.
+Nedoplatek prosím uhraďte do 20. 11. 2026 na účet 2701453802/0300, variabilní symbol 5512048873.
 
 Od prosince 2026 se Vaše měsíční záloha zvyšuje z 1 085 Kč na 1 240 Kč.
 
@@ -345,7 +345,7 @@ Elektro Vltava a. s.`,
     keyFacts: [
       { id: 'amount', label: 'Amount to pay', value: '1 840 Kč', icon: 'money', evidence: 'Nedoplatek: 1 840 Kč' },
       { id: 'due', label: 'Pay by', value: 'Friday 20 Nov 2026', icon: 'calendar', evidence: 'uhraďte do 20. 11. 2026' },
-      { id: 'account', label: 'Account', value: '123456789/0300', icon: 'finance', evidence: 'na účet 123456789/0300' },
+      { id: 'account', label: 'Account', value: '2701453802/0300', icon: 'finance', evidence: 'na účet 2701453802/0300' },
       { id: 'vs', label: 'Variable symbol', value: '5512048873', icon: 'number', evidence: 'variabilní symbol 5512048873' },
       { id: 'advance', label: 'New monthly advance', value: '1 240 Kč from December', icon: 'utilities', evidence: 'z 1 085 Kč na 1 240 Kč' },
     ],
@@ -353,7 +353,7 @@ Elektro Vltava a. s.`,
       {
         id: 'pay',
         title: 'Pay 1 840 Kč by 20 November',
-        detail: 'Transfer to 123456789/0300 with variable symbol 5512048873. The symbol is how they match your payment.',
+        detail: 'Transfer to 2701453802/0300 with variable symbol 5512048873. The symbol is how they match your payment.',
         kind: 'required',
       },
       {
@@ -375,7 +375,7 @@ Total price for the period: 14 860 CZK
 Advances paid: 13 020 CZK
 Amount owed: 1 840 CZK
 
-Please pay the amount owed by 20 Nov 2026 to account 123456789/0300, variable symbol 5512048873.
+Please pay the amount owed by 20 Nov 2026 to account 2701453802/0300, variable symbol 5512048873.
 
 From December 2026 your monthly advance increases from 1 085 CZK to 1 240 CZK.
 
@@ -387,6 +387,14 @@ Elektro Vltava a. s.`,
       { id: 'explain', label: 'Question the amount', description: 'Ask how it was calculated and if the reading was real.' },
       { id: 'advance', label: 'Keep my advance lower', description: 'Ask to stay at 1 085 Kč a month.' },
     ],
+    payment: {
+      account: '2701453802/0300',
+      amount: 1840,
+      variableSymbol: '5512048873',
+      dueDate: '2026-11-20',
+      recipientName: 'Elektro Vltava a. s.',
+      message: 'Nedoplatek elektřina 2026',
+    },
   },
   replies: {
     instalments: {

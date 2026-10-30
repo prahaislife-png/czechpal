@@ -82,6 +82,21 @@ export type Analysis = {
   translation: string;
   /** Empty when replying makes no sense (signs, menus, labels). */
   replyIntents: ReplyIntent[];
+  /** Payment details read from a bill, for QR Platba. Every field is copied from the document, never guessed. */
+  payment?: PaymentInfo;
+};
+
+export type PaymentInfo = {
+  /** As printed: "2701453802/0300", "19-2000145399/0800" or an IBAN. */
+  account: string;
+  amount?: number;
+  variableSymbol?: string;
+  specificSymbol?: string;
+  constantSymbol?: string;
+  /** ISO date YYYY-MM-DD. */
+  dueDate?: string;
+  recipientName?: string;
+  message?: string;
 };
 
 export type Tone = 'formal' | 'friendly' | 'short';

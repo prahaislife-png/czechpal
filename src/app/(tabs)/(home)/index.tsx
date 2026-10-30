@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { SectionHeader } from '@/components/ui/card';
 import { FlagMark } from '@/components/ui/flag-mark';
 import { Icon, type IconName } from '@/components/ui/icon';
-import { List } from '@/components/ui/list';
+import { List, Row } from '@/components/ui/list';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { categoryLabels } from '@/lib/ai';
@@ -80,6 +80,26 @@ export default function HomeScreen() {
           <Source icon="keyboard" label="Type" onPress={() => router.push('/paste')} />
         </View>
       </List>
+
+      <View>
+        <SectionHeader title="Get things done" />
+        <List>
+          <Row
+            icon="qrcode"
+            title="Pay a bill by QR code"
+            subtitle="Your banking app fills in the payment"
+            chevron
+            onPress={() => router.push('/pay')}
+          />
+          <Row
+            icon="compose"
+            title="Write to someone in Czech"
+            subtitle="Landlord, doctor or tradesperson"
+            chevron
+            onPress={() => router.push('/compose')}
+          />
+        </List>
+      </View>
 
       <View>
         <SectionHeader title="Try it on" />

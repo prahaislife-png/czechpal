@@ -7,6 +7,7 @@ import { useTheme } from '@/theme/use-theme';
 export default function AppTabs() {
   const { colors } = useTheme();
   const home = iconGlyph('home');
+  const help = iconGlyph('help');
   const history = iconGlyph('history');
   const profile = iconGlyph('profile');
 
@@ -15,6 +16,10 @@ export default function AppTabs() {
       <NativeTabs.Trigger name="(home)">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: home.ios, selected: 'house.fill' }} md="home" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="help">
+        <NativeTabs.Trigger.Label>Help</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={help.ios} md={help.md as never} />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="history">
         <NativeTabs.Trigger.Label>History</NativeTabs.Trigger.Label>

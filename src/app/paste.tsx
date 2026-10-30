@@ -109,5 +109,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     // The focused border is the focus indicator; suppress the browser's default ring.
     outlineWidth: 0,
+    outlineColor: 'transparent',
   },
 });

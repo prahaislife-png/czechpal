@@ -2,15 +2,14 @@ import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { Redirect, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Linking, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Linking, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
 import { HeaderTextButton } from '@/components/ui/header-button';
 import { Card, SectionHeader } from '@/components/ui/card';
-import { Icon } from '@/components/ui/icon';
-import { List } from '@/components/ui/list';
+import { ChoiceList } from '@/components/ui/choice-list';
 import { Segmented } from '@/components/ui/segmented';
 import { SkeletonLine } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
@@ -108,33 +107,11 @@ export default function ReplyScreen() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View>
           <SectionHeader title="What do you want to say?" />
-          <List inset={false}>
-            {analysis.replyIntents.map((intent) => {
-              const selected = intent.id === intentId;
-              return (
-                <Pressable
-                  key={intent.id}
-                  onPress={() => setIntentId(intent.id)}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: selected }}
-                  style={({ pressed }) => [styles.intent, pressed && { backgroundColor: colors.fill }]}>
-                  <View style={styles.intentText}>
-                    <Text variant="callout" weight="600">
-                      {intent.label}
-                    </Text>
-                    <Text variant="footnote" color="label2">
-                      {intent.description}
-                    </Text>
-                  </View>
-                  <Icon
-                    name={selected ? 'checkCircle' : 'circle'}
-                    size={24}
-                    color={selected ? colors.accent : colors.label3}
-                  />
-                </Pressable>
-              );
-            })}
-          </List>
+          <ChoiceList
+            options={analysis.replyIntents.map((i) => ({ id: i.id, label: i.label, description: i.description }))}
+            value={intentId}
+            onChange={setIntentId}
+          />
         </View>
 
         <View>
@@ -226,8 +203,6 @@ export default function ReplyScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { padding: layout.gutter, paddingBottom: space.xxxl, gap: space.xxl },
-  intent: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md, minHeight: 64 },
-  intentText: { flex: 1, gap: 2 },
   editorCard: { overflow: 'hidden' },
   editor: { padding: space.xl, lineHeight: 24, minHeight: EDITOR_MIN_HEIGHT, textAlignVertical: 'top', borderRadius: radius.card },
   editorSkeleton: { padding: space.xl, gap: space.md, minHeight: 180 },

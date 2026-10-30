@@ -1,6 +1,7 @@
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
+import type { ResolvedSharePayload } from 'expo-sharing';
 
 import { sampleById } from '@/lib/ai/samples';
 import { useStore } from '@/store/cases';
@@ -31,6 +32,42 @@ export function draftFromExample(sampleId: string) {
   const sample = sampleById(sampleId);
   if (!sample) return null;
   return useStore.getState().createDraft({ source: 'example', sampleId, text: sample.original, hint: sample.category });
+}
+
+export type SharedItem =
+  | { kind: 'text'; text: string }
+  | { kind: 'image'; uri: string }
+  | { kind: 'pdf'; name: string }
+  | { kind: 'link'; url: string };
+
+/**
+ * Picks what to read from content shared by another app (WhatsApp, Mail, Photos, Files):
+ * text first, then an image, then a PDF, then a link. Null when nothing usable arrived.
+ */
+export function pickSharedItem(payloads: ResolvedSharePayload[]): SharedItem | null {
+  const text = payloads.find((p) => p.shareType === 'text' && p.value.trim());
+  if (text) return { kind: 'text', text: text.value.trim() };
+  const image = payloads.find((p) => p.contentType === 'image' && p.contentUri);
+  if (image?.contentUri) return { kind: 'image', uri: image.contentUri };
+  const pdf = payloads.find((p) => p.contentMimeType === 'application/pdf' && p.contentUri);
+  if (pdf) return { kind: 'pdf', name: pdf.originalName ?? 'Shared document.pdf' };
+  const link = payloads.find((p) => p.shareType === 'url' && p.value.trim());
+  if (link) return { kind: 'link', url: link.value.trim() };
+  return null;
+}
+
+export function draftFromShare(item: SharedItem): string {
+  const { createDraft } = useStore.getState();
+  switch (item.kind) {
+    case 'text':
+      return draftFromText(item.text);
+    case 'image':
+      return createDraft({ source: 'library', imageUri: item.uri });
+    case 'pdf':
+      return createDraft({ source: 'pdf', fileName: item.name });
+    case 'link':
+      return draftFromText(item.url);
+  }
 }
 
 const review = (id: string) => ({ pathname: '/review/[id]', params: { id } }) as const;

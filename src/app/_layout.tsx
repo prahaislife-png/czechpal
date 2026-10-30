@@ -63,6 +63,9 @@ export default function RootLayout() {
               <Stack.Screen name="case/[id]" options={{ title: '' }} />
               <Stack.Screen name="reply/[id]" options={{ presentation: 'modal', title: 'Write a reply' }} />
               <Stack.Screen name="paste" options={{ presentation: 'modal', title: 'Type or paste' }} />
+              <Stack.Screen name="compose" options={{ presentation: 'modal', title: 'Write in Czech' }} />
+              <Stack.Screen name="pay" options={{ presentation: 'modal', title: 'Pay by QR code' }} />
+              <Stack.Screen name="handle-share" options={{ headerShown: false, animation: 'none' }} />
             </Stack.Protected>
           </Stack>
         </View>

@@ -19,13 +19,17 @@ import {
 import { DocumentPaper } from '@/components/document-paper';
 import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
-import { IconWell } from '@/components/ui/list';
+import { SectionHeader } from '@/components/ui/card';
+import { Icon } from '@/components/ui/icon';
+import { IconWell, List, Row } from '@/components/ui/list';
 import { Segmented } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
-import type { Analysis } from '@/lib/ai';
+import type { Analysis, PaymentInfo } from '@/lib/ai';
+import { categoryById, helpForTextCategory } from '@/lib/help/directory';
 import { confirm } from '@/lib/dialogs';
 import { useCase, useStore, type CaseItem } from '@/store/cases';
 import { layout, motion, radius, space } from '@/theme/tokens';
+import { useTheme } from '@/theme/use-theme';
 
 type Tab = 'summary' | 'english' | 'czech';
 
@@ -71,6 +75,8 @@ function Ready({ item, animate }: { item: CaseItem; animate: boolean }) {
   const result = item.result!;
   const { analysis } = result;
   const canReply = analysis.replyIntents.length > 0;
+  const helpId = helpForTextCategory(analysis.category);
+  const help = helpId ? categoryById(helpId) : undefined;
 
   useEffect(() => {
     if (!copied) return;
@@ -141,6 +147,11 @@ function Ready({ item, animate }: { item: CaseItem; animate: boolean }) {
                 <NextSteps steps={analysis.nextSteps} />
               </Animated.View>
             )}
+            {analysis.payment && (
+              <Animated.View entering={enter(section++)}>
+                <PayThisBill caseId={item.id} payment={analysis.payment} />
+              </Animated.View>
+            )}
             {analysis.keyFacts.length > 0 && (
               <Animated.View entering={enter(section++)}>
                 <KeyFacts facts={analysis.keyFacts} />
@@ -153,6 +164,20 @@ function Ready({ item, animate }: { item: CaseItem; animate: boolean }) {
               <Animated.View entering={enter(section++)}>
                 <Bullets title="Not mentioned" items={analysis.notStated} muted />
               </Animated.View>
+            )}
+            {help && (
+              <View>
+                <SectionHeader title="Need a hand with this?" />
+                <List>
+                  <Row
+                    icon={help.icon}
+                    title={`Find ${help.title.toLowerCase()}`}
+                    subtitle="English-speaking help, or write to anyone in Czech"
+                    chevron
+                    onPress={() => router.push({ pathname: '/help/[category]', params: { category: help.id } })}
+                  />
+                </List>
+              </View>
             )}
             <Button label="Delete" variant="quietDestructive" size="medium" onPress={remove} style={styles.delete} />
           </>
@@ -199,6 +224,39 @@ function Ready({ item, animate }: { item: CaseItem; animate: boolean }) {
   );
 }
 
+/** Bills get a one-tap path to QR Platba. Amount and due date are copied from the bill, never computed. */
+function PayThisBill({ caseId, payment }: { caseId: string; payment: PaymentInfo }) {
+  const { colors } = useTheme();
+  const amount = payment.amount?.toLocaleString('cs-CZ', { maximumFractionDigits: 2 });
+  const due = payment.dueDate
+    ? new Date(`${payment.dueDate}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+    : undefined;
+  return (
+    <View>
+      <SectionHeader title="Pay this bill" />
+      <List inset={false}>
+        <View style={styles.pay}>
+          <Icon name="qrcode" size={28} color={colors.accent} />
+          <View style={styles.payText}>
+            <Text variant="headline" tabular>
+              {amount ? `${amount} Kč` : 'Amount on the bill'}
+            </Text>
+            <Text variant="footnote" color="label2">
+              {due ? `Due ${due} · ` : ''}Scan the QR code with your banking app
+            </Text>
+          </View>
+          <Button
+            label="Pay"
+            size="medium"
+            variant="secondary"
+            onPress={() => router.push({ pathname: '/pay', params: { caseId } })}
+          />
+        </View>
+      </List>
+    </View>
+  );
+}
+
 function Failed({ item }: { item: CaseItem }) {
   const analyze = useStore((s) => s.analyze);
   return (
@@ -237,6 +295,8 @@ const styles = StyleSheet.create({
   longText: { lineHeight: 26 },
   image: { width: '100%', aspectRatio: 3 / 4, maxHeight: 420, borderRadius: radius.tile },
   delete: { alignSelf: 'center' },
+  pay: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg },
+  payText: { flex: 1, gap: 2 },
   failed: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space.xxxl, gap: space.xl },
   failedText: { gap: space.sm, maxWidth: 360 },
   failedActions: { alignSelf: 'stretch', gap: space.xs, maxWidth: layout.maxWidth },

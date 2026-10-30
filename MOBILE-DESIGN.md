@@ -38,24 +38,37 @@ and get what it says, what it means for you and, when it is a message, a reply i
 ```
 NAV READ
 platforms: iOS + Android (web: best-effort)
-tabs (3): Home · History · Profile
+tabs (4): Home · Help · History · Profile
 src/app/
   welcome                      protected one-way door (Stack.Protected), replace into tabs
   (tabs)/
-    (home)/index    Home       → scan (fullscreen) · paste (modal) · review/[id] (push)
+    (home)/index    Home       → scan (fullscreen) · paste, compose, pay (modals) · review/[id] (push)
+    help/index      Help       → push help/[category] → push help/provider/[id]; compose, pay (modals)
     history/index   History    → push case/[id]
     profile/index   Profile    (settings live here; no settings tab)
   scan                         fullScreenModal, explicit Close; camera permission primed here
-  paste                        modal (pageSheet), explicit Cancel
+  paste                        modal, explicit Cancel
+  compose                      modal, explicit Close; ?recipient&to&phone prefill from Find help
+  pay                          modal, explicit Close; ?caseId prefills from a scanned bill
+  handle-share                 landing for the share extension; replaces itself with review/[id]
   review/[id]                  push; leaving discards the draft
   case/[id]                    push via replace from review (a stale review is never re-entered)
   reply/[id]                   modal, explicit Close
-anchor: (tabs)                 deep links to case/review/reply land with Home underneath
+anchors: root (tabs) · help stack index   deep links always land with a back stack
 sheets: none
-deep links: /case/:id, /reply/:id
+deep links: /case/:id, /reply/:id, /help/:category, /help/provider/:id, /pay, /compose
 android back: default pop everywhere
 max taps to any core screen: 2
 ```
+
+## Trust rules for the new tools
+
+- **QR payments:** SPAYD built from bill data only, ASCII-only, validated (Czech mod-11 + IBAN mod-97). Example
+  bills never render a scannable code. The app never moves money.
+- **Find help:** every listing shows its verification status (verified with date / unverified / sample).
+  Sample listings have no phone number and can't be contacted. Rankings are never sold.
+- **Write in Czech:** hand-written templates, formal register, gender-neutral first person, user text inserted
+  verbatim. Tested across every option combination.
 
 ## Standing rules from the audit
 
