@@ -2,7 +2,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 
-import { analyzerFor, AnalyzeError, type Analysis, type AnalyzeResult, type Category } from '@/lib/ai';
+import {
+  analyzerFor,
+  AnalyzeError,
+  type Analysis,
+  type AnalyzeResult,
+  type Category,
+  type PartialAnalysis,
+} from '@/lib/ai';
 
 export type CaseSource = 'camera' | 'library' | 'pdf' | 'text' | 'example';
 
@@ -61,6 +68,14 @@ type Actions = {
   setAiConsent: (value: boolean) => void;
 };
 
+/**
+ * Explanations still being written, by case id: shown on screen as they stream in, never saved.
+ * Kept out of the persisted store so a stream of small updates doesn't rewrite storage each time.
+ */
+export const usePartials = create<{ byId: Record<string, PartialAnalysis | undefined> }>(() => ({ byId: {} }));
+const setPartial = (id: string, partial: PartialAnalysis | undefined) =>
+  usePartials.setState((s) => ({ byId: { ...s.byId, [id]: partial } }));
+
 const thisMonth = () => new Date().toISOString().slice(0, 7);
 const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
@@ -104,6 +119,7 @@ export const useStore = create<State & Actions>()(
               uri: item.imageUri ?? item.fileUri,
               sampleId: item.source === 'example' ? item.sampleId : undefined,
               hint: item.hint,
+              onPartial: (partial) => setPartial(id, partial),
             });
             // Examples are free. Otherwise only a successful explanation counts, and the
             // server's own count wins when it sends one.
@@ -122,6 +138,8 @@ export const useStore = create<State & Actions>()(
             const message =
               e instanceof AnalyzeError ? e.message : 'Something went wrong while reading this message. Please try again.';
             patch(id, { status: 'error', error: message });
+          } finally {
+            setPartial(id, undefined);
           }
         },
 
@@ -175,6 +193,8 @@ export const useStore = create<State & Actions>()(
 );
 
 export const useCase = (id: string | undefined) => useStore((s) => s.cases.find((c) => c.id === id));
+
+export const usePartial = (id: string | undefined) => usePartials((s) => (id ? s.byId[id] : undefined));
 
 export function useRemainingAnalyses() {
   return useStore((s) =>

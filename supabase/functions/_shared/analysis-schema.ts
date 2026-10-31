@@ -36,22 +36,21 @@ const obj = (properties: Record<string, Json>): Json => ({
   additionalProperties: false,
 });
 
+/**
+ * Property order is the order Claude writes them, and the app shows each part as it streams in,
+ * so this follows the result screen top to bottom: the answer first, the long translation last.
+ */
 const analysisJson = obj({
   kind: oneOf(['text', 'message', 'document']),
   typeLabel: str,
   title: str,
   category: oneOf(CATEGORIES),
-  sender: nullable(str),
-  verdict: nullable(obj({ urgency: oneOf(['none', 'action', 'urgent']), label: str, detail: nullable(str) })),
   inShort: str,
-  lines: nullable(arr(obj({ cs: str, en: str, note: nullable(str) }))),
-  meaning: arr(str),
-  keyFacts: arr(obj({ id: str, label: str, value: str, icon: oneOf(FACT_ICONS), evidence: nullable(str) })),
-  nextSteps: arr(obj({ id: str, title: str, detail: nullable(str), kind: oneOf(['required', 'optional']) })),
-  notStated: arr(str),
+  verdict: nullable(obj({ urgency: oneOf(['none', 'action', 'urgent']), label: str, detail: nullable(str) })),
+  sender: nullable(str),
   caution: nullable(oneOf(['official', 'medical'])),
-  translation: str,
-  replyIntents: arr(obj({ id: str, label: str, description: str })),
+  lines: nullable(arr(obj({ cs: str, en: str, note: nullable(str) }))),
+  nextSteps: arr(obj({ id: str, title: str, detail: nullable(str), kind: oneOf(['required', 'optional']) })),
   payment: nullable(
     obj({
       account: str,
@@ -64,12 +63,17 @@ const analysisJson = obj({
       message: str,
     }),
   ),
+  keyFacts: arr(obj({ id: str, label: str, value: str, icon: oneOf(FACT_ICONS), evidence: nullable(str) })),
+  meaning: arr(str),
+  notStated: arr(str),
+  replyIntents: arr(obj({ id: str, label: str, description: str })),
+  translation: str,
 });
 
 export const analyzeOutputSchema: Json = obj({
   status: oneOf(['ok', 'unreadable', 'not_czech']),
-  originalText: str,
   analysis: nullable(analysisJson),
+  originalText: str,
 });
 
 export const replyOutputSchema: Json = obj({ czech: str, english: str });

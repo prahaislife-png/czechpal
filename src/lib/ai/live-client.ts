@@ -1,7 +1,9 @@
 import { FunctionsFetchError, FunctionsHttpError } from '@supabase/supabase-js';
+import { fetch as streamingFetch } from 'expo/fetch';
 
-import { ensureSession, supabase } from '@/lib/supabase';
+import { ensureSession, functionHeaders, functionsUrl, supabase } from '@/lib/supabase';
 
+import { partialAnalysis, type PartialAnalysis } from './partial-analysis';
 import { fileAsBase64, imageForUpload } from './prepare';
 import {
   AnalyzeError,
@@ -12,6 +14,10 @@ import {
   type ReplyDraft,
   type ReplyInput,
 } from './types';
+
+const NETWORK_MESSAGE = 'Couldn’t connect. Check your internet and try again.';
+/** How often the screen is updated while an explanation streams in. */
+const PARTIAL_INTERVAL_MS = 80;
 
 type ServerError = { error?: { code?: string; message?: string } };
 
@@ -62,6 +68,83 @@ async function invoke<T>(name: 'analyze' | 'reply', body: Record<string, unknown
   throw new AnalyzeError('server', 'Something went wrong. Please try again.');
 }
 
+type AnalyzeResponse = { analysis: Analysis; originalText: string; remaining: number };
+
+/**
+ * /analyze with streaming: the server sends one JSON object per line, "delta" lines with the
+ * answer as it is written, then "done" with the checked result (or "error"). Partial results
+ * are only for display; the result returned here is always the server-validated one.
+ */
+async function analyzeStreaming(body: Record<string, unknown>, onPartial?: (p: PartialAnalysis) => void): Promise<AnalyzeResponse> {
+  if (!supabase) throw new AnalyzeError('server', 'Live explanations aren’t set up in this build.');
+  let accessToken: string;
+  try {
+    accessToken = (await ensureSession()).access_token;
+  } catch {
+    throw new AnalyzeError('network', NETWORK_MESSAGE);
+  }
+
+  let res: Awaited<ReturnType<typeof streamingFetch>>;
+  try {
+    res = await streamingFetch(`${functionsUrl}/analyze`, {
+      method: 'POST',
+      headers: functionHeaders(accessToken),
+      body: JSON.stringify({ ...body, stream: true }),
+    });
+  } catch {
+    throw new AnalyzeError('network', NETWORK_MESSAGE);
+  }
+  if (!res.ok) {
+    const payload: ServerError = await res.json().catch(() => ({}));
+    throw new AnalyzeError(codeFor(payload.error?.code), payload.error?.message ?? 'Something went wrong. Please try again.');
+  }
+
+  let raw = '';
+  let done: AnalyzeResponse | null = null;
+  let lastShown = 0;
+  const handle = (line: string) => {
+    if (!line.trim()) return;
+    const msg = JSON.parse(line) as
+      | { type: 'delta'; text: string }
+      | ({ type: 'done' } & AnalyzeResponse)
+      | { type: 'error'; code?: string; message?: string };
+    if (msg.type === 'delta') raw += msg.text;
+    else if (msg.type === 'done') done = { analysis: msg.analysis, originalText: msg.originalText, remaining: msg.remaining };
+    else throw new AnalyzeError(codeFor(msg.code), msg.message ?? 'Something went wrong. Please try again.');
+  };
+
+  const reader = res.body?.getReader();
+  if (!reader) {
+    (await res.text()).split('\n').forEach(handle);
+  } else {
+    const decoder = new TextDecoder();
+    let buffer = '';
+    try {
+      while (true) {
+        const { value, done: finished } = await reader.read();
+        if (finished) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+        lines.forEach(handle);
+        if (onPartial && Date.now() - lastShown >= PARTIAL_INTERVAL_MS) {
+          const partial = partialAnalysis(raw);
+          if (partial) {
+            lastShown = Date.now();
+            onPartial(partial);
+          }
+        }
+      }
+      handle(buffer);
+    } catch (e) {
+      if (e instanceof AnalyzeError) throw e;
+      throw new AnalyzeError('network', 'The connection dropped while explaining. Please try again.');
+    }
+  }
+  if (!done) throw new AnalyzeError('server', 'The explanation didn’t finish. Please try again.');
+  return done;
+}
+
 /**
  * The real AI boundary: a Supabase Edge Function holds the Claude key, checks the
  * free allowance, and validates Claude's structured answer before it reaches the app.
@@ -88,7 +171,7 @@ export const liveClient: AIClient = {
     }
     if (input.hint) body.hint = input.hint;
 
-    const data = await invoke<{ analysis: Analysis; originalText: string; remaining: number }>('analyze', body);
+    const data = await analyzeStreaming(body, input.onPartial);
     return { analysis: data.analysis, originalText: data.originalText, demo: null, remaining: data.remaining };
   },
 

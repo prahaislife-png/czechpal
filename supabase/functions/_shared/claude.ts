@@ -1,10 +1,37 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@1.3.0';
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
-/** The model is configuration, not code: set CLAUDE_MODEL as a function secret to switch. */
-export const MODEL = Deno.env.get('CLAUDE_MODEL') ?? 'claude-opus-5-5';
+export type Effort = 'low' | 'medium' | 'high';
+/** off = answer straight away; adaptive = the model decides how much to think first. */
+export type Thinking = 'off' | 'adaptive';
+export type ModelConfig = { model: string; effort: Effort; thinking: Thinking };
+
+const envEffort = Deno.env.get('CLAUDE_EFFORT');
+const envThinking = Deno.env.get('CLAUDE_THINKING');
+
+/** The model is configuration, not code: set CLAUDE_MODEL, CLAUDE_EFFORT and CLAUDE_THINKING as function secrets. */
+export const DEFAULT_CONFIG: ModelConfig = {
+  model: Deno.env.get('CLAUDE_MODEL') ?? 'claude-opus-5-5',
+  effort: envEffort === 'low' || envEffort === 'high' ? envEffort : 'medium',
+  thinking: envThinking === 'off' ? 'off' : 'adaptive',
+};
+export const MODEL = DEFAULT_CONFIG.model;
 
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from the function's secrets
+
+/**
+ * Each model line turns thinking off differently: Sonnet 5.5 uses between_tools (no tools here, so
+ * no thinking), Opus 5.5 can't turn it off (effort is its only lever), the rest accept disabled.
+ */
+function thinkingParam(config: ModelConfig): Record<string, unknown> {
+  if (config.thinking === 'adaptive') return { thinking: { type: 'adaptive' } };
+  if (config.model.startsWith('claude-opus-5-5')) return {};
+  if (config.model.startsWith('claude-sonnet-5-5')) return { thinking: { type: 'between_tools' } };
+  return { thinking: { type: 'disabled' } };
+}
+
+/** Server-side refusal fallbacks exist for the Opus 5 and Fable lines only (not Haiku). */
+const supportsFallbacks = (model: string) => model.startsWith('claude-opus-5') || model.startsWith('claude-fable');
 
 export class AiError extends Error {
   constructor(
@@ -21,25 +48,37 @@ export class AiError extends Error {
 export type Usage = { input: number; output: number; cacheRead: number };
 
 /**
- * One structured call to Claude. The system prompt is cached (it is identical on every call);
- * refusals fall back to another model server-side instead of failing the user's request.
+ * One structured call to Claude, streamed: `onText` receives the JSON as it is written, so the
+ * app can show the first fields long before the last ones exist. The system prompt is cached
+ * (it is identical on every call); where available, refusals fall back to another model server-side.
  */
 export async function callStructured(opts: {
   system: string;
   content: Anthropic.Beta.BetaContentBlockParam[];
   schema: Record<string, unknown>;
+  config?: ModelConfig;
+  onText?: (delta: string) => void;
 }): Promise<{ json: unknown; usage: Usage }> {
+  const config = opts.config ?? DEFAULT_CONFIG;
+  const params = {
+    model: config.model,
+    max_tokens: 16000,
+    ...(supportsFallbacks(config.model) ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' } : {}),
+    ...thinkingParam(config),
+    system: [{ type: 'text', text: opts.system, cache_control: { type: 'ephemeral' } }],
+    output_config: { effort: config.effort, format: { type: 'json_schema', schema: opts.schema } },
+    messages: [{ role: 'user', content: opts.content }],
+  } as unknown as Anthropic.Beta.MessageCreateParamsStreaming;
+
   let response: Anthropic.Beta.BetaMessage;
   try {
-    response = await client.beta.messages.create({
-      model: MODEL,
-      max_tokens: 16000,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      system: [{ type: 'text', text: opts.system, cache_control: { type: 'ephemeral' } }],
-      output_config: { effort: 'medium', format: { type: 'json_schema', schema: opts.schema } },
-      messages: [{ role: 'user', content: opts.content }],
-    });
+    const stream = client.beta.messages.stream(params);
+    if (opts.onText) {
+      for await (const event of stream) {
+        if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') opts.onText(event.delta.text);
+      }
+    }
+    response = await stream.finalMessage();
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) throw new AiError(503, 'busy', 'CzechPal is busy right now. Try again in a minute.');
     if (e instanceof Anthropic.APIError) {
@@ -79,7 +118,7 @@ export async function logCall(
   const { error } = await admin.from('ai_calls').insert({
     user_id: row.userId,
     kind: row.kind,
-    model: MODEL,
+    model: `${DEFAULT_CONFIG.model} ${DEFAULT_CONFIG.effort}${DEFAULT_CONFIG.thinking === 'off' ? ' no-thinking' : ''}`,
     ok: row.ok,
     input_tokens: row.usage?.input ?? null,
     output_tokens: row.usage?.output ?? null,

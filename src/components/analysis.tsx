@@ -17,7 +17,7 @@ import { SectionHeader } from '@/components/ui/card';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { List, RowIcon } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
-import type { Analysis, AnalyzeResult, KeyFact, NextStep, TranslatedLine, Urgency } from '@/lib/ai';
+import type { Analysis, AnalyzeResult, KeyFact, NextStep, PartialAnalysis, TranslatedLine, Urgency } from '@/lib/ai';
 import { ANALYZE_DURATION_MS } from '@/lib/ai/mock-client';
 import type { CaseItem } from '@/store/cases';
 import { motion, radius, space } from '@/theme/tokens';
@@ -31,19 +31,22 @@ const verdictStyle: Record<Urgency, { icon: IconName; tone: 'success' | 'warning
 
 /* ───────────── What is it, and what does it mean for me? ───────────── */
 
-/** Signature element of the result: the answer set straight on the page, no card around it. */
-export function ResultHero({ analysis }: { analysis: Analysis }) {
+/**
+ * Signature element of the result: the answer set straight on the page, no card around it.
+ * While the explanation streams in, any part can still be missing.
+ */
+export function ResultHero({ analysis }: { analysis: Pick<PartialAnalysis, 'category' | 'typeLabel' | 'inShort' | 'verdict' | 'sender'> }) {
   const { colors } = useTheme();
   return (
     <View style={styles.hero}>
       <View style={styles.typeRow}>
-        <Icon name={analysis.category} size={16} color={colors.label2} />
+        {analysis.category && <Icon name={analysis.category} size={16} color={colors.label2} />}
         <Text variant="footnote" weight="600" color="label2">
-          {analysis.typeLabel}
+          {analysis.typeLabel ?? ' '}
         </Text>
       </View>
       <Text variant="title2" weight="600" selectable accessibilityRole="header">
-        {analysis.inShort}
+        {analysis.inShort ?? ' '}
       </Text>
       {analysis.verdict && <Verdict verdict={analysis.verdict} />}
       {analysis.sender ? (
@@ -237,6 +240,19 @@ export function DemoNotice({ demo }: { demo: AnalyzeResult['demo'] }) {
   );
 }
 
+/** Sits below the last section while the explanation is still being written. */
+export function StillWriting() {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.stillWriting} accessibilityLiveRegion="polite">
+      <ActivityIndicator size="small" color={colors.label3} />
+      <Text variant="footnote" color="label2">
+        Writing the rest of the explanation
+      </Text>
+    </View>
+  );
+}
+
 /* ───────────── Reading ───────────── */
 
 const stages = ['Reading the Czech text', 'Working out what it means', 'Finding what matters to you'];
@@ -342,6 +358,7 @@ const styles = StyleSheet.create({
   noticeText: { flex: 1, gap: 2 },
   demo: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, paddingHorizontal: space.xs },
   demoText: { flex: 1 },
+  stillWriting: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.xs },
   analyzing: { gap: space.xxl },
   preview: { borderRadius: radius.tile, borderCurve: 'continuous', overflow: 'hidden', maxHeight: 300 },
   previewImage: { width: '100%', aspectRatio: 4 / 3 },

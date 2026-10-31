@@ -8,6 +8,14 @@ const publishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 /** Live AI is on when the app is configured for a Supabase project; otherwise it runs in demo mode. */
 export const isBackendConfigured = !!url && !!publishableKey;
 
+/** For calls supabase-js can't make itself, such as reading a streamed response. */
+export const functionsUrl = `${url}/functions/v1`;
+export const functionHeaders = (accessToken: string) => ({
+  Authorization: `Bearer ${accessToken}`,
+  apikey: publishableKey ?? '',
+  'Content-Type': 'application/json',
+});
+
 // The publishable key is designed to ship inside apps; secrets live only in Supabase.
 export const supabase = isBackendConfigured
   ? createClient(url!, publishableKey!, {
