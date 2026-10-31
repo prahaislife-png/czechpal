@@ -1,11 +1,12 @@
 import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { PracticeRow } from '@/components/practice';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
 import { Field } from '@/components/ui/field';
+import { Icon } from '@/components/ui/icon';
 import { SkeletonLine } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
 import {
@@ -18,7 +19,7 @@ import {
   type Practice,
   type PracticeKind,
 } from '@/lib/help/practices';
-import { layout, space } from '@/theme/tokens';
+import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
 type Page = { key: string; items: Practice[]; done: boolean; error?: string };
@@ -81,9 +82,29 @@ function PracticeList({ kind, title }: { kind: PracticeKind; title: string }) {
   };
 
   const filtersOn = newPatients || english || !!district || debounced.trim().length >= 2;
+  const forPatients = !!kindById(kind)?.doctorType;
+  const mentalHealth = kind === 'psychiatry' || kind === 'psychology';
 
   const header = (
     <View style={styles.header}>
+      {mentalHealth && (
+        // Finding a practice takes time; someone in crisis needs a person now.
+        <Pressable
+          onPress={() => Linking.openURL('tel:116123')}
+          accessibilityRole="button"
+          accessibilityLabel="In crisis? Call 116 123, free, any time"
+          style={[styles.crisis, { backgroundColor: colors.accentSoft }]}>
+          <Icon name="phone" size={18} color={colors.accent} />
+          <View style={styles.crisisText}>
+            <Text variant="callout" weight="600">
+              In crisis? Call 116 123
+            </Text>
+            <Text variant="footnote" color="label2">
+              First psychological help line. Free, any time of day. In danger, call 155 or 112.
+            </Text>
+          </View>
+        </Pressable>
+      )}
       <Field
         label="Search by name or street"
         value={query}
@@ -95,7 +116,9 @@ function PracticeList({ kind, title }: { kind: PracticeKind; title: string }) {
         clearButtonMode="while-editing"
       />
       <View style={styles.chips}>
-        <Chip label="Taking new patients" role="checkbox" selected={newPatients} onPress={() => setNewPatients((v) => !v)} />
+        {forPatients && (
+          <Chip label="Taking new patients" role="checkbox" selected={newPatients} onPress={() => setNewPatients((v) => !v)} />
+        )}
         <Chip label="English spoken" role="checkbox" selected={english} onPress={() => setEnglish((v) => !v)} />
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.districts}>
@@ -185,5 +208,7 @@ const styles = StyleSheet.create({
   skeleton: { paddingHorizontal: space.lg, gap: space.xl, paddingTop: space.md },
   skeletonRow: { gap: space.sm },
   message: { alignItems: 'center', gap: space.md, padding: space.xxl },
+  crisis: { flexDirection: 'row', gap: space.md, alignItems: 'center', padding: space.lg, borderRadius: radius.card, borderCurve: 'continuous' },
+  crisisText: { flex: 1, gap: 2 },
   footer: { gap: space.md, padding: layout.gutter, paddingTop: space.xl },
 });

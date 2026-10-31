@@ -14,7 +14,7 @@ export type Recipient = 'trades' | 'landlord' | 'doctor';
 export type When = 'asap' | 'thisWeek' | 'nextWeek';
 export type TimeOfDay = 'any' | 'morning' | 'afternoon';
 export type Problem = 'leak' | 'blocked' | 'noHotWater' | 'heating' | 'electrical' | 'other';
-export type DoctorType = 'gp' | 'dentist' | 'paediatrician' | 'gynaecologist';
+export type DoctorType = 'gp' | 'dentist' | 'paediatrician' | 'gynaecologist' | 'psychiatrist' | 'psychologist';
 export type Insurer = '111' | '201' | '205' | '207' | '209' | '211' | '213' | 'private';
 
 export type IntentId = 'repair' | 'quote' | 'defect' | 'deposit' | 'bill' | 'register' | 'appointment' | 'reschedule';
@@ -94,6 +94,8 @@ export const doctorTypes: { id: DoctorType; label: string }[] = [
   { id: 'dentist', label: 'Dentist' },
   { id: 'paediatrician', label: 'Children’s doctor' },
   { id: 'gynaecologist', label: 'Gynaecologist' },
+  { id: 'psychiatrist', label: 'Psychiatrist' },
+  { id: 'psychologist', label: 'Psychologist' },
 ];
 
 /** Czech public health insurers by their official codes, plus commercial insurance for foreigners. */
@@ -153,6 +155,8 @@ const doctorCs: Record<DoctorType, { cs: string; en: string; say: string; patien
     say: 'GI-neh-koh-loh-gah',
     patients: { cs: 'nové pacientky', say: 'NOH-veh PAH-tsi-en-tki' },
   },
+  psychiatrist: { cs: 'psychiatra', en: 'a psychiatrist', say: 'PSI-khi-ah-trah' },
+  psychologist: { cs: 'psychologa', en: 'a psychologist', say: 'PSI-khoh-loh-gah' },
 };
 
 const LITTLE_CZECH_WRITTEN: Line = {

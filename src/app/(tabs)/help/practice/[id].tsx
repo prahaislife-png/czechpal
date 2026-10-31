@@ -83,18 +83,13 @@ export default function PracticeScreen() {
 }
 
 function PracticeDetails({ practice: p }: { practice: Practice }) {
-  const primaryKind = kindById(p.kinds[0]);
+  // The first kind with a patient list decides the Czech message; a pharmacy has none.
+  const doctorType = p.kinds.map((k) => kindById(k)?.doctorType).find(Boolean);
   const ask = (mode: 'message' | 'call') =>
+    doctorType &&
     router.push({
       pathname: '/compose',
-      params: {
-        recipient: 'doctor',
-        intent: 'register',
-        doctorType: primaryKind?.doctorType ?? 'gp',
-        to: p.name,
-        phone: p.phone ?? '',
-        mode,
-      },
+      params: { recipient: 'doctor', intent: 'register', doctorType, to: p.name, phone: p.phone ?? '', mode },
     });
 
   return (
@@ -127,7 +122,12 @@ function PracticeDetails({ practice: p }: { practice: Practice }) {
             icon="compose"
             variant="plain"
             size="medium"
-            onPress={() => router.push({ pathname: '/practice-report/[id]', params: { id: String(p.id), name: p.name } })}
+            onPress={() =>
+              router.push({
+                pathname: '/practice-report/[id]',
+                params: { id: String(p.id), name: p.name, patients: doctorType ? '1' : '0' },
+              })
+            }
             style={styles.reportButton}
           />
         </View>
@@ -161,8 +161,19 @@ function PracticeDetails({ practice: p }: { practice: Practice }) {
       </ScrollView>
 
       <BottomBar>
-        <Button label="Ask about new patients in Czech" icon="compose" onPress={() => ask('message')} />
-        <Button label="Get a call script" icon="phone" variant="plain" size="medium" onPress={() => ask('call')} />
+        {doctorType ? (
+          <>
+            <Button label="Ask about new patients in Czech" icon="compose" onPress={() => ask('message')} />
+            <Button label="Get a call script" icon="phone" variant="plain" size="medium" onPress={() => ask('call')} />
+          </>
+        ) : (
+          <>
+            <Button label="Open in Maps" icon="location" onPress={() => Linking.openURL(mapsUrl(p))} />
+            {p.phone ? (
+              <Button label="Call" icon="phone" variant="plain" size="medium" onPress={() => Linking.openURL(`tel:${p.phone}`)} />
+            ) : null}
+          </>
+        )}
       </BottomBar>
     </View>
   );

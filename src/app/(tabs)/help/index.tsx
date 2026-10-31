@@ -6,6 +6,7 @@ import { Icon } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
 import { emergencyNumbers, helpCategories } from '@/lib/help/directory';
+import { supportLines } from '@/lib/help/urgent';
 import { layout, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
@@ -14,6 +15,39 @@ export default function HelpScreen() {
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+      <View>
+        <SectionHeader title="Sick tonight or at the weekend?" />
+        <List>
+          <Row
+            icon="night"
+            title="After-hours doctors and pharmacies"
+            subtitle="For adults and children, dentists, night pharmacies"
+            chevron
+            onPress={() => router.push('/help/urgent')}
+          />
+        </List>
+      </View>
+
+      <View>
+        <SectionHeader title="Visa and residence" />
+        <List>
+          <Row
+            icon="government"
+            title="Immigration offices in Prague"
+            subtitle="Which one is yours, hours, and today’s waits"
+            chevron
+            onPress={() => router.push('/help/offices')}
+          />
+          <Row
+            icon="document"
+            title="What do I need?"
+            subtitle="New address, new employer, extending, a lost card"
+            chevron
+            onPress={() => router.push('/help/checklists')}
+          />
+        </List>
+      </View>
+
       <View>
         <SectionHeader title="Do it yourself, in Czech" />
         <List>
@@ -65,6 +99,18 @@ export default function HelpScreen() {
           Emergency calls are free from any phone.
         </Text>
       </View>
+
+      <View>
+        <SectionHeader title="Someone to talk to" />
+        <List inset={false}>
+          {supportLines.map((l) => (
+            <EmergencyRow key={l.number} number={l.number} label={l.label} detail={l.detail} />
+          ))}
+        </List>
+        <Text variant="footnote" color="label3" style={styles.footer}>
+          Free and open day and night. Official 116 numbers listed by the Czech government.
+        </Text>
+      </View>
     </ScrollView>
   );
 }
@@ -83,7 +129,7 @@ function EmergencyRow({
   const { colors } = useTheme();
   return (
     <Pressable
-      onPress={() => Linking.openURL(`tel:${number}`)}
+      onPress={() => Linking.openURL(`tel:${number.replace(/\s/g, '')}`)}
       accessibilityRole="button"
       accessibilityLabel={`Call ${label}, ${number}`}
       style={({ pressed }) => [styles.emergency, pressed && { backgroundColor: colors.fill }]}>
@@ -119,6 +165,6 @@ const styles = StyleSheet.create({
     paddingVertical: space.md,
     minHeight: 60,
   },
-  number: { width: 52 },
+  number: { minWidth: 52 },
   emergencyText: { flex: 1, gap: 1 },
 });

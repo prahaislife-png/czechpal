@@ -38,6 +38,8 @@ const glyphs = {
   refresh: ['arrow.clockwise', 'refresh'],
   close: ['xmark', 'close'],
   plus: ['plus', 'add'],
+  pills: ['pills', 'medication'],
+  night: ['moon', 'bedtime'],
   external: ['arrow.up.right', 'open_in_new'],
   trash: ['trash', 'delete'],
   globe: ['globe', 'language'],
