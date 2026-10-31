@@ -20,6 +20,9 @@ const kindIcon: Record<PracticeKind, IconName> = {
   dentist: 'health',
   children: 'person',
   gynecology: 'health',
+  psychiatry: 'help',
+  psychology: 'personal',
+  pharmacy: 'pills',
 };
 
 export default function HelpCategoryScreen() {
@@ -56,8 +59,8 @@ export default function HelpCategoryScreen() {
             ))}
           </List>
           <Text variant="footnote" color="label3" style={styles.note}>
-            Every practice in the official register, with who’s taking new patients and who speaks English, as reported by
-            other CzechPal users.
+            Every practice and pharmacy in the official register, with who’s taking new patients and who speaks English, as
+            reported by other CzechPal users. Needing a doctor tonight? See After-hours care on the Help page.
           </Text>
         </View>
       )}

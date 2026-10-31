@@ -42,7 +42,9 @@ const insurerOptions: readonly { id: PublicInsurer | 'skip'; label: string }[] =
  * defamatory, no health details, nothing to moderate. Anonymous; only totals are shown.
  */
 export default function ReportPracticeScreen() {
-  const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
+  const { id, name, patients } = useLocalSearchParams<{ id: string; name?: string; patients?: string }>();
+  // A pharmacy has no patient list: only the English question applies.
+  const forPatients = patients !== '0';
   const [newPatients, setNewPatients] = useState<(typeof newPatientOptions)[number]['id']>('skip');
   const [english, setEnglish] = useState<(typeof englishOptions)[number]['id']>('skip');
   const [fee, setFee] = useState<(typeof feeOptions)[number]['id']>('skip');
@@ -50,17 +52,17 @@ export default function ReportPracticeScreen() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const answered = newPatients !== 'skip' || english !== 'skip' || fee !== 'skip';
+  const answered = english !== 'skip' || (forPatients && (newPatients !== 'skip' || fee !== 'skip'));
 
   const send = async () => {
     if (!answered || sending) return;
     setSending(true);
     setError(null);
     const report: Report = {
-      ...(newPatients !== 'skip' ? { newPatients } : {}),
+      ...(forPatients && newPatients !== 'skip' ? { newPatients } : {}),
       ...(english !== 'skip' ? { english } : {}),
-      ...(fee !== 'skip' ? { extraFee: fee } : {}),
-      ...(insurer !== 'skip' ? { insurer } : {}),
+      ...(forPatients && fee !== 'skip' ? { extraFee: fee } : {}),
+      ...(forPatients && insurer !== 'skip' ? { insurer } : {}),
     };
     try {
       await reportPractice(Number(id), report);
@@ -82,28 +84,34 @@ export default function ReportPracticeScreen() {
           </Text>
         ) : null}
 
-        <View>
-          <SectionHeader title="Are they taking new patients?" />
-          <ChipGroup options={newPatientOptions} value={newPatients} onChange={setNewPatients} />
-        </View>
+        {forPatients && (
+          <View>
+            <SectionHeader title="Are they taking new patients?" />
+            <ChipGroup options={newPatientOptions} value={newPatients} onChange={setNewPatients} />
+          </View>
+        )}
 
         <View>
           <SectionHeader title="How was their English?" />
           <ChipGroup options={englishOptions} value={english} onChange={setEnglish} />
         </View>
 
-        <View>
-          <SectionHeader title="Extra charge for foreigners or for English?" />
-          <ChipGroup options={feeOptions} value={fee} onChange={setFee} />
-        </View>
+        {forPatients && (
+          <>
+            <View>
+              <SectionHeader title="Extra charge for foreigners or for English?" />
+              <ChipGroup options={feeOptions} value={fee} onChange={setFee} />
+            </View>
 
-        <View>
-          <SectionHeader title="Your health insurer (optional)" />
-          <ChipGroup options={insurerOptions} value={insurer} onChange={setInsurer} />
-          <Text variant="footnote" color="label3" style={styles.hint}>
-            Helps people with the same insurer.
-          </Text>
-        </View>
+            <View>
+              <SectionHeader title="Your health insurer (optional)" />
+              <ChipGroup options={insurerOptions} value={insurer} onChange={setInsurer} />
+              <Text variant="footnote" color="label3" style={styles.hint}>
+                Helps people with the same insurer.
+              </Text>
+            </View>
+          </>
+        )}
 
         <Text variant="footnote" color="label2" style={styles.hint}>
           Your answers are anonymous. Others only see totals, such as “taking new patients, reported 2 days ago”. You can
@@ -129,7 +137,7 @@ export default function ReportPracticeScreen() {
         />
         {!answered && (
           <Text variant="footnote" color="label3" align="center">
-            Answer at least one of the first three questions.
+            {forPatients ? 'Answer at least one of the first three questions.' : 'Answer the question above.'}
           </Text>
         )}
       </BottomBar>

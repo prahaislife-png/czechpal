@@ -11,14 +11,24 @@ import { ensureSession, supabase } from '@/lib/supabase';
  * what CzechPal users reported, each with a date, summarised on the server.
  */
 
-export type PracticeKind = 'gp' | 'dentist' | 'children' | 'gynecology';
+export type PracticeKind = 'gp' | 'dentist' | 'children' | 'gynecology' | 'psychiatry' | 'psychology' | 'pharmacy';
 
-export const practiceKinds: { id: PracticeKind; title: string; one: string; doctorType: DoctorType }[] = [
+/**
+ * `doctorType` links a kind to the Czech composer ("are you taking new patients?"); kinds without
+ * one (pharmacies) have no patient list to join, so that question and message don't apply.
+ */
+export const practiceKinds: { id: PracticeKind; title: string; one: string; doctorType?: DoctorType }[] = [
   { id: 'gp', title: 'GPs', one: 'GP', doctorType: 'gp' },
   { id: 'dentist', title: 'Dentists', one: 'Dentist', doctorType: 'dentist' },
   { id: 'children', title: 'Children’s doctors', one: 'Children’s doctor', doctorType: 'paediatrician' },
   { id: 'gynecology', title: 'Gynaecologists', one: 'Gynaecologist', doctorType: 'gynaecologist' },
+  { id: 'psychiatry', title: 'Psychiatrists', one: 'Psychiatrist', doctorType: 'psychiatrist' },
+  { id: 'psychology', title: 'Psychologists', one: 'Psychologist', doctorType: 'psychologist' },
+  { id: 'pharmacy', title: 'Pharmacies', one: 'Pharmacy' },
 ];
+
+/** Whether "taking new patients" means anything for this practice. */
+export const takesPatients = (kinds: PracticeKind[]) => kinds.some((k) => kindById(k)?.doctorType);
 
 export const kindById = (id: string | undefined) => practiceKinds.find((k) => k.id === id);
 

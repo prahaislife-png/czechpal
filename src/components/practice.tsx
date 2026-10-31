@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { insurers } from '@/lib/compose/templates';
-import { addressLine, ago, englishLabel, isFresh, type Practice } from '@/lib/help/practices';
+import { addressLine, ago, englishLabel, isFresh, takesPatients, type Practice } from '@/lib/help/practices';
 import { space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
@@ -80,7 +80,7 @@ export function PracticeStatus({ practice: p }: { practice: Practice }) {
 
   return (
     <View style={styles.statusList}>
-      {p.new_patients ? (
+      {!takesPatients(p.kinds) ? null : p.new_patients ? (
         isFresh(p.new_patients_at) ? (
           <StatusLine
             icon={p.new_patients === 'yes' ? 'checkCircle' : 'alert'}

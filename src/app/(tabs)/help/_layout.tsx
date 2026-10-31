@@ -13,6 +13,11 @@ export default function HelpStack() {
       <Stack.Screen name="index" options={{ ...largeTitleOptions(colors), title: 'Help' }} />
       <Stack.Screen name="[category]" options={{ title: '' }} />
       <Stack.Screen name="find/[kind]" options={{ title: '' }} />
+      <Stack.Screen name="urgent" options={{ title: 'After-hours care' }} />
+      <Stack.Screen name="offices/index" options={{ title: 'Immigration offices' }} />
+      <Stack.Screen name="offices/[id]" options={{ title: '' }} />
+      <Stack.Screen name="checklists/index" options={{ title: 'What do I need?' }} />
+      <Stack.Screen name="checklists/[id]" options={{ title: '' }} />
       <Stack.Screen name="practice/[id]" options={{ title: '' }} />
       <Stack.Screen name="provider/[id]" options={{ title: '' }} />
     </Stack>

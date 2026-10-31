@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Imports Prague GPs, dentists, children's doctors and gynaecologists from the official
+ * Imports Prague GPs, dentists, children's doctors, gynaecologists, psychiatrists, psychologists
+ * and pharmacies from the official
  * National Register of Healthcare Providers (NRPZS, ÚZIS ČR, CC BY 4.0, updated monthly)
  * into the `providers` table. Community reports are never touched.
  *
@@ -26,7 +27,13 @@ const KINDS = {
   'zubní lékařství': 'dentist',
   'praktické lékařství pro děti a dorost': 'children',
   'gynekologie a porodnictví': 'gynecology',
+  psychiatrie: 'psychiatry',
+  'dětská a dorostová psychiatrie': 'psychiatry',
+  'Klinický psycholog': 'psychology',
+  Psychoterapeut: 'psychology',
 };
+/** Pharmacies are a kind of facility rather than a specialty; hospital and other in-house dispensaries are left out. */
+const PHARMACY_TYPE = 'Lékárna';
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
@@ -120,7 +127,8 @@ for (const r of rows) {
     continue;
   }
   const specialties = get(r, 'ZZ_obor_pece').split(',').map((s) => s.trim()).filter(Boolean);
-  const kinds = [...new Set(specialties.map((s) => KINDS[s]).filter(Boolean))];
+  const isPharmacy = get(r, 'ZZ_druh_nazev') === PHARMACY_TYPE || get(r, 'ZZ_druh_nazev_sekundarni') === PHARMACY_TYPE;
+  const kinds = [...new Set([...specialties.map((s) => KINDS[s]), isPharmacy ? 'pharmacy' : undefined].filter(Boolean))];
   if (!kinds.length) {
     skipped.otherSpecialty++;
     continue;
@@ -166,7 +174,9 @@ console.log('Skipped:', JSON.stringify(skipped));
 
 if (dryRun) {
   const sample = (kind) => providers.filter((p) => p.kinds.includes(kind)).slice(0, 3);
-  for (const k of Object.values(KINDS)) console.log(`\nSample ${k}:`, JSON.stringify(sample(k).map(({ search, specialties, ...p }) => p), null, 1));
+  for (const k of [...new Set([...Object.values(KINDS), 'pharmacy'])]) {
+    console.log(`\nSample ${k}:`, JSON.stringify(sample(k).map(({ search, house_number, postcode, lat, lng, ...p }) => p)));
+  }
   const noDistrict = providers.filter((p) => !p.district).slice(0, 5).map((p) => [p.name, p.street]);
   console.log('\nNo district, e.g.:', JSON.stringify(noDistrict));
   process.exit(0);
