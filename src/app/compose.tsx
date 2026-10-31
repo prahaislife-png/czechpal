@@ -27,6 +27,8 @@ import {
   timesOfDay,
   whens,
   type ComposeInput,
+  type DoctorType,
+  type IntentId,
   type Line,
   type Recipient,
 } from '@/lib/compose/templates';
@@ -41,16 +43,26 @@ const modes = [
 ] as const;
 
 const isRecipient = (v: unknown): v is Recipient => v === 'trades' || v === 'landlord' || v === 'doctor';
+const isDoctorType = (v: unknown): v is DoctorType => doctorTypes.some((d) => d.id === v);
+const isIntent = (v: unknown, recipient: Recipient): v is IntentId => intents[recipient].some((i) => i.id === v);
 
 /**
  * Write to any Czech landlord, doctor or tradesperson, not only the English-speaking ones.
- * Modal task with Close. Opened from Home, from Find help, or from a provider (recipient + name + phone).
+ * Modal task with Close. Opened from Home, from Find help, or from a provider
+ * (recipient + name + phone, and for a doctor optionally the doctor type and intent).
  */
 export default function ComposeScreen() {
   const { colors } = useTheme();
-  const params = useLocalSearchParams<{ recipient?: string; to?: string; phone?: string }>();
-  const [input, setInput] = useState<ComposeInput>(() => defaultInput(isRecipient(params.recipient) ? params.recipient : 'trades'));
-  const [mode, setMode] = useState<Mode>('message');
+  const params = useLocalSearchParams<{ recipient?: string; to?: string; phone?: string; doctorType?: string; intent?: string; mode?: string }>();
+  const [input, setInput] = useState<ComposeInput>(() => {
+    const base = defaultInput(isRecipient(params.recipient) ? params.recipient : 'trades');
+    return {
+      ...base,
+      ...(isIntent(params.intent, base.recipient) ? { intent: params.intent } : {}),
+      ...(isDoctorType(params.doctorType) ? { doctorType: params.doctorType } : {}),
+    };
+  });
+  const [mode, setMode] = useState<Mode>(params.mode === 'call' ? 'call' : 'message');
   const [copied, setCopied] = useState(false);
   const [openError, setOpenError] = useState<string | null>(null);
 
