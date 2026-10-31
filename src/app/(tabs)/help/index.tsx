@@ -2,12 +2,14 @@ import { router } from 'expo-router';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { SectionHeader } from '@/components/ui/card';
-import { Icon } from '@/components/ui/icon';
+import { Icon, type IconName } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { emergencyNumbers, helpCategories } from '@/lib/help/directory';
+import { kindIcon, practiceKinds } from '@/lib/help/practices';
 import { supportLines } from '@/lib/help/urgent';
-import { layout, space } from '@/theme/tokens';
+import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
 export default function HelpScreen() {
@@ -15,13 +17,24 @@ export default function HelpScreen() {
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+      {/* The most used part of Help: one tap to every practice of a kind in Prague. */}
       <View>
-        <SectionHeader title="Sick tonight or at the weekend?" />
-        <List>
+        <SectionHeader title="Find a doctor in Prague" />
+        <View style={styles.kinds}>
+          {practiceKinds.map((k) => (
+            <KindPill
+              key={k.id}
+              icon={kindIcon[k.id]}
+              label={k.title}
+              onPress={() => router.push({ pathname: '/help/find/[kind]', params: { kind: k.id } })}
+            />
+          ))}
+        </View>
+        <List style={styles.afterHours}>
           <Row
             icon="night"
-            title="After-hours doctors and pharmacies"
-            subtitle="For adults and children, dentists, night pharmacies"
+            title="Sick tonight or at the weekend?"
+            subtitle="After-hours doctors, dentists and night pharmacies"
             chevron
             onPress={() => router.push('/help/urgent')}
           />
@@ -49,29 +62,11 @@ export default function HelpScreen() {
       </View>
 
       <View>
-        <SectionHeader title="Do it yourself, in Czech" />
+        <SectionHeader title="Other help" />
         <List>
-          <Row
-            icon="compose"
-            title="Write to anyone in Czech"
-            subtitle="Landlord, doctor, plumber: a message or a call script"
-            chevron
-            onPress={() => router.push('/compose')}
-          />
-          <Row
-            icon="qrcode"
-            title="Pay a bill by QR code"
-            subtitle="Turn a bill into a code your banking app scans"
-            chevron
-            onPress={() => router.push('/pay')}
-          />
-        </List>
-      </View>
-
-      <View>
-        <SectionHeader title="Find help" />
-        <List>
-          {helpCategories.map((c) => (
+          {helpCategories
+            .filter((c) => c.id !== 'doctors')
+            .map((c) => (
             <Row
               key={c.id}
               icon={c.icon}
@@ -80,10 +75,10 @@ export default function HelpScreen() {
               chevron
               onPress={() => router.push({ pathname: '/help/[category]', params: { category: c.id } })}
             />
-          ))}
+            ))}
         </List>
         <Text variant="footnote" color="label3" style={styles.footer}>
-          Official Czech directories, what to ask, and a way to write to anyone in Czech.
+          Official Czech directories, and what to ask.
         </Text>
       </View>
 
@@ -112,6 +107,21 @@ export default function HelpScreen() {
         </Text>
       </View>
     </ScrollView>
+  );
+}
+
+function KindPill({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
+  const { colors } = useTheme();
+  return (
+    <PressableScale
+      onPress={onPress}
+      accessibilityRole="button"
+      style={[styles.kind, { backgroundColor: colors.surface }]}>
+      <Icon name={icon} size={18} color={colors.accent} />
+      <Text variant="subhead" weight="600" chrome>
+        {label}
+      </Text>
+    </PressableScale>
   );
 }
 
@@ -157,6 +167,16 @@ function EmergencyRow({
 const styles = StyleSheet.create({
   content: { padding: layout.gutter, paddingBottom: space.huge, gap: space.xxl },
   footer: { paddingHorizontal: space.lg, marginTop: space.sm },
+  kinds: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  kind: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    minHeight: 44,
+    paddingHorizontal: space.lg,
+    borderRadius: radius.pill,
+  },
+  afterHours: { marginTop: space.md },
   emergency: {
     flexDirection: 'row',
     alignItems: 'center',

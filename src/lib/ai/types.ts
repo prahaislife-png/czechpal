@@ -102,9 +102,7 @@ export type PaymentInfo = {
   message?: string;
 };
 
-export type Tone = 'formal' | 'friendly' | 'short';
-
-export type ReplyDraft = { intentId: string; tone: Tone; czech: string; english: string };
+export type ReplyDraft = { intentId: string; czech: string; english: string };
 
 export type AnalyzeInput = {
   kind: 'text' | 'image' | 'pdf';
@@ -145,9 +143,29 @@ export type ReplyInput = {
   originalText: string;
   sampleId?: string;
   intentId: string;
-  tone: Tone;
+  /** What to reply in the reader's own words, any language; replaces the suggested intent. */
+  ownWords?: string;
   /** Language of the translation shown under the Czech reply. */
   language?: LanguageCode;
+};
+
+/** A new message, not a reply: what the reader wants to say, in their own words. */
+export type ComposeInput = {
+  request: string;
+  /** The practice or person it's for, when the composer was opened from one. */
+  to?: string;
+  about?: string;
+  details: { name?: string; address?: string; insurer?: string };
+  language?: LanguageCode;
+};
+
+export type SpokenLine = { cs: string; en: string };
+
+export type ComposeResult = {
+  czech: string;
+  /** In the reader's language, despite the name (kept the same as replies). */
+  english: string;
+  call: { say: SpokenLine[]; hear: SpokenLine[] };
 };
 
 export class AnalyzeError extends Error {
@@ -167,6 +185,7 @@ export class AnalyzeError extends Error {
 export interface AIClient {
   analyzeDocument(input: AnalyzeInput): Promise<AnalyzeResult>;
   generateReply(input: ReplyInput): Promise<ReplyDraft>;
+  composeMessage(input: ComposeInput): Promise<ComposeResult>;
   /** Live only: the server decides the free allowance. */
   getAllowance?(): Promise<Allowance>;
 }

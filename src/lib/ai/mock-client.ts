@@ -4,6 +4,8 @@ import {
   type AIClient,
   type AnalyzeInput,
   type AnalyzeResult,
+  type ComposeInput,
+  type ComposeResult,
   type ReplyDraft,
   type ReplyInput,
 } from './types';
@@ -39,28 +41,27 @@ export const mockClient: AIClient = {
     return { analysis: fallback.analysis, originalText: fallback.original, demo: 'sample', sampleId: fallback.id };
   },
 
-  async generateReply({ sampleId, intentId, tone }: ReplyInput): Promise<ReplyDraft> {
+  async generateReply({ sampleId, intentId }: ReplyInput): Promise<ReplyDraft> {
     await wait(700);
     const sample = sampleById(sampleId) ?? samples[0];
     const template = sample.replies[intentId] ?? Object.values(sample.replies)[0];
     const greeting = sample.greeting ?? { cs: 'Dobrý den,', en: 'Hello,' };
     const name = sample.signature ?? { cs: '[Vaše jméno]', en: '[Your name]' };
+    return {
+      intentId,
+      czech: `${greeting.cs}\n\n${template.body.cs}\n\nS pozdravem\n${name.cs}`,
+      english: `${greeting.en}\n\n${template.body.en}\n\nKind regards\n${name.en}`,
+    };
+  },
 
-    const frame = {
-      formal: {
-        cs: `${greeting.cs}\n\n${template.body.cs}\n\nS pozdravem\n${name.cs}`,
-        en: `${greeting.en}\n\n${template.body.en}\n\nKind regards\n${name.en}`,
-      },
-      friendly: {
-        cs: `${greeting.cs}\n\n${template.body.cs}\n\nDěkuji a přeji hezký den\n${name.cs}`,
-        en: `${greeting.en}\n\n${template.body.en}\n\nThank you and have a nice day\n${name.en}`,
-      },
-      short: {
-        cs: `${greeting.cs}\n${template.short.cs}\n\nDěkuji\n${name.cs}`,
-        en: `${greeting.en}\n${template.short.en}\n\nThank you\n${name.en}`,
-      },
-    }[tone];
-
-    return { intentId, tone, czech: frame.cs, english: frame.en };
+  // Without the server nothing can be written from the reader's words: say so plainly.
+  async composeMessage({ details }: ComposeInput): Promise<ComposeResult> {
+    await wait(700);
+    const demo = '[Demo: CzechPal writes your message here when it is connected to the server.]';
+    return {
+      czech: `Dobrý den,\n\n${demo}\n\nČesky mluvím jen trochu, proto prosím o odpověď písemně.\n\nS pozdravem\n${details.name?.trim() || '[Vaše jméno]'}`,
+      english: `Hello,\n\n${demo}\n\nI only speak a little Czech, so please reply in writing.\n\nKind regards\n${details.name?.trim() || '[Your name]'}`,
+      call: { say: [], hear: [] },
+    };
   },
 };

@@ -1,41 +1,20 @@
 import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, SectionHeader } from '@/components/ui/card';
-import { Chip } from '@/components/ui/chip';
 import { Icon } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
-import { type IconName } from '@/components/ui/icon';
-import { categoryById, providers, type Provider } from '@/lib/help/directory';
-import { practiceKinds, type PracticeKind } from '@/lib/help/practices';
+import { categoryById } from '@/lib/help/directory';
+import { kindIcon, practiceKinds } from '@/lib/help/practices';
 import { layout, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
-
-const kindIcon: Record<PracticeKind, IconName> = {
-  gp: 'doctor',
-  dentist: 'health',
-  children: 'person',
-  gynecology: 'health',
-  psychiatry: 'help',
-  psychology: 'personal',
-  pharmacy: 'pills',
-};
 
 export default function HelpCategoryScreen() {
   const { colors } = useTheme();
   const { category: id } = useLocalSearchParams<{ category: string }>();
   const category = categoryById(id);
-  const [fluentOnly, setFluentOnly] = useState(false);
-  const [insuranceOnly, setInsuranceOnly] = useState(false);
-
-  const inCategory = useMemo(() => providers.filter((p) => p.category === id), [id]);
-  const list = inCategory.filter(
-    (p) => (!fluentOnly || p.english === 'fluent') && (!insuranceOnly || p.publicInsurance === true),
-  );
 
   if (!category) return <Redirect href="/help" />;
 
@@ -104,30 +83,6 @@ export default function HelpCategoryScreen() {
         </View>
       ) : null}
 
-      {/* Real listings only; this stays hidden until the first ones are checked. */}
-      {inCategory.length > 0 && (
-        <View>
-          <SectionHeader title="Listings" />
-          <View style={styles.filters}>
-            <Chip label="Fluent English" role="checkbox" selected={fluentOnly} onPress={() => setFluentOnly((v) => !v)} />
-            {id === 'doctors' && (
-              <Chip label="Public insurance" role="checkbox" selected={insuranceOnly} onPress={() => setInsuranceOnly((v) => !v)} />
-            )}
-          </View>
-          {list.length ? (
-            <List>
-              {list.map((p) => (
-                <ProviderRow key={p.id} provider={p} />
-              ))}
-            </List>
-          ) : (
-            <Text variant="callout" color="label2" style={styles.empty}>
-              Nothing matches these filters. Turn one off, or write to any Czech provider above.
-            </Text>
-          )}
-        </View>
-      )}
-
       <View>
         <SectionHeader title="What to ask" />
         <View style={styles.tips}>
@@ -145,30 +100,10 @@ export default function HelpCategoryScreen() {
   );
 }
 
-function ProviderRow({ provider: p }: { provider: Provider }) {
-  return (
-    <Row
-      title={p.name}
-      subtitle={`${p.services.join(', ')} · ${p.area} · ${p.english === 'fluent' ? 'Fluent English' : 'Some English'}`}
-      accessory={
-        p.verification.status === 'verified' ? (
-          <Badge label="Verified" tone="success" icon="verified" />
-        ) : (
-          <Badge label="Unverified" tone="warning" />
-        )
-      }
-      chevron
-      onPress={() => router.push({ pathname: '/help/provider/[id]', params: { id: p.id } })}
-    />
-  );
-}
-
 const styles = StyleSheet.create({
   content: { padding: layout.gutter, paddingBottom: space.huge, gap: space.xxl },
   bridge: { gap: space.sm },
   bridgeButton: { alignSelf: 'flex-start', marginTop: space.xs },
-  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginBottom: space.md },
-  empty: { paddingHorizontal: space.xs },
   note: { paddingHorizontal: space.lg, marginTop: space.sm },
   tips: { gap: space.md, paddingHorizontal: space.xs },
   tip: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start' },

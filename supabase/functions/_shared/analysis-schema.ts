@@ -162,3 +162,26 @@ export const validateReplyOutput = (raw: unknown) => {
   const { czech, translation } = ReplyOutput.parse(raw);
   return { czech, english: translation };
 };
+
+/* ───────────── Compose (a new message, not a reply) ───────────── */
+
+const spokenLine = obj({ cs: str, translated: str });
+export const composeOutputSchema: Json = obj({
+  czech: str,
+  translation: str,
+  callSay: arr(spokenLine),
+  callHear: arr(spokenLine),
+});
+
+const SpokenLine = z.object({ cs: text, translated: text }).transform(({ cs, translated }) => ({ cs, en: translated }));
+const ComposeOutput = z.object({
+  czech: text,
+  translation: text,
+  callSay: z.array(SpokenLine).max(8),
+  callHear: z.array(SpokenLine).max(6),
+});
+/** Same naming as replies: the app reads translations as `english` / `en`. */
+export const validateComposeOutput = (raw: unknown) => {
+  const { czech, translation, callSay, callHear } = ComposeOutput.parse(raw);
+  return { czech, english: translation, call: { say: callSay, hear: callHear } };
+};

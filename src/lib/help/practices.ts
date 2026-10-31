@@ -1,5 +1,6 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
 
+import type { IconName } from '@/components/ui/icon';
 import type { DoctorType, Insurer } from '@/lib/compose/templates';
 import { ensureSession, supabase } from '@/lib/supabase';
 
@@ -28,6 +29,17 @@ export const practiceKinds: { id: PracticeKind; title: string; one: string; doct
 ];
 
 /** Whether "taking new patients" means anything for this practice. */
+/** Icon per kind, used wherever the kinds are listed. */
+export const kindIcon: Record<PracticeKind, IconName> = {
+  gp: 'doctor',
+  dentist: 'health',
+  children: 'person',
+  gynecology: 'health',
+  psychiatry: 'help',
+  psychology: 'personal',
+  pharmacy: 'pills',
+};
+
 export const takesPatients = (kinds: PracticeKind[]) => kinds.some((k) => kindById(k)?.doctorType);
 
 export const kindById = (id: string | undefined) => practiceKinds.find((k) => k.id === id);

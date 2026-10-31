@@ -1,16 +1,15 @@
-import { router } from 'expo-router';
 import { useIncomingShare } from 'expo-sharing';
 import { useEffect, useRef } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/ui/text';
-import { draftFromShare, pickSharedItem } from '@/lib/capture';
+import { draftFromShare, pickSharedItem, replaceWithReview } from '@/lib/capture';
 import { space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
 /**
  * Reads what another app shared (native share extension / share intent), turns it into a draft
- * and replaces itself with the review screen, so back never returns here.
+ * and replaces itself with the next screen, so back never returns here.
  * Web has its own file: receiving shares isn't supported there.
  */
 export function ShareIntake({ fallback }: { fallback: React.ReactNode }) {
@@ -25,7 +24,7 @@ export function ShareIntake({ fallback }: { fallback: React.ReactNode }) {
     handled.current = true;
     const id = draftFromShare(item);
     clearSharedPayloads();
-    router.replace({ pathname: '/review/[id]', params: { id } });
+    replaceWithReview(id);
   }, [isResolving, resolvedSharedPayloads, clearSharedPayloads]);
 
   if (!isResolving && (error || !pickSharedItem(resolvedSharedPayloads))) return fallback;

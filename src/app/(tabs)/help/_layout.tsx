@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { largeTitleOptions, stackOptions } from '@/theme/navigation';
 import { useTheme } from '@/theme/use-theme';
 
-// Deep links to a category or provider land with the Help list underneath.
+// Deep links to a category or practice land with the Help list underneath.
 export const unstable_settings = { anchor: 'index' };
 
 export default function HelpStack() {
@@ -19,7 +19,6 @@ export default function HelpStack() {
       <Stack.Screen name="checklists/index" options={{ title: 'What do I need?' }} />
       <Stack.Screen name="checklists/[id]" options={{ title: '' }} />
       <Stack.Screen name="practice/[id]" options={{ title: '' }} />
-      <Stack.Screen name="provider/[id]" options={{ title: '' }} />
     </Stack>
   );
 }

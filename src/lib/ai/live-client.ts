@@ -13,6 +13,8 @@ import {
   type Analysis,
   type AnalyzeInput,
   type AnalyzeResult,
+  type ComposeInput,
+  type ComposeResult,
   type ReplyDraft,
   type ReplyInput,
 } from './types';
@@ -74,7 +76,7 @@ async function accessToken(): Promise<string> {
   }
 }
 
-async function invoke<T>(name: 'reply' | 'allowance', body: Record<string, unknown>): Promise<T> {
+async function invoke<T>(name: 'reply' | 'compose' | 'allowance', body: Record<string, unknown>): Promise<T> {
   await accessToken();
   const controller = new AbortController();
   let timedOut = false;
@@ -234,15 +236,20 @@ export const liveClient: AIClient = {
 
   getAllowance: () => invoke<Allowance>('allowance', {}),
 
-  async generateReply({ analysis, originalText, intentId, tone, language }: ReplyInput): Promise<ReplyDraft> {
+  async generateReply({ analysis, originalText, intentId, ownWords, language }: ReplyInput): Promise<ReplyDraft> {
     const intent = analysis.replyIntents.find((i) => i.id === intentId) ?? analysis.replyIntents[0];
     const data = await invoke<{ czech: string; english: string }>('reply', {
       originalText,
       summary: { kind: analysis.kind, sender: analysis.sender, inShort: analysis.inShort },
-      intent: { label: intent?.label ?? 'Reply', description: intent?.description ?? '' },
-      tone,
+      ...(ownWords?.trim()
+        ? { ownWords: ownWords.trim() }
+        : { intent: { label: intent?.label ?? 'Reply', description: intent?.description ?? '' } }),
       language: language ?? DEFAULT_LANGUAGE,
     });
-    return { intentId, tone, czech: data.czech, english: data.english };
+    return { intentId, czech: data.czech, english: data.english };
+  },
+
+  async composeMessage({ request, to, about, details, language }: ComposeInput): Promise<ComposeResult> {
+    return invoke<ComposeResult>('compose', { request, to, about, details, language: language ?? DEFAULT_LANGUAGE });
   },
 };
