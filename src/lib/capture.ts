@@ -17,7 +17,8 @@ export async function pickImage(): Promise<string | null> {
 export async function pickPdf(): Promise<string | null> {
   const result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf', copyToCacheDirectory: true });
   if (result.canceled) return null;
-  return useStore.getState().createDraft({ source: 'pdf', fileName: result.assets[0].name });
+  const file = result.assets[0];
+  return useStore.getState().createDraft({ source: 'pdf', fileUri: file.uri, fileName: file.name });
 }
 
 export function draftFromPhoto(uri: string) {
@@ -37,7 +38,7 @@ export function draftFromExample(sampleId: string) {
 export type SharedItem =
   | { kind: 'text'; text: string }
   | { kind: 'image'; uri: string }
-  | { kind: 'pdf'; name: string }
+  | { kind: 'pdf'; uri: string; name: string }
   | { kind: 'link'; url: string };
 
 /**
@@ -50,7 +51,7 @@ export function pickSharedItem(payloads: ResolvedSharePayload[]): SharedItem | n
   const image = payloads.find((p) => p.contentType === 'image' && p.contentUri);
   if (image?.contentUri) return { kind: 'image', uri: image.contentUri };
   const pdf = payloads.find((p) => p.contentMimeType === 'application/pdf' && p.contentUri);
-  if (pdf) return { kind: 'pdf', name: pdf.originalName ?? 'Shared document.pdf' };
+  if (pdf?.contentUri) return { kind: 'pdf', uri: pdf.contentUri, name: pdf.originalName ?? 'Shared document.pdf' };
   const link = payloads.find((p) => p.shareType === 'url' && p.value.trim());
   if (link) return { kind: 'link', url: link.value.trim() };
   return null;
@@ -64,7 +65,7 @@ export function draftFromShare(item: SharedItem): string {
     case 'image':
       return createDraft({ source: 'library', imageUri: item.uri });
     case 'pdf':
-      return createDraft({ source: 'pdf', fileName: item.name });
+      return createDraft({ source: 'pdf', fileUri: item.uri, fileName: item.name });
     case 'link':
       return draftFromText(item.url);
   }

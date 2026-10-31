@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
+import { isDemoMode } from '@/lib/ai';
 import { confirm } from '@/lib/dialogs';
 import { FREE_ANALYSES_PER_MONTH, useRemainingAnalyses, useStore } from '@/store/cases';
 import { layout, radius, space } from '@/theme/tokens';
@@ -15,6 +16,7 @@ export default function ProfileScreen() {
   const remaining = useRemainingAnalyses();
   const used = FREE_ANALYSES_PER_MONTH - remaining;
   const caseCount = useStore((s) => s.cases.length);
+  const aiConsent = useStore((s) => s.aiConsent);
   const { clearAll, resetUsage, resetOnboarding } = useStore.getState();
 
   const deleteAll = async () => {
@@ -77,11 +79,27 @@ export default function ProfileScreen() {
       <View>
         <SectionHeader title="Privacy" />
         <List>
+          {!isDemoMode && (
+            <Row
+              icon="shield"
+              title="Send texts to the AI to explain them"
+              subtitle={aiConsent ? 'Allowed' : 'You’ll be asked before the next explanation'}
+              accessory={
+                <Switch
+                  value={aiConsent}
+                  onValueChange={(v) => useStore.getState().setAiConsent(v)}
+                  trackColor={{ true: colors.accentFill }}
+                  accessibilityLabel="Send texts to the AI to explain them"
+                />
+              }
+            />
+          )}
           <Row icon="trash" title="Delete everything" destructive onPress={deleteAll} />
         </List>
         <Text variant="footnote" color="label2" style={styles.footer}>
-          Everything you scan is kept on this device. Once live reading is on, a text is sent for analysis only after
-          you tap Explain, and nothing is ever sent to anyone on your behalf.
+          Your history is kept on this device. A photo or text is sent to Anthropic’s Claude AI only when you tap
+          Explain; CzechPal doesn’t keep it, and Anthropic doesn’t use it to train AI models. Nothing is ever sent to
+          anyone on your behalf.
         </Text>
       </View>
 

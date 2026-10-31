@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 
-import { ai, AnalyzeError, type Analysis, type AnalyzeResult, type Category } from '@/lib/ai';
+import { analyzerFor, AnalyzeError, type Analysis, type AnalyzeResult, type Category } from '@/lib/ai';
 
 export type CaseSource = 'camera' | 'library' | 'pdf' | 'text' | 'example';
 
@@ -11,6 +11,8 @@ export type CaseItem = {
   createdAt: string;
   source: CaseSource;
   imageUri?: string;
+  /** Local copy of a picked or shared PDF. */
+  fileUri?: string;
   fileName?: string;
   text?: string;
   sampleId?: string;
@@ -41,6 +43,8 @@ type State = {
   onboarded: boolean;
   cases: CaseItem[];
   usage: { month: string; used: number };
+  /** The user agreed that their text may be sent to the AI service (asked once, before the first live explanation). */
+  aiConsent: boolean;
 };
 
 type Actions = {
@@ -54,6 +58,7 @@ type Actions = {
   remove: (id: string) => void;
   clearAll: () => void;
   resetUsage: () => void;
+  setAiConsent: (value: boolean) => void;
 };
 
 const thisMonth = () => new Date().toISOString().slice(0, 7);
@@ -70,6 +75,7 @@ export const useStore = create<State & Actions>()(
         onboarded: false,
         cases: [],
         usage: { month: thisMonth(), used: 0 },
+        aiConsent: false,
 
         completeOnboarding: () => set({ onboarded: true }),
         resetOnboarding: () => set({ onboarded: false }),
@@ -92,19 +98,25 @@ export const useStore = create<State & Actions>()(
           if (!item || item.status === 'analyzing') return;
           patch(id, { status: 'analyzing', error: undefined });
           try {
-            const result = await ai.analyzeDocument({
+            const result = await analyzerFor(item).analyzeDocument({
               kind: item.source === 'text' || item.source === 'example' ? 'text' : item.source === 'pdf' ? 'pdf' : 'image',
               text: item.text,
-              uri: item.imageUri,
+              uri: item.imageUri ?? item.fileUri,
               sampleId: item.source === 'example' ? item.sampleId : undefined,
               hint: item.hint,
             });
-            // Allowance is consumed only by a successful analysis.
-            set((s) => {
-              const month = thisMonth();
-              const used = s.usage.month === month ? s.usage.used + 1 : 1;
-              return { usage: { month, used } };
-            });
+            // Examples are free. Otherwise only a successful explanation counts, and the
+            // server's own count wins when it sends one.
+            if (item.source !== 'example') {
+              set((s) => {
+                const month = thisMonth();
+                const used =
+                  result.remaining !== undefined
+                    ? Math.max(0, FREE_ANALYSES_PER_MONTH - result.remaining)
+                    : (s.usage.month === month ? s.usage.used : 0) + 1;
+                return { usage: { month, used } };
+              });
+            }
             patch(id, { status: 'ready', result, sampleId: result.sampleId });
           } catch (e) {
             const message =
@@ -117,13 +129,15 @@ export const useStore = create<State & Actions>()(
         remove: (id) => set((s) => ({ cases: s.cases.filter((c) => c.id !== id) })),
         clearAll: () => set({ cases: [] }),
         resetUsage: () => set({ usage: { month: thisMonth(), used: 0 } }),
+        setAiConsent: (aiConsent) => set({ aiConsent }),
       };
     },
     {
       name: STORAGE_KEY,
       storage: createJSONStorage(() => storage),
-      partialize: ({ onboarded, cases, usage }) => ({
+      partialize: ({ onboarded, cases, usage, aiConsent }) => ({
         onboarded,
+        aiConsent,
         // Interrupted analyses come back as errors the user can retry; drafts are not kept.
         cases: cases
           .filter((c) => c.status !== 'draft')

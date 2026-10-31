@@ -13,7 +13,7 @@ import { ChoiceList } from '@/components/ui/choice-list';
 import { Segmented } from '@/components/ui/segmented';
 import { SkeletonLine } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
-import { ai, type ReplyDraft, type Tone } from '@/lib/ai';
+import { replierFor, type ReplyDraft, type Tone } from '@/lib/ai';
 import { useCase, useStore } from '@/store/cases';
 import { layout, motion, radius, space, type as ramp } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -46,27 +46,36 @@ export default function ReplyScreen() {
   // A draft for a different intent or tone is stale: show the skeleton until the new one lands.
   const current = draft && draft.intentId === intentId && draft.tone === tone ? draft : null;
 
+  const result = item?.result;
+  const sampleId = item?.sampleId;
+  const [attempt, setAttempt] = useState(0);
+  // An error belongs to the request that failed; changing intent or tone starts a fresh one.
+  const requestKey = `${intentId}-${tone}-${attempt}`;
+  const [replyError, setReplyError] = useState<{ key: string; message: string } | null>(null);
+  const failed = replyError?.key === requestKey ? replyError.message : null;
+
   useEffect(() => {
-    if (!item?.result) return;
+    if (!result) return;
     let active = true;
-    ai.generateReply({
-      analysis: item.result.analysis,
-      originalText: item.result.originalText,
-      sampleId: item.sampleId,
-      intentId,
-      tone,
-    }).then((d) => {
-      if (!active) return;
-      text.current = d.czech;
-      setEdited(false);
-      setCopied(false);
-      setEditorHeight(EDITOR_MIN_HEIGHT);
-      setDraft(d);
-    });
+    replierFor({ sampleId })
+      .generateReply({ analysis: result.analysis, originalText: result.originalText, sampleId, intentId, tone })
+      .then((d) => {
+        if (!active) return;
+        text.current = d.czech;
+        setEdited(false);
+        setCopied(false);
+        setEditorHeight(EDITOR_MIN_HEIGHT);
+        setDraft(d);
+      })
+      .catch((e: unknown) => {
+        if (!active) return;
+        const message = e instanceof Error ? e.message : 'The reply couldn’t be written. Please try again.';
+        setReplyError({ key: `${intentId}-${tone}-${attempt}`, message });
+      });
     return () => {
       active = false;
     };
-  }, [item?.result, item?.sampleId, intentId, tone]);
+  }, [result, sampleId, intentId, tone, attempt]);
 
   useEffect(() => {
     if (!copied) return;
@@ -145,6 +154,13 @@ export default function ReplyScreen() {
                   ]}
                 />
               </Animated.View>
+            ) : failed ? (
+              <View style={styles.editorSkeleton} accessibilityLiveRegion="polite">
+                <Text variant="callout" color="danger">
+                  {failed}
+                </Text>
+                <Button label="Try again" variant="secondary" size="medium" icon="refresh" onPress={() => setAttempt((a) => a + 1)} style={styles.retry} />
+              </View>
             ) : (
               <View style={styles.editorSkeleton} accessibilityLabel="Writing your reply">
                 <SkeletonLine width="30%" />
@@ -206,6 +222,7 @@ const styles = StyleSheet.create({
   editorCard: { overflow: 'hidden' },
   editor: { padding: space.xl, lineHeight: 24, minHeight: EDITOR_MIN_HEIGHT, textAlignVertical: 'top', borderRadius: radius.card },
   editorSkeleton: { padding: space.xl, gap: space.md, minHeight: 180 },
+  retry: { alignSelf: 'flex-start' },
   english: { lineHeight: 22 },
   englishSkeleton: { gap: space.sm },
   hint: { marginTop: space.sm, paddingHorizontal: space.xs },
