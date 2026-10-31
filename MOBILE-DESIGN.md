@@ -1,4 +1,4 @@
-# CzechReply: mobile design commitments
+# CzechPal: mobile design commitments
 
 Read this before any UI decision. Tokens and visual rules: `design-system/MASTER.md`.
 Audit baseline the redesign is measured against: `design-baseline.json`.

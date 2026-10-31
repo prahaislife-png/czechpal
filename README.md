@@ -1,4 +1,4 @@
-# CzechReply
+# CzechPal
 
 Point your phone at anything written in Czech (a sign, a menu, a medicine label, a chat, a letter) and get
 what it says, what it means for you and, when it's a message, a polite reply in Czech.
@@ -24,7 +24,7 @@ Press `w` for the browser, or scan the QR code with a development build on your 
   - Messages get a suggested reply.
   - Letters get a verdict, numbered steps, quoted key details and a notice for official matters.
 - **Write a reply**: choose an intent and a tone, edit the Czech draft, see its English meaning, then copy it or open it in email.
-- **Share to CzechReply**: share text, screenshots, photos or PDFs from WhatsApp, Mail or Photos straight into the app. This needs a development or store build; it doesn't work in Expo Go or on the web.
+- **Share to CzechPal**: share text, screenshots, photos or PDFs from WhatsApp, Mail or Photos straight into the app. This needs a development or store build; it doesn't work in Expo Go or on the web.
 - **Pay a bill by QR code**: builds a QR Platba code your Czech banking app scans, with the account checked against the bank's own checksum, plus copy buttons for each field.
 - **Write in Czech**: messages and phone call scripts (with pronunciation, and a play-aloud button) for landlords, doctors and tradespeople.
 - **Help**: English-speaking providers with a verification status on each listing, filters, and emergency numbers. The current listings are clearly marked samples.

@@ -12,7 +12,7 @@ import { Icon } from '@/components/ui/icon';
 import { List } from '@/components/ui/list';
 import { Chip } from '@/components/ui/chip';
 import { Text } from '@/components/ui/text';
-import { categoryLabels, type Category } from '@/lib/ai';
+import { categoryLabels, isDemoMode, type Category } from '@/lib/ai';
 import { useCase, useRemainingAnalyses, useStore, type CaseItem } from '@/store/cases';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -33,12 +33,18 @@ export default function ReviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const item = useCase(id);
   const remaining = useRemainingAnalyses();
-  const { setHint, analyze, discardDraft, resetUsage } = useStore.getState();
+  const aiConsent = useStore((s) => s.aiConsent);
+  const { setHint, analyze, discardDraft, resetUsage, setAiConsent } = useStore.getState();
 
   // Leaving without explaining discards the draft; a started analysis is no longer a draft.
   useEffect(() => () => discardDraft(id), [id, discardDraft]);
 
   if (!item) return <Redirect href="/" />;
+
+  const isExample = item.source === 'example';
+  // Apple requires explicit permission before personal data goes to a third-party AI.
+  const needsConsent = !isDemoMode && !isExample && !aiConsent;
+  const outOfAllowance = !isExample && remaining === 0;
 
   const explain = () => {
     analyze(item.id);
@@ -71,22 +77,38 @@ export default function ReviewScreen() {
       </ScrollView>
 
       <BottomBar>
-        {remaining > 0 ? (
-          <>
-            <Button label="Explain" onPress={explain} />
-            <Text variant="footnote" color="label3" align="center" tabular>
-              {remaining === 1
-                ? '1 free explanation left this month'
-                : `${remaining} free explanations left this month`}
-            </Text>
-          </>
-        ) : (
+        {outOfAllowance ? (
           // The allowance gate is inline state, not an alert.
           <>
             <Text variant="footnote" color="label2" align="center">
               You’ve used this month’s free explanations. Pro with unlimited explanations is coming soon.
             </Text>
-            <Button label="Reset demo allowance" variant="secondary" onPress={resetUsage} />
+            {isDemoMode && <Button label="Reset demo allowance" variant="secondary" onPress={resetUsage} />}
+          </>
+        ) : needsConsent ? (
+          <>
+            <Text variant="footnote" color="label2" align="center">
+              To explain it, CzechPal sends this text or photo securely to Anthropic’s Claude AI. CzechPal doesn’t keep
+              it, and Anthropic doesn’t use it to train AI models. You can change this in Profile.
+            </Text>
+            <Button
+              label="Agree and explain"
+              onPress={() => {
+                setAiConsent(true);
+                explain();
+              }}
+            />
+          </>
+        ) : (
+          <>
+            <Button label="Explain" onPress={explain} />
+            <Text variant="footnote" color="label3" align="center" tabular>
+              {isExample
+                ? 'Examples are free and don’t use your explanations.'
+                : remaining === 1
+                  ? '1 free explanation left this month'
+                  : `${remaining} free explanations left this month`}
+            </Text>
           </>
         )}
       </BottomBar>

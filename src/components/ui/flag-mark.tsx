@@ -3,14 +3,14 @@ import { StyleSheet, View } from 'react-native';
 import { flag } from '@/theme/tokens';
 
 /**
- * The CzechReply mark: the Czech flag, drawn natively, inside a speech-bubble silhouette
+ * The CzechPal mark: the Czech flag, drawn natively, inside a speech-bubble silhouette
  * (rounded square with a squared-off bottom-left corner).
  */
 export function FlagMark({ size = 28 }: { size?: number }) {
   const r = size * 0.3;
   return (
     <View
-      accessibilityLabel="CzechReply"
+      accessibilityLabel="CzechPal"
       style={[
         styles.mark,
         {

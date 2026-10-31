@@ -183,7 +183,7 @@ export default function PayScreen() {
         <View style={styles.note}>
           <Icon name="lock" size={14} color={colors.label3} />
           <Text variant="footnote" color="label3" style={styles.noteText}>
-            CzechReply never sends money. The QR code only fills in the payment form in your own banking app.
+            CzechPal never sends money. The QR code only fills in the payment form in your own banking app.
           </Text>
         </View>
       </ScrollView>

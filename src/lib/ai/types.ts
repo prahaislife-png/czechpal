@@ -119,6 +119,8 @@ export type AnalyzeResult = {
   /** Demo mode: the result is a sample, not a reading of the user's document. */
   demo: null | 'matched' | 'sample';
   sampleId?: string;
+  /** Free explanations left this month, as counted by the server. */
+  remaining?: number;
 };
 
 export type ReplyInput = {
@@ -131,7 +133,7 @@ export type ReplyInput = {
 
 export class AnalyzeError extends Error {
   constructor(
-    public code: 'too_short' | 'unreadable' | 'network',
+    public code: 'too_short' | 'unreadable' | 'too_large' | 'limit' | 'rate' | 'network' | 'server',
     message: string,
   ) {
     super(message);

@@ -1,7 +1,7 @@
 import { Easing } from 'react-native-reanimated';
 
 /**
- * CzechReply design tokens.
+ * CzechPal design tokens.
  *
  * Rules (see design-system/MASTER.md):
  * - One accent (Czech cobalt). Spent only on the primary action, active state and progress.
