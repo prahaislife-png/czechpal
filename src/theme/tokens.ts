@@ -85,8 +85,8 @@ export const camera = {
 /** QR codes stay dark-on-white in every theme: banking apps scan that most reliably. */
 export const qr = { dark: '#000000', light: '#FFFFFF' } as const;
 
-/** Czech flag colours — brand mark only, never UI state. */
-export const flag = { blue: '#11457E', red: '#D7141A', white: '#FFFFFF' };
+/** Brand mark colours (the app icon): never UI state. */
+export const brand = { inkTop: '#1B2333', inkBottom: '#0B1019', corners: '#7F9DFF', glyph: '#FFFFFF', hacek: '#E8333A' };
 
 export const space = {
   xxs: 2,

@@ -7,7 +7,7 @@ import { CaseRow } from '@/components/case-row';
 import { DocumentPaper } from '@/components/document-paper';
 import { Badge } from '@/components/ui/badge';
 import { SectionHeader } from '@/components/ui/card';
-import { FlagMark } from '@/components/ui/flag-mark';
+import { BrandMark } from '@/components/ui/brand-mark';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
 import { PressableScale } from '@/components/ui/pressable-scale';
@@ -37,7 +37,7 @@ export default function HomeScreen() {
       ]}>
       <View style={styles.brandRow}>
         <View style={styles.brand}>
-          <FlagMark size={26} />
+          <BrandMark size={26} />
           <Text variant="headline">CzechPal</Text>
         </View>
         <View style={styles.headerActions}>

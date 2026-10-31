@@ -15,7 +15,7 @@ CzechPal is a personal assistant, not a chatbot. Every analysis answers two ques
   primary action, active/selected state and progress. Never decorative.
 - **One grey family:** cool slate. Labels `label` / `label2` / `label3`, surfaces `background` / `surface` / `surfaceMuted`.
 - **Status colours** (`success`, `warning`, `danger` + `*Soft`) always travel with a word and usually an icon.
-- **Flag colours** (`flag.*`) are for the brand mark only, never UI state.
+- **Brand colours** (`brand.*`) are for the brand mark (the app icon's Č in viewfinder corners) only, never UI state.
 - No gradients, glassmorphism or sparkles. Light and dark are designed together.
 
 ## Shape

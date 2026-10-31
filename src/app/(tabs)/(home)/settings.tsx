@@ -1,13 +1,16 @@
 import Constants from 'expo-constants';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
-import { ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { Linking, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { Card, SectionHeader } from '@/components/ui/card';
+import { Icon } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
+import { deleteServerData } from '@/lib/account';
 import { isDemoMode, languageByCode } from '@/lib/ai';
 import { confirm } from '@/lib/dialogs';
+import { PRIVACY_URL, SUPPORT_URL } from '@/lib/links';
 import { allowanceRenewsOn, useFreeLimit, useRemainingAnalyses, useStore } from '@/store/cases';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -29,16 +32,33 @@ export default function SettingsScreen() {
   const aiConsent = useStore((s) => s.aiConsent);
   const language = useStore((s) => s.language);
   const { clearAll, resetUsage, resetOnboarding } = useStore.getState();
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  // The server first: if that fails, nothing is deleted, so the user can simply try again.
   const deleteAll = async () => {
+    if (deleting) return;
     const ok = await confirm({
       title: 'Delete everything?',
-      message: `This removes ${caseCount === 1 ? '1 item' : `${caseCount} items`}, their replies, and your saved name and address from this device. It can’t be undone.`,
+      message: `This deletes ${caseCount === 1 ? '1 item' : `${caseCount} items`} and their replies, your saved name and address, and your anonymous account on CzechPal’s server with any doctor or office reports you sent. It can’t be undone.`,
       confirmLabel: 'Delete everything',
       destructive: true,
     });
-    if (ok) clearAll();
+    if (!ok) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteServerData();
+      clearAll();
+      useStore.getState().setAiConsent(false);
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : 'Something went wrong. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
   };
+
+  const external = <Icon name="external" size={14} color={colors.label3} />;
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
@@ -108,13 +128,43 @@ export default function SettingsScreen() {
               }
             />
           )}
-          <Row icon="trash" title="Delete everything" destructive onPress={deleteAll} />
+          <Row
+            icon="trash"
+            title={deleting ? 'Deleting…' : 'Delete everything'}
+            destructive
+            onPress={deleting ? undefined : deleteAll}
+          />
         </List>
+        {deleteError && (
+          <Text variant="footnote" color="danger" style={styles.footer} accessibilityLiveRegion="polite">
+            {deleteError}
+          </Text>
+        )}
         <Text variant="footnote" color="label2" style={styles.footer}>
           Your history and saved name and address are kept on this device. A photo or text is sent to Anthropic’s
           Claude AI only when you ask CzechPal to explain or write something; CzechPal doesn’t keep it, and Anthropic
           doesn’t use it to train AI models. Nothing is ever sent to anyone on your behalf.
         </Text>
+      </View>
+
+      <View>
+        <SectionHeader title="About" />
+        <List>
+          <Row
+            icon="lock"
+            title="Privacy policy"
+            accessory={external}
+            accessibilityHint="Opens the website"
+            onPress={() => Linking.openURL(PRIVACY_URL)}
+          />
+          <Row
+            icon="help"
+            title="Help and contact"
+            accessory={external}
+            accessibilityHint="Opens the website"
+            onPress={() => Linking.openURL(SUPPORT_URL)}
+          />
+        </List>
       </View>
 
       <Text variant="footnote" color="label3" align="center">

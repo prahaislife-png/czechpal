@@ -18,7 +18,7 @@ and get what it says, what it means for you and, when it is a message, a reply i
 
 | Dial | Value | Why |
 | --- | --- | --- |
-| DESIGN_EXPRESSION | 5 | Branded-native: cobalt accent, flag mark and a viewfinder hero; navigation chrome stays native (1.C) |
+| DESIGN_EXPRESSION | 5 | Branded-native: cobalt accent, a Č-in-viewfinder mark and a viewfinder hero; navigation chrome stays native (1.C) |
 | MOTION_INTENSITY | 4 | Utility used in the street: press feedback, a reveal when a result lands, shutter feedback. Nothing decorative |
 | VISUAL_DENSITY | 3 | Read one-handed on the go; generous type, few items per screen |
 
