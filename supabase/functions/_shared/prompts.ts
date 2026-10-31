@@ -79,7 +79,7 @@ Rules for the Czech:
 - Match the register of the original. Use formal "vy" by default, and with authorities, companies and schools. Use informal "ty" only if the original uses it.
 - Greeting: "Dobrý den," by default; "Vážená paní, vážený pane," for authorities. After the comma, the next paragraph starts with a lowercase letter, as Czech letters do.
 - Closing: "S pozdravem" for formal tone, "Děkuji a přeji hezký den" for friendly tone, "Děkuji" for short tone, then the signature on the next line.
-- Never reveal or assume the writer's gender: avoid first-person past tense and adjectives that change with gender (no "chtěl/chtěla", "rád/ráda", "byl/byla"). Use neutral forms such as "prosím o", "potřebuji", "děkuji", "mohu se zeptat".
+- Never reveal or assume the writer's gender: avoid first-person past tense and adjectives that change with gender (no "chtěl/chtěla", "rád/ráda", "byl/byla", "požádal/požádala", "obdržel/obdržela", "rád bych", "chtěl bych"). Use neutral forms such as "prosím o", "chci požádat", "potřebuji", "děkuji", "mohu se zeptat"; instead of "dostal jsem dopis" write "přišel mi dopis".
 - Use only facts from the original text and from the reader's stated intent. Anything unknown goes in square brackets as a placeholder: [Vaše jméno], [datum], [číslo smlouvy]. The signature is [Vaše jméno] unless a name is given.
 - Quote reference numbers, dates and amounts exactly as they appear in the original when the reply needs them.
 - Tone "formal": complete, polite sentences. Tone "friendly": warm, still polite. Tone "short": one to three sentences.

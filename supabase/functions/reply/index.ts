@@ -2,6 +2,7 @@ import { withSupabase } from 'npm:@supabase/server@1';
 
 import { replyOutputSchema, validateReplyOutput } from '../_shared/analysis-schema.ts';
 import { AiError, callStructured, fail, isRateLimited, logCall, type Usage } from '../_shared/claude.ts';
+import { genderedForms } from '../_shared/gender.ts';
 import { languageName } from '../_shared/languages.ts';
 import { REPLY_SYSTEM } from '../_shared/prompts.ts';
 
@@ -39,30 +40,49 @@ export default {
     try {
       if (await isRateLimited(admin, userId)) return fail(429, 'rate_limited', 'Too many requests. Wait a minute and try again.');
 
-      const result = await callStructured({
-        system: REPLY_SYSTEM,
-        schema: replyOutputSchema,
-        content: [
-          { type: 'text', text: `<original_text>\n${originalText}\n</original_text>` },
-          {
-            type: 'text',
-            text: [
-              `What it is: ${clip(summary.kind, 20) || 'message'}${clip(summary.sender, 200) ? `, from ${clip(summary.sender, 200)}` : ''}.`,
-              `In short: ${clip(summary.inShort, 600)}`,
-              `The reader wants to: ${clip(intent.label, 200)}. ${clip(intent.description, 400)}`,
-              `Tone: ${tone}.`,
-              // Spelled out: a short "translate into X" often comes back in English anyway.
-              `Write the "translation" field entirely in ${languageName(body.language)}${languageName(body.language) === 'English' ? '' : ', not in English and not in Czech'}, placeholders included.`,
-              name ? `Sign it as: ${name}.` : 'Sign it as: [Vaše jméno].',
-              'Write the reply now.',
-            ].join('\n'),
-          },
-        ],
-        signal: req.signal,
-      });
-      usage = result.usage;
-      const reply = validateReplyOutput(result.json);
-      await logCall(admin, { userId, kind: 'reply', ok: true, usage });
+      const request = [
+        `What it is: ${clip(summary.kind, 20) || 'message'}${clip(summary.sender, 200) ? `, from ${clip(summary.sender, 200)}` : ''}.`,
+        `In short: ${clip(summary.inShort, 600)}`,
+        `The reader wants to: ${clip(intent.label, 200)}. ${clip(intent.description, 400)}`,
+        `Tone: ${tone}.`,
+        // Spelled out: a short "translate into X" often comes back in English anyway.
+        `Write the "translation" field entirely in ${languageName(body.language)}${languageName(body.language) === 'English' ? '' : ', not in English and not in Czech'}, placeholders included.`,
+        name ? `Sign it as: ${name}.` : 'Sign it as: [Vaše jméno].',
+      ].join('\n');
+      const draft = (extra?: string) =>
+        callStructured({
+          system: REPLY_SYSTEM,
+          schema: replyOutputSchema,
+          content: [
+            { type: 'text', text: `<original_text>\n${originalText}\n</original_text>` },
+            { type: 'text', text: `${request}\n${extra ? `${extra}\n` : ''}Write the reply now.` },
+          ],
+          signal: req.signal,
+        });
+
+      const first = await draft();
+      usage = first.usage;
+      let reply = validateReplyOutput(first.json);
+
+      // The reader's gender is unknown, so the Czech must not reveal one. The prompt says so, but a
+      // small model still slips ("Rád bych požádal"); check, and ask once for a neutral rewrite.
+      const gendered = genderedForms(reply.czech);
+      let note: string | undefined;
+      if (gendered.length) {
+        const second = await draft(
+          `Do not use these words, because they show the writer's gender: ${gendered.join(', ')}. ` +
+            'Use neutral first-person forms instead, such as "prosím o", "chci požádat", "chci se zeptat", "děkuji", "mohu", "potřebuji". ' +
+            'Do not write both forms either, as in "obdržel(a)".',
+        );
+        usage = { input: usage.input + second.usage.input, output: usage.output + second.usage.output, cacheRead: usage.cacheRead + second.usage.cacheRead };
+        const rewritten = validateReplyOutput(second.json);
+        const still = genderedForms(rewritten.czech);
+        note = still.length ? `gender_retry_failed: ${still.join(',')}` : `gender_retry: ${gendered.join(',')}`;
+        // Keep the rewrite only if it is actually better.
+        if (still.length < gendered.length) reply = rewritten;
+      }
+
+      await logCall(admin, { userId, kind: 'reply', ok: true, usage, error: note });
       return Response.json(reply);
     } catch (e) {
       const known = e instanceof AiError;
