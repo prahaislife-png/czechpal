@@ -1,5 +1,6 @@
 import type { IconName } from '@/components/ui/icon';
 
+import type { LanguageCode } from './languages';
 import type { PartialAnalysis } from './partial-analysis';
 
 export type Category =
@@ -108,7 +109,14 @@ export type ReplyDraft = { intentId: string; tone: Tone; czech: string; english:
 export type AnalyzeInput = {
   kind: 'text' | 'image' | 'pdf';
   text?: string;
+  /** The PDF, or the photo for a one-page image. */
   uri?: string;
+  /** Every page of a photographed document, in order (first page first). */
+  uris?: string[];
+  /** Language the explanation is written in. */
+  language?: LanguageCode;
+  /** Stable per case: a retry of an explanation that never arrived isn't charged twice. */
+  requestId?: string;
   /** Present when the user picked a built-in example. */
   sampleId?: string;
   hint?: Category;
@@ -133,6 +141,8 @@ export type ReplyInput = {
   sampleId?: string;
   intentId: string;
   tone: Tone;
+  /** Language of the translation shown under the Czech reply. */
+  language?: LanguageCode;
 };
 
 export class AnalyzeError extends Error {

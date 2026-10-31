@@ -35,7 +35,7 @@ export default function HelpScreen() {
       </View>
 
       <View>
-        <SectionHeader title="Find English-speaking help" />
+        <SectionHeader title="Find help" />
         <List>
           {helpCategories.map((c) => (
             <Row
@@ -49,8 +49,7 @@ export default function HelpScreen() {
           ))}
         </List>
         <Text variant="footnote" color="label3" style={styles.footer}>
-          Prague first. Every listing will be checked by phone for English, insurance and prices before it’s marked
-          verified.
+          Official Czech directories, what to ask, and a way to write to anyone in Czech.
         </Text>
       </View>
 

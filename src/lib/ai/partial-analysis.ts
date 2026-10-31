@@ -55,9 +55,10 @@ export function partialAnalysis(raw: string): PartialAnalysis | null {
   if (isStr(a.sender)) out.sender = a.sender;
   if (a.caution === 'official' || a.caution === 'medical') out.caution = a.caution;
   if (Array.isArray(a.lines)) {
+    // Claude writes the line's translation as "translated"; the app calls it `en`.
     out.lines = a.lines
-      .filter((l): l is Obj => isObj(l) && isStr(l.cs) && isStr(l.en))
-      .map((l): TranslatedLine => ({ cs: l.cs as string, en: l.en as string, note: isStr(l.note) ? l.note : undefined }));
+      .filter((l): l is Obj => isObj(l) && isStr(l.cs) && isStr(l.translated))
+      .map((l): TranslatedLine => ({ cs: l.cs as string, en: l.translated as string, note: isStr(l.note) ? l.note : undefined }));
   }
   if (Array.isArray(a.nextSteps)) {
     out.nextSteps = a.nextSteps

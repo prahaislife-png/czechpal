@@ -49,7 +49,8 @@ const analysisJson = obj({
   verdict: nullable(obj({ urgency: oneOf(['none', 'action', 'urgent']), label: str, detail: nullable(str) })),
   sender: nullable(str),
   caution: nullable(oneOf(['official', 'medical'])),
-  lines: nullable(arr(obj({ cs: str, en: str, note: nullable(str) }))),
+  // "translated", not "en": a field named after a language pulls the model into English.
+  lines: nullable(arr(obj({ cs: str, translated: str, note: nullable(str) }))),
   nextSteps: arr(obj({ id: str, title: str, detail: nullable(str), kind: oneOf(['required', 'optional']) })),
   payment: nullable(
     obj({
@@ -76,7 +77,8 @@ export const analyzeOutputSchema: Json = obj({
   originalText: str,
 });
 
-export const replyOutputSchema: Json = obj({ czech: str, english: str });
+// "translation", not "english": a field named after a language pulls the model into that language.
+export const replyOutputSchema: Json = obj({ czech: str, translation: str });
 
 /* ───────────── Server-side validation ───────────── */
 
@@ -97,7 +99,12 @@ const Analysis = z.object({
   sender: opt(text),
   verdict: opt(z.object({ urgency: z.enum(['none', 'action', 'urgent']), label: text, detail: opt(text) })),
   inShort: text,
-  lines: opt(z.array(z.object({ cs: text, en: text, note: opt(text) }))),
+  // The app's TranslatedLine calls the translation `en`.
+  lines: opt(
+    z.array(
+      z.object({ cs: text, translated: text, note: opt(text) }).transform(({ cs, translated, note }) => ({ cs, en: translated, note })),
+    ),
+  ),
   meaning: z.array(text),
   keyFacts: z.array(z.object({ id: text, label: text, value: text, icon: z.enum(FACT_ICONS), evidence: opt(text) })),
   nextSteps: z.array(z.object({ id: text, title: text, detail: opt(text), kind: z.enum(['required', 'optional']) })),
@@ -149,5 +156,9 @@ export function validateAnalyzeOutput(raw: unknown): ValidAnalyzeOutput {
   };
 }
 
-const ReplyOutput = z.object({ czech: text, english: text });
-export const validateReplyOutput = (raw: unknown) => ReplyOutput.parse(raw);
+const ReplyOutput = z.object({ czech: text, translation: text });
+/** The app reads the translation as `english` (its name from before other languages existed). */
+export const validateReplyOutput = (raw: unknown) => {
+  const { czech, translation } = ReplyOutput.parse(raw);
+  return { czech, english: translation };
+};

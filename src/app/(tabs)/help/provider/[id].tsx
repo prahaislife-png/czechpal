@@ -18,7 +18,6 @@ export default function ProviderScreen() {
 
   const category = categoryById(p.category);
   const { status, checkedOn } = p.verification;
-  const isSample = status === 'sample';
 
   const rows: [string, string][] = [
     ['Services', p.services.join(', ')],
@@ -41,8 +40,6 @@ export default function ProviderScreen() {
           </Text>
           {status === 'verified' ? (
             <Badge label={checkedOn ? `Verified ${formatChecked(checkedOn)}` : 'Verified'} tone="success" icon="verified" />
-          ) : isSample ? (
-            <Badge label="Sample listing" tone="neutral" />
           ) : (
             <Badge label="Unverified, self-reported" tone="warning" />
           )}
@@ -62,15 +59,13 @@ export default function ProviderScreen() {
         </List>
 
         <Text variant="footnote" color="label3" style={styles.note}>
-          {isSample
-            ? 'This is a made-up example showing how a listing will look. It has no phone number and can’t be contacted.'
-            : status === 'verified'
-              ? 'We phoned to check English, insurance and prices. Things change, so confirm when you book.'
-              : 'Details come from the provider and haven’t been checked by us yet.'}
+          {status === 'verified'
+            ? 'We phoned to check English, insurance and prices. Things change, so confirm when you book.'
+            : 'Details come from the provider and haven’t been checked by us yet.'}
         </Text>
       </ScrollView>
 
-      {!isSample && (
+      {(category?.composeRecipient || p.phone || p.website) && (
         <BottomBar>
           {category?.composeRecipient ? (
             <Button

@@ -2,11 +2,12 @@ import { withSupabase } from 'npm:@supabase/server@1';
 
 import { replyOutputSchema, validateReplyOutput } from '../_shared/analysis-schema.ts';
 import { AiError, callStructured, fail, isRateLimited, logCall, type Usage } from '../_shared/claude.ts';
+import { languageName } from '../_shared/languages.ts';
 import { REPLY_SYSTEM } from '../_shared/prompts.ts';
 
 /**
  * POST /reply
- * { originalText, summary: { kind, sender?, inShort }, intent: { label, description }, tone: 'formal'|'friendly'|'short', name? }
+ * { originalText, summary: { kind, sender?, inShort }, intent: { label, description }, tone: 'formal'|'friendly'|'short', name?, language? }
  * Replies don't use up the free allowance; they are rate-limited only.
  */
 
@@ -50,11 +51,14 @@ export default {
               `In short: ${clip(summary.inShort, 600)}`,
               `The reader wants to: ${clip(intent.label, 200)}. ${clip(intent.description, 400)}`,
               `Tone: ${tone}.`,
+              // Spelled out: a short "translate into X" often comes back in English anyway.
+              `Write the "translation" field entirely in ${languageName(body.language)}${languageName(body.language) === 'English' ? '' : ', not in English and not in Czech'}, placeholders included.`,
               name ? `Sign it as: ${name}.` : 'Sign it as: [Vaše jméno].',
               'Write the reply now.',
             ].join('\n'),
           },
         ],
+        signal: req.signal,
       });
       usage = result.usage;
       const reply = validateReplyOutput(result.json);

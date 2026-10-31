@@ -1,6 +1,6 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
@@ -18,7 +18,8 @@ import { GlassSurface } from '@/components/ui/glass';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
-import { draftFromPhoto, leaveModalForReview, pickImage } from '@/lib/capture';
+import { draftFromPhoto, leaveModalForReview, pickImage, pickMorePages } from '@/lib/capture';
+import { MAX_PAGES, pagesOf, useStore } from '@/store/cases';
 import { camera as cam, motion, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
@@ -27,13 +28,28 @@ const isNative = process.env.EXPO_OS !== 'web';
 /**
  * Full-screen scanner (immersive → fullScreenModal, explicit Close).
  * Camera permission is primed here, at the moment of intent, never on app start.
+ *
+ * With `addTo` (a draft's id) it adds the next page of that document and goes back to it,
+ * instead of starting a new one.
  */
 export default function ScanScreen() {
   const insets = useSafeAreaInsets();
+  const { addTo } = useLocalSearchParams<{ addTo?: string }>();
   const [permission, requestPermission] = useCameraPermissions();
   const [mountError, setMountError] = useState<string | null>(null);
 
-  const fromLibrary = async () => leaveModalForReview(await pickImage());
+  const fromLibrary = async () => {
+    if (!addTo) return leaveModalForReview(await pickImage());
+    const draft = useStore.getState().cases.find((c) => c.id === addTo);
+    if (!draft) return router.back();
+    if (await pickMorePages(addTo, MAX_PAGES - pagesOf(draft).length)) router.back();
+  };
+
+  const onPhoto = (uri: string) => {
+    if (!addTo) return leaveModalForReview(draftFromPhoto(uri));
+    useStore.getState().addPages(addTo, [uri]);
+    router.back();
+  };
 
   let body: React.ReactNode;
   if (!permission) {
@@ -66,7 +82,7 @@ export default function ScanScreen() {
       />
     );
   } else {
-    body = <Viewfinder onMountError={setMountError} onLibrary={fromLibrary} />;
+    body = <Viewfinder onMountError={setMountError} onLibrary={fromLibrary} onPhoto={onPhoto} addingPage={!!addTo} />;
   }
 
   return (
@@ -80,7 +96,17 @@ export default function ScanScreen() {
   );
 }
 
-function Viewfinder({ onMountError, onLibrary }: { onMountError: (m: string) => void; onLibrary: () => void }) {
+function Viewfinder({
+  onMountError,
+  onLibrary,
+  onPhoto,
+  addingPage,
+}: {
+  onMountError: (m: string) => void;
+  onLibrary: () => void;
+  onPhoto: (uri: string) => void;
+  addingPage: boolean;
+}) {
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotion();
   const camera = useRef<CameraView>(null);
@@ -104,7 +130,7 @@ function Viewfinder({ onMountError, onLibrary }: { onMountError: (m: string) => 
     try {
       const photo = await camera.current?.takePictureAsync({ quality: 0.8 });
       if (!photo) throw new Error('no photo');
-      leaveModalForReview(draftFromPhoto(photo.uri));
+      onPhoto(photo.uri);
     } catch {
       setBusy(false);
       setError('Couldn’t take the photo. Hold steady and try again.');
@@ -143,29 +169,34 @@ function Viewfinder({ onMountError, onLibrary }: { onMountError: (m: string) => 
       <View style={[styles.controls, { paddingBottom: insets.bottom + space.xl }]}>
         <GlassSurface style={styles.hint}>
           <Text variant="subhead" weight="500" color="onInk" accessibilityLiveRegion="polite" chrome>
-            {error ?? 'Point at any Czech text'}
+            {error ?? (addingPage ? 'Point at the next page' : 'Point at any Czech text')}
           </Text>
         </GlassSurface>
         <View style={styles.shutterRow}>
-          <GlassButton icon="photo" label="Choose a photo" onPress={onLibrary} size={52} />
+          <GlassButton icon="photo" label={addingPage ? 'Choose pages from photos' : 'Choose a photo'} onPress={onLibrary} size={52} />
           <PressableScale
             onPress={shoot}
             disabled={!ready || busy}
             pressedScale={0.92}
             accessibilityRole="button"
-            accessibilityLabel="Take photo"
+            accessibilityLabel={addingPage ? 'Take photo of the next page' : 'Take photo'}
             style={[styles.shutter, (!ready || busy) && styles.shutterIdle]}>
             <View style={styles.shutterCore} />
           </PressableScale>
-          <GlassButton
-            icon="keyboard"
-            label="Type or paste instead"
-            size={52}
-            onPress={() => {
-              router.back();
-              router.push('/paste');
-            }}
-          />
+          {addingPage ? (
+            // Keeps the shutter centred; switching to typing makes no sense mid-document.
+            <View style={styles.shutterSpacer} />
+          ) : (
+            <GlassButton
+              icon="keyboard"
+              label="Type or paste instead"
+              size={52}
+              onPress={() => {
+                router.back();
+                router.push('/paste');
+              }}
+            />
+          )}
         </View>
       </View>
 
@@ -269,6 +300,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   shutterIdle: { opacity: 0.5 },
+  shutterSpacer: { width: 52, height: 52 },
   shutterCore: { width: 62, height: 62, borderRadius: 31, backgroundColor: cam.foreground },
   glassButton: { borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   flash: { backgroundColor: cam.foreground },

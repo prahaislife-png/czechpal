@@ -74,18 +74,21 @@ type RowProps = {
   /** Chevron means "pushes a screen". Off by default; turn on only for rows that navigate. */
   chevron?: boolean;
   destructive?: boolean;
+  /** For rows in a pick-one list: announced as selected to screen readers. */
+  selected?: boolean;
   onPress?: () => void;
   accessibilityHint?: string;
 };
 
 /** List rows highlight their background on press, never scale. */
-export function Row({ title, subtitle, icon, value, accessory, chevron, destructive, onPress, accessibilityHint }: RowProps) {
+export function Row({ title, subtitle, icon, value, accessory, chevron, destructive, selected, onPress, accessibilityHint }: RowProps) {
   const { colors } = useTheme();
   return (
     <Pressable
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityState={selected === undefined ? undefined : { selected }}
       accessibilityHint={accessibilityHint}
       style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.fill }]}>
       {icon && <RowIcon name={icon} color={destructive ? colors.danger : undefined} />}

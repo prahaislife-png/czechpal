@@ -17,3 +17,4 @@ export const replierFor = (item: { sampleId?: string }): AIClient => (item.sampl
 
 export * from './types';
 export type { PartialAnalysis } from './partial-analysis';
+export * from './languages';

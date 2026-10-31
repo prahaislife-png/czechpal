@@ -13,7 +13,7 @@ import { ChoiceList } from '@/components/ui/choice-list';
 import { Segmented } from '@/components/ui/segmented';
 import { SkeletonLine } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
-import { replierFor, type ReplyDraft, type Tone } from '@/lib/ai';
+import { languageByCode, replierFor, type ReplyDraft, type Tone } from '@/lib/ai';
 import { useCase, useStore } from '@/store/cases';
 import { layout, motion, radius, space, type as ramp } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -48,6 +48,7 @@ export default function ReplyScreen() {
 
   const result = item?.result;
   const sampleId = item?.sampleId;
+  const language = item?.language;
   const [attempt, setAttempt] = useState(0);
   // An error belongs to the request that failed; changing intent or tone starts a fresh one.
   const requestKey = `${intentId}-${tone}-${attempt}`;
@@ -58,7 +59,7 @@ export default function ReplyScreen() {
     if (!result) return;
     let active = true;
     replierFor({ sampleId })
-      .generateReply({ analysis: result.analysis, originalText: result.originalText, sampleId, intentId, tone })
+      .generateReply({ analysis: result.analysis, originalText: result.originalText, sampleId, intentId, tone, language })
       .then((d) => {
         if (!active) return;
         text.current = d.czech;
@@ -75,7 +76,7 @@ export default function ReplyScreen() {
     return () => {
       active = false;
     };
-  }, [result, sampleId, intentId, tone, attempt]);
+  }, [result, sampleId, intentId, tone, attempt, language]);
 
   useEffect(() => {
     if (!copied) return;
@@ -177,7 +178,7 @@ export default function ReplyScreen() {
         </View>
 
         <View>
-          <SectionHeader title="What it says in English" />
+          <SectionHeader title={`What it says in ${languageByCode(language).name}`} />
           <Card style={{ backgroundColor: colors.surfaceMuted, boxShadow: 'none' }}>
             {current ? (
               <Text variant="subhead" color="label2" selectable style={styles.english}>
@@ -192,7 +193,7 @@ export default function ReplyScreen() {
           </Card>
           {edited && (
             <Text variant="footnote" color="warning" style={styles.hint}>
-              You’ve edited the Czech, so the English above may no longer match.
+              You’ve edited the Czech, so the translation above may no longer match.
             </Text>
           )}
         </View>

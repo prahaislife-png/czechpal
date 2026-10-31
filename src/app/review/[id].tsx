@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { DocumentPaper } from '@/components/document-paper';
 import { Badge } from '@/components/ui/badge';
@@ -9,11 +9,11 @@ import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
-import { List } from '@/components/ui/list';
+import { List, Row } from '@/components/ui/list';
 import { Chip } from '@/components/ui/chip';
 import { Text } from '@/components/ui/text';
-import { categoryLabels, isDemoMode, type Category } from '@/lib/ai';
-import { useCase, useRemainingAnalyses, useStore, type CaseItem } from '@/store/cases';
+import { categoryLabels, isDemoMode, languageByCode, type Category } from '@/lib/ai';
+import { MAX_PAGES, pagesOf, useCase, useRemainingAnalyses, useStore, type CaseItem } from '@/store/cases';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
@@ -34,6 +34,7 @@ export default function ReviewScreen() {
   const item = useCase(id);
   const remaining = useRemainingAnalyses();
   const aiConsent = useStore((s) => s.aiConsent);
+  const language = useStore((s) => s.language);
   const { setHint, analyze, discardDraft, resetUsage, setAiConsent } = useStore.getState();
 
   // Leaving without explaining discards the draft; a started analysis is no longer a draft.
@@ -74,6 +75,19 @@ export default function ReviewScreen() {
             ))}
           </View>
         </View>
+
+        {/* Examples are pre-written in English; the language only applies to live explanations. */}
+        {!isDemoMode && !isExample && (
+          <List>
+            <Row
+              icon="globe"
+              title="Explain in"
+              value={languageByCode(language).native}
+              chevron
+              onPress={() => router.push('/language')}
+            />
+          </List>
+        )}
       </ScrollView>
 
       <BottomBar>
@@ -131,12 +145,7 @@ function Preview({ item }: { item: CaseItem }) {
     return (
       <View style={styles.preview}>
         {detected}
-        <Image
-          source={{ uri: item.imageUri }}
-          contentFit="cover"
-          style={[styles.image, { backgroundColor: colors.fill }]}
-          accessibilityLabel="Your photo"
-        />
+        <Pages item={item} />
       </View>
     );
   }
@@ -165,10 +174,82 @@ function Preview({ item }: { item: CaseItem }) {
   );
 }
 
+/**
+ * The photographed pages. One page shows large; several scroll sideways in reading order.
+ * Letters often continue overleaf, and the deadline is often on page 2, so adding pages is offered.
+ */
+function Pages({ item }: { item: CaseItem }) {
+  const { colors } = useTheme();
+  const pages = pagesOf(item);
+  const canAdd = pages.length < MAX_PAGES;
+  const addPage = () => router.push({ pathname: '/scan', params: { addTo: item.id } });
+
+  return (
+    <View style={styles.pages}>
+      {pages.length === 1 ? (
+        <Image
+          source={{ uri: pages[0] }}
+          contentFit="cover"
+          style={[styles.image, { backgroundColor: colors.fill }]}
+          accessibilityLabel="Your photo"
+        />
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pageStrip}>
+          {pages.map((uri, i) => (
+            <View key={`${uri}-${i}`} style={styles.page}>
+              <Image
+                source={{ uri }}
+                contentFit="cover"
+                style={[styles.pageImage, { backgroundColor: colors.fill }]}
+                accessibilityLabel={`Page ${i + 1} of ${pages.length}`}
+              />
+              <View style={styles.pageFooter}>
+                <Text variant="footnote" weight="600" color="label2" tabular>
+                  Page {i + 1}
+                </Text>
+                <Pressable
+                  onPress={() => useStore.getState().removePage(item.id, i)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove page ${i + 1}`}
+                  hitSlop={12}
+                  style={({ pressed }) => [styles.removePage, { backgroundColor: pressed ? colors.fill : 'transparent' }]}>
+                  <Icon name="close" size={14} color={colors.label2} />
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+      )}
+      {canAdd ? (
+        <View style={styles.addRow}>
+          <Button label="Add a page" icon="plus" variant="secondary" size="medium" onPress={addPage} />
+          <Text variant="footnote" color="label3" style={styles.addCopy}>
+            {pages.length === 1
+              ? 'More pages? Add them so nothing is missed.'
+              : `${pages.length} pages, explained together`}
+          </Text>
+        </View>
+      ) : (
+        <Text variant="footnote" color="label3" style={styles.addCopy}>
+          {MAX_PAGES} pages, explained together. That’s the most at once.
+        </Text>
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { padding: layout.gutter, gap: space.xxl },
   image: { width: '100%', aspectRatio: 3 / 4, maxHeight: 420, borderRadius: radius.tile },
+  pages: { gap: space.md },
+  pageStrip: { gap: space.md, paddingRight: space.xs },
+  page: { width: 200, gap: space.xs },
+  pageImage: { width: 200, aspectRatio: 3 / 4, borderRadius: radius.tile },
+  pageFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xs },
+  removePage: { width: 28, height: 28, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  addRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  addCopy: { flex: 1, paddingHorizontal: space.xs },
   preview: { gap: space.md },
   detected: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.xs },
   pdf: { flexDirection: 'row', alignItems: 'center', gap: space.lg, padding: space.xl },

@@ -1,13 +1,15 @@
 import { withSupabase } from 'npm:@supabase/server@1';
 
 import { analyzeOutputSchema, CATEGORIES, validateAnalyzeOutput } from '../_shared/analysis-schema.ts';
-import { parseInput, userContent } from '../_shared/analyze-input.ts';
+import { parseInput, userContent, type Input } from '../_shared/analyze-input.ts';
 import { AiError, callStructured, fail, isRateLimited, logCall, type Usage } from '../_shared/claude.ts';
+import { languageName } from '../_shared/languages.ts';
 import { ANALYZE_SYSTEM } from '../_shared/prompts.ts';
 
 /**
  * POST /analyze with a body described in _shared/analyze-input.ts
- * optional: hint (a category), language (explanations' language, default English)
+ * optional: hint (a category), language (a code from _shared/languages.ts, default English),
+ * stream (true: NDJSON as the explanation is written)
  *
  * Reserves one free explanation first and refunds it if the explanation fails.
  */
@@ -29,7 +31,8 @@ export default {
     const input = parseInput(body);
     if (input instanceof Response) return input;
     const hint = CATEGORIES.find((c) => c === body.hint);
-    const language = body.language === undefined ? 'English' : String(body.language).slice(0, 40);
+    // A code from a fixed list; free text here would end up inside the prompt.
+    const language = languageName(body.language);
 
     const admin = ctx.supabaseAdmin;
     try {
@@ -39,19 +42,37 @@ export default {
       throw e;
     }
 
-    const { data: remaining, error: reserveError } = await admin.rpc('reserve_analysis', {
-      p_user: userId,
-      p_limit: FREE_LIMIT,
-    });
+    // A retry of a case whose result never reached the app (same id, same content, within
+    // 15 minutes) isn't charged again. See migrations/…_free_retry_after_lost_result.sql.
+    const requestId = typeof body.requestId === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(body.requestId) ? body.requestId : null;
+    const inputHash = requestId ? await fingerprint(input) : null;
+    let free = false;
+    if (requestId && inputHash) {
+      const { data, error } = await admin.rpc('already_charged', { p_user: userId, p_request: requestId, p_hash: inputHash });
+      if (error) console.error('already_charged failed', error.message);
+      free = data === true;
+    }
+
+    const { data: remaining, error: reserveError } = free
+      ? await admin.rpc('remaining_analyses', { p_user: userId, p_limit: FREE_LIMIT })
+      : await admin.rpc('reserve_analysis', { p_user: userId, p_limit: FREE_LIMIT });
     if (reserveError) {
-      console.error('reserve_analysis failed', reserveError.message);
+      console.error('reserving an explanation failed', reserveError.message);
       return fail(500, 'server', 'Something went wrong. Please try again.');
     }
     if (remaining < 0) {
       return fail(402, 'limit_reached', 'You’ve used this month’s free explanations. Pro with unlimited explanations is coming soon.');
     }
 
-    const refund = () => admin.rpc('refund_analysis', { p_user: userId });
+    // Gives the explanation back. A free retry reserved nothing, so there is nothing to give back.
+    const refund = async () => {
+      if (free) return;
+      await admin.rpc('refund_analysis', { p_user: userId });
+      if (requestId) await admin.rpc('forget_charge', { p_user: userId, p_request: requestId });
+    };
+    // The app may give up (timeout, closed app, lost signal). Then stop paying for the answer and refund it.
+    const gone = new AbortController();
+    req.signal.addEventListener('abort', () => gone.abort());
 
     /** The explanation itself; `onText` streams Claude's JSON as it is written. */
     const explain = async (onText?: (delta: string) => void): Promise<Outcome> => {
@@ -62,6 +83,7 @@ export default {
           content: userContent(input, hint, language),
           schema: analyzeOutputSchema,
           onText,
+          signal: gone.signal,
         });
         usage = result.usage;
         const out = validateAnalyzeOutput(result.json);
@@ -74,7 +96,10 @@ export default {
             : { error: { status: 422, code: 'unreadable', message: 'The photo is hard to read. Try again closer, in good light, with the whole text in the frame.' } };
         }
 
-        await logCall(admin, { userId, kind: 'analyze', ok: true, usage });
+        await logCall(admin, { userId, kind: 'analyze', ok: true, usage, error: free ? 'free_retry' : undefined });
+        if (requestId && inputHash && !free) {
+          await admin.rpc('record_charge', { p_user: userId, p_request: requestId, p_hash: inputHash });
+        }
         // Pasted text isn't echoed back by Claude (that would only slow it down); the server has it.
         const originalText = input.kind === 'text' ? input.text : out.originalText;
         return { result: { analysis: out.analysis, originalText, remaining } };
@@ -105,10 +130,26 @@ export default {
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
-        const send = (line: Record<string, unknown>) => controller.enqueue(encoder.encode(JSON.stringify(line) + '\n'));
+        const send = (line: Record<string, unknown>) => {
+          if (gone.signal.aborted) return;
+          try {
+            controller.enqueue(encoder.encode(JSON.stringify(line) + '\n'));
+          } catch {
+            gone.abort(); // the app has disconnected
+          }
+        };
         const outcome = await explain((text) => send({ type: 'delta', text }));
         send('result' in outcome ? { type: 'done', ...outcome.result } : { type: 'error', code: outcome.error.code, message: outcome.error.message });
-        controller.close();
+        // Finished, but the app left before it could receive the result: it doesn't count.
+        if ('result' in outcome && gone.signal.aborted) await refund();
+        try {
+          controller.close();
+        } catch {
+          // Already closed by a disconnect.
+        }
+      },
+      cancel() {
+        gone.abort();
       },
     });
     return new Response(stream, {
@@ -120,3 +161,11 @@ export default {
 type Outcome =
   | { result: { analysis: unknown; originalText: string; remaining: number } }
   | { error: { status: number; code: string; message: string } };
+
+/** One-way SHA-256 of what is being explained: recognises a retry without storing the content. */
+async function fingerprint(input: Input): Promise<string> {
+  const parts =
+    input.kind === 'text' ? ['text', input.text] : input.kind === 'pdf' ? ['pdf', input.data] : ['images', ...input.images.map((i) => i.data)];
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(parts.join('\u0000')));
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+}

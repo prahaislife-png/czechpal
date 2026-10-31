@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
-import { isDemoMode } from '@/lib/ai';
+import { isDemoMode, languageByCode } from '@/lib/ai';
 import { confirm } from '@/lib/dialogs';
 import { FREE_ANALYSES_PER_MONTH, useRemainingAnalyses, useStore } from '@/store/cases';
 import { layout, radius, space } from '@/theme/tokens';
@@ -17,6 +17,7 @@ export default function ProfileScreen() {
   const used = FREE_ANALYSES_PER_MONTH - remaining;
   const caseCount = useStore((s) => s.cases.length);
   const aiConsent = useStore((s) => s.aiConsent);
+  const language = useStore((s) => s.language);
   const { clearAll, resetUsage, resetOnboarding } = useStore.getState();
 
   const deleteAll = async () => {
@@ -57,7 +58,13 @@ export default function ProfileScreen() {
       <View>
         <SectionHeader title="Preferences" />
         <List>
-          <Row icon="globe" title="Explanations in" value="English" />
+          <Row
+            icon="globe"
+            title="Explanations in"
+            value={languageByCode(language).native}
+            chevron
+            onPress={() => router.push('/language')}
+          />
         </List>
       </View>
 

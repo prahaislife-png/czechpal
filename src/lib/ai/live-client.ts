@@ -1,8 +1,9 @@
-import { FunctionsFetchError, FunctionsHttpError } from '@supabase/supabase-js';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { fetch as streamingFetch } from 'expo/fetch';
 
 import { ensureSession, functionHeaders, functionsUrl, supabase } from '@/lib/supabase';
 
+import { DEFAULT_LANGUAGE } from './languages';
 import { partialAnalysis, type PartialAnalysis } from './partial-analysis';
 import { fileAsBase64, imageForUpload } from './prepare';
 import {
@@ -16,8 +17,18 @@ import {
 } from './types';
 
 const NETWORK_MESSAGE = 'Couldn’t connect. Check your internet and try again.';
+const SLOW_MESSAGE = 'This is taking too long. Check your connection and try again.';
 /** How often the screen is updated while an explanation streams in. */
 const PARTIAL_INTERVAL_MS = 80;
+
+/**
+ * Time limits. An explanation normally starts arriving within a few seconds, so a long silence
+ * means the connection is stuck (a tram, a lift), not that the AI is still thinking.
+ */
+const SESSION_LIMIT_MS = 15_000;
+const STALL_LIMIT_MS = 30_000;
+const ANALYZE_LIMIT_MS = 120_000;
+const REPLY_LIMIT_MS = 45_000;
 
 type ServerError = { error?: { code?: string; message?: string } };
 
@@ -43,29 +54,52 @@ const codeFor = (server: string | undefined): AnalyzeError['code'] => {
   }
 };
 
-async function invoke<T>(name: 'analyze' | 'reply', body: Record<string, unknown>): Promise<T> {
+/** Signs in (anonymously) if needed, giving up rather than hanging on a dead connection. */
+async function accessToken(): Promise<string> {
   if (!supabase) throw new AnalyzeError('server', 'Live explanations aren’t set up in this build.');
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    await ensureSession();
+    const session = await Promise.race([
+      ensureSession(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('timeout')), SESSION_LIMIT_MS);
+      }),
+    ]);
+    return session.access_token;
   } catch {
-    throw new AnalyzeError('network', 'Couldn’t connect. Check your internet and try again.');
+    throw new AnalyzeError('network', NETWORK_MESSAGE);
+  } finally {
+    clearTimeout(timer);
   }
-  const { data, error } = await supabase.functions.invoke<T>(name, { body });
-  if (!error && data) return data;
+}
 
-  if (error instanceof FunctionsHttpError) {
-    let payload: ServerError = {};
-    try {
-      payload = await error.context.json();
-    } catch {
-      // Non-JSON error body: fall through to the generic message.
+async function invoke<T>(name: 'reply', body: Record<string, unknown>): Promise<T> {
+  await accessToken();
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, REPLY_LIMIT_MS);
+  try {
+    const { data, error } = await supabase!.functions.invoke<T>(name, { body, signal: controller.signal });
+    if (!error && data) return data;
+    if (error instanceof FunctionsHttpError) {
+      let payload: ServerError = {};
+      try {
+        payload = await error.context.json();
+      } catch {
+        // Non-JSON error body: fall through to the generic message.
+      }
+      throw new AnalyzeError(codeFor(payload.error?.code), payload.error?.message ?? 'Something went wrong. Please try again.');
     }
-    throw new AnalyzeError(codeFor(payload.error?.code), payload.error?.message ?? 'Something went wrong. Please try again.');
+    throw new AnalyzeError('network', timedOut ? SLOW_MESSAGE : NETWORK_MESSAGE);
+  } catch (e) {
+    if (e instanceof AnalyzeError) throw e;
+    throw new AnalyzeError('network', timedOut ? SLOW_MESSAGE : NETWORK_MESSAGE);
+  } finally {
+    clearTimeout(timer);
   }
-  if (error instanceof FunctionsFetchError) {
-    throw new AnalyzeError('network', 'Couldn’t connect. Check your internet and try again.');
-  }
-  throw new AnalyzeError('server', 'Something went wrong. Please try again.');
 }
 
 type AnalyzeResponse = { analysis: Analysis; originalText: string; remaining: number };
@@ -74,30 +108,25 @@ type AnalyzeResponse = { analysis: Analysis; originalText: string; remaining: nu
  * /analyze with streaming: the server sends one JSON object per line, "delta" lines with the
  * answer as it is written, then "done" with the checked result (or "error"). Partial results
  * are only for display; the result returned here is always the server-validated one.
+ *
+ * Gives up after STALL_LIMIT_MS without any data, or ANALYZE_LIMIT_MS in total. Disconnecting
+ * makes the server stop and refund the explanation, so giving up costs the user nothing.
  */
 async function analyzeStreaming(body: Record<string, unknown>, onPartial?: (p: PartialAnalysis) => void): Promise<AnalyzeResponse> {
-  if (!supabase) throw new AnalyzeError('server', 'Live explanations aren’t set up in this build.');
-  let accessToken: string;
-  try {
-    accessToken = (await ensureSession()).access_token;
-  } catch {
-    throw new AnalyzeError('network', NETWORK_MESSAGE);
-  }
+  const token = await accessToken();
 
-  let res: Awaited<ReturnType<typeof streamingFetch>>;
-  try {
-    res = await streamingFetch(`${functionsUrl}/analyze`, {
-      method: 'POST',
-      headers: functionHeaders(accessToken),
-      body: JSON.stringify({ ...body, stream: true }),
-    });
-  } catch {
-    throw new AnalyzeError('network', NETWORK_MESSAGE);
-  }
-  if (!res.ok) {
-    const payload: ServerError = await res.json().catch(() => ({}));
-    throw new AnalyzeError(codeFor(payload.error?.code), payload.error?.message ?? 'Something went wrong. Please try again.');
-  }
+  const controller = new AbortController();
+  let timedOut = false;
+  const giveUp = () => {
+    timedOut = true;
+    controller.abort();
+  };
+  const hardLimit = setTimeout(giveUp, ANALYZE_LIMIT_MS);
+  let stall = setTimeout(giveUp, STALL_LIMIT_MS);
+  const progress = () => {
+    clearTimeout(stall);
+    stall = setTimeout(giveUp, STALL_LIMIT_MS);
+  };
 
   let raw = '';
   let done: AnalyzeResponse | null = null;
@@ -113,16 +142,29 @@ async function analyzeStreaming(body: Record<string, unknown>, onPartial?: (p: P
     else throw new AnalyzeError(codeFor(msg.code), msg.message ?? 'Something went wrong. Please try again.');
   };
 
-  const reader = res.body?.getReader();
-  if (!reader) {
-    (await res.text()).split('\n').forEach(handle);
-  } else {
-    const decoder = new TextDecoder();
-    let buffer = '';
-    try {
+  try {
+    const res = await streamingFetch(`${functionsUrl}/analyze`, {
+      method: 'POST',
+      headers: functionHeaders(token),
+      body: JSON.stringify({ ...body, stream: true }),
+      signal: controller.signal,
+    });
+    progress();
+    if (!res.ok) {
+      const payload: ServerError = await res.json().catch(() => ({}));
+      throw new AnalyzeError(codeFor(payload.error?.code), payload.error?.message ?? 'Something went wrong. Please try again.');
+    }
+
+    const reader = res.body?.getReader();
+    if (!reader) {
+      (await res.text()).split('\n').forEach(handle);
+    } else {
+      const decoder = new TextDecoder();
+      let buffer = '';
       while (true) {
         const { value, done: finished } = await reader.read();
         if (finished) break;
+        progress();
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() ?? '';
@@ -136,13 +178,42 @@ async function analyzeStreaming(body: Record<string, unknown>, onPartial?: (p: P
         }
       }
       handle(buffer);
-    } catch (e) {
-      if (e instanceof AnalyzeError) throw e;
-      throw new AnalyzeError('network', 'The connection dropped while explaining. Please try again.');
     }
+  } catch (e) {
+    if (e instanceof AnalyzeError) throw e;
+    if (timedOut) throw new AnalyzeError('network', SLOW_MESSAGE);
+    throw new AnalyzeError('network', raw ? 'The connection dropped while explaining. Please try again.' : NETWORK_MESSAGE);
+  } finally {
+    clearTimeout(hardLimit);
+    clearTimeout(stall);
   }
   if (!done) throw new AnalyzeError('server', 'The explanation didn’t finish. Please try again.');
   return done;
+}
+
+/** What /analyze receives for the user's text, photo(s) or PDF. */
+async function requestBody(input: AnalyzeInput): Promise<Record<string, unknown>> {
+  if (input.kind === 'text') {
+    const text = (input.text ?? '').trim();
+    if (text.length < 20) {
+      throw new AnalyzeError('too_short', 'This text is too short to explain. Paste all of it, including any greeting or heading.');
+    }
+    return { kind: 'text', text };
+  }
+  const pages = input.kind === 'image' ? (input.uris ?? (input.uri ? [input.uri] : [])) : [];
+  if (input.kind === 'pdf' ? !input.uri : pages.length === 0) {
+    throw new AnalyzeError('unreadable', 'The file is missing. Please add it again.');
+  }
+  try {
+    if (input.kind === 'pdf') return { kind: 'pdf', data: await fileAsBase64(input.uri!) };
+    if (pages.length === 1) return { kind: 'image', ...(await imageForUpload(pages[0])) };
+    // One at a time: several full-size photos in memory at once can be too much for older phones.
+    const images = [];
+    for (const uri of pages) images.push(await imageForUpload(uri));
+    return { kind: 'images', images };
+  } catch {
+    throw new AnalyzeError('unreadable', 'A photo couldn’t be opened. Try taking it again.');
+  }
 }
 
 /**
@@ -151,37 +222,23 @@ async function analyzeStreaming(body: Record<string, unknown>, onPartial?: (p: P
  */
 export const liveClient: AIClient = {
   async analyzeDocument(input: AnalyzeInput): Promise<AnalyzeResult> {
-    let body: Record<string, unknown>;
-    if (input.kind === 'text') {
-      const text = (input.text ?? '').trim();
-      if (text.length < 20) {
-        throw new AnalyzeError('too_short', 'This text is too short to explain. Paste all of it, including any greeting or heading.');
-      }
-      body = { kind: 'text', text };
-    } else {
-      if (!input.uri) throw new AnalyzeError('unreadable', 'The file is missing. Please add it again.');
-      try {
-        body =
-          input.kind === 'image'
-            ? { kind: 'image', ...(await imageForUpload(input.uri)) }
-            : { kind: 'pdf', data: await fileAsBase64(input.uri) };
-      } catch {
-        throw new AnalyzeError('unreadable', 'This file couldn’t be opened. Try taking the photo again.');
-      }
-    }
+    const body = await requestBody(input);
     if (input.hint) body.hint = input.hint;
+    if (input.requestId) body.requestId = input.requestId;
+    body.language = input.language ?? DEFAULT_LANGUAGE;
 
     const data = await analyzeStreaming(body, input.onPartial);
     return { analysis: data.analysis, originalText: data.originalText, demo: null, remaining: data.remaining };
   },
 
-  async generateReply({ analysis, originalText, intentId, tone }: ReplyInput): Promise<ReplyDraft> {
+  async generateReply({ analysis, originalText, intentId, tone, language }: ReplyInput): Promise<ReplyDraft> {
     const intent = analysis.replyIntents.find((i) => i.id === intentId) ?? analysis.replyIntents[0];
     const data = await invoke<{ czech: string; english: string }>('reply', {
       originalText,
       summary: { kind: analysis.kind, sender: analysis.sender, inShort: analysis.inShort },
       intent: { label: intent?.label ?? 'Reply', description: intent?.description ?? '' },
       tone,
+      language: language ?? DEFAULT_LANGUAGE,
     });
     return { intentId, tone, czech: data.czech, english: data.english };
   },
