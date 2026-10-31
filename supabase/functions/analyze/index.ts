@@ -1,6 +1,7 @@
 import { withSupabase } from 'npm:@supabase/server@1';
 
 import { analyzeOutputSchema, CATEGORIES, validateAnalyzeOutput } from '../_shared/analysis-schema.ts';
+import { FREE_LIMIT, LIMIT_REACHED_MESSAGE } from '../_shared/allowance.ts';
 import { parseInput, userContent, type Input } from '../_shared/analyze-input.ts';
 import { AiError, callStructured, fail, isRateLimited, logCall, type Usage } from '../_shared/claude.ts';
 import { languageName } from '../_shared/languages.ts';
@@ -14,7 +15,6 @@ import { ANALYZE_SYSTEM } from '../_shared/prompts.ts';
  * Reserves one free explanation first and refunds it if the explanation fails.
  */
 
-const FREE_LIMIT = Number(Deno.env.get('FREE_ANALYSES_PER_MONTH') ?? '5');
 
 export default {
   fetch: withSupabase({ auth: 'user' }, async (req, ctx) => {
@@ -61,7 +61,7 @@ export default {
       return fail(500, 'server', 'Something went wrong. Please try again.');
     }
     if (remaining < 0) {
-      return fail(402, 'limit_reached', 'You’ve used this month’s free explanations. Pro with unlimited explanations is coming soon.');
+      return fail(402, 'limit_reached', LIMIT_REACHED_MESSAGE);
     }
 
     // Gives the explanation back. A free retry reserved nothing, so there is nothing to give back.
@@ -102,7 +102,7 @@ export default {
         }
         // Pasted text isn't echoed back by Claude (that would only slow it down); the server has it.
         const originalText = input.kind === 'text' ? input.text : out.originalText;
-        return { result: { analysis: out.analysis, originalText, remaining } };
+        return { result: { analysis: out.analysis, originalText, remaining, limit: FREE_LIMIT } };
       } catch (e) {
         await refund();
         const known = e instanceof AiError;
@@ -159,7 +159,7 @@ export default {
 };
 
 type Outcome =
-  | { result: { analysis: unknown; originalText: string; remaining: number } }
+  | { result: { analysis: unknown; originalText: string; remaining: number; limit: number } }
   | { error: { status: number; code: string; message: string } };
 
 /** One-way SHA-256 of what is being explained: recognises a retry without storing the content. */

@@ -133,7 +133,12 @@ export type AnalyzeResult = {
   sampleId?: string;
   /** Free explanations left this month, as counted by the server. */
   remaining?: number;
+  /** The server's free explanations per month. */
+  limit?: number;
 };
+
+/** The user's free explanations this month, as the server counts them. */
+export type Allowance = { limit: number; remaining: number };
 
 export type ReplyInput = {
   analysis: Analysis;
@@ -162,4 +167,6 @@ export class AnalyzeError extends Error {
 export interface AIClient {
   analyzeDocument(input: AnalyzeInput): Promise<AnalyzeResult>;
   generateReply(input: ReplyInput): Promise<ReplyDraft>;
+  /** Live only: the server decides the free allowance. */
+  getAllowance?(): Promise<Allowance>;
 }

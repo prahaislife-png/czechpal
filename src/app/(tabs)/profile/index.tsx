@@ -1,20 +1,30 @@
-import { router } from 'expo-router';
+import Constants from 'expo-constants';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { ScrollView, StyleSheet, Switch, View } from 'react-native';
 
-import { Badge } from '@/components/ui/badge';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
 import { isDemoMode, languageByCode } from '@/lib/ai';
 import { confirm } from '@/lib/dialogs';
-import { FREE_ANALYSES_PER_MONTH, useRemainingAnalyses, useStore } from '@/store/cases';
+import { allowanceRenewsOn, useFreeLimit, useRemainingAnalyses, useStore } from '@/store/cases';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
+
+/** Testing tools: shown in demo mode and development builds, never in the App Store build. */
+const showDevTools = isDemoMode || __DEV__;
 
 export default function ProfileScreen() {
   const { colors } = useTheme();
   const remaining = useRemainingAnalyses();
-  const used = FREE_ANALYSES_PER_MONTH - remaining;
+  const limit = useFreeLimit();
+  const used = limit - remaining;
+  useFocusEffect(
+    useCallback(() => {
+      useStore.getState().syncAllowance();
+    }, []),
+  );
   const caseCount = useStore((s) => s.cases.length);
   const aiConsent = useStore((s) => s.aiConsent);
   const language = useStore((s) => s.language);
@@ -33,25 +43,19 @@ export default function ProfileScreen() {
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
       <Card style={styles.plan}>
-        <View style={styles.planHead}>
-          <Text variant="title3">Free plan</Text>
-          <Badge label="Demo" tone="accent" />
-        </View>
+        <Text variant="title3">Free explanations</Text>
         <View style={styles.meter}>
           <View style={[styles.track, { backgroundColor: colors.fill }]}>
             <View
-              style={[
-                styles.fill,
-                { backgroundColor: colors.accentFill, width: `${(used / FREE_ANALYSES_PER_MONTH) * 100}%` },
-              ]}
+              style={[styles.fill, { backgroundColor: colors.accentFill, width: `${limit ? (used / limit) * 100 : 0}%` }]}
             />
           </View>
           <Text variant="subhead" color="label2" tabular>
-            {remaining} of {FREE_ANALYSES_PER_MONTH} free explanations left this month
+            {remaining} of {limit} left this month
           </Text>
         </View>
         <Text variant="footnote" color="label3">
-          CzechPal Pro, with unlimited explanations and history across devices, is coming soon.
+          Renews on {allowanceRenewsOn()}. Built-in examples and replies are always free.
         </Text>
       </Card>
 
@@ -68,20 +72,23 @@ export default function ProfileScreen() {
         </List>
       </View>
 
-      <View>
-        <SectionHeader title="Demo" />
-        <List>
-          <Row icon="refresh" title="Reset free explanations" onPress={resetUsage} />
-          <Row
-            icon="star"
-            title="Show the welcome screen again"
-            onPress={() => {
-              resetOnboarding();
-              router.replace('/welcome');
-            }}
-          />
-        </List>
-      </View>
+      {showDevTools && (
+        <View>
+          <SectionHeader title={isDemoMode ? 'Demo' : 'Testing'} />
+          <List>
+            {/* Live, the server counts explanations, so only a demo allowance can be reset here. */}
+            {isDemoMode && <Row icon="refresh" title="Reset free explanations" onPress={resetUsage} />}
+            <Row
+              icon="star"
+              title="Show the welcome screen again"
+              onPress={() => {
+                resetOnboarding();
+                router.replace('/welcome');
+              }}
+            />
+          </List>
+        </View>
+      )}
 
       <View>
         <SectionHeader title="Privacy" />
@@ -111,7 +118,8 @@ export default function ProfileScreen() {
       </View>
 
       <Text variant="footnote" color="label3" align="center">
-        CzechPal 1.0 · Demo build
+        CzechPal {Constants.expoConfig?.version ?? ''}
+        {isDemoMode ? ' · Demo' : ''}
       </Text>
     </ScrollView>
   );
@@ -120,7 +128,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   content: { padding: layout.gutter, paddingBottom: space.huge, gap: space.xxl },
   plan: { gap: space.lg },
-  planHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   meter: { gap: space.sm },
   track: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: radius.pill },
