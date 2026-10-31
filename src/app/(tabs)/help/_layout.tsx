@@ -12,6 +12,8 @@ export default function HelpStack() {
     <Stack screenOptions={stackOptions(colors)}>
       <Stack.Screen name="index" options={{ ...largeTitleOptions(colors), title: 'Help' }} />
       <Stack.Screen name="[category]" options={{ title: '' }} />
+      <Stack.Screen name="find/[kind]" options={{ title: '' }} />
+      <Stack.Screen name="practice/[id]" options={{ title: '' }} />
       <Stack.Screen name="provider/[id]" options={{ title: '' }} />
     </Stack>
   );

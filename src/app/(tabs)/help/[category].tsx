@@ -9,9 +9,18 @@ import { Chip } from '@/components/ui/chip';
 import { Icon } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
+import { type IconName } from '@/components/ui/icon';
 import { categoryById, providers, type Provider } from '@/lib/help/directory';
+import { practiceKinds, type PracticeKind } from '@/lib/help/practices';
 import { layout, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
+
+const kindIcon: Record<PracticeKind, IconName> = {
+  gp: 'doctor',
+  dentist: 'health',
+  children: 'person',
+  gynecology: 'health',
+};
 
 export default function HelpCategoryScreen() {
   const { colors } = useTheme();
@@ -30,6 +39,28 @@ export default function HelpCategoryScreen() {
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
       <Stack.Screen options={{ title: category.title }} />
+
+      {id === 'doctors' && (
+        // The live directory: every practice in Prague, with what other foreigners found out.
+        <View>
+          <SectionHeader title="Find a practice in Prague" />
+          <List>
+            {practiceKinds.map((k) => (
+              <Row
+                key={k.id}
+                icon={kindIcon[k.id]}
+                title={k.title}
+                chevron
+                onPress={() => router.push({ pathname: '/help/find/[kind]', params: { kind: k.id } })}
+              />
+            ))}
+          </List>
+          <Text variant="footnote" color="label3" style={styles.note}>
+            Every practice in the official register, with who’s taking new patients and who speaks English, as reported by
+            other CzechPal users.
+          </Text>
+        </View>
+      )}
 
       {category.composeRecipient && (
         // The bridge: most good Czech providers don't advertise English, so make all of them reachable.

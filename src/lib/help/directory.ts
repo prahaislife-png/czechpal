@@ -34,7 +34,7 @@ export const helpCategories: HelpCategory[] = [
   {
     id: 'doctors',
     title: 'Doctors and dentists',
-    short: 'GPs, dentists, children’s doctors',
+    short: 'Every practice in Prague, and who takes new patients',
     icon: 'doctor',
     composeRecipient: 'doctor',
     composeLabel: 'Write to any Czech doctor',

@@ -14,7 +14,7 @@ export type Recipient = 'trades' | 'landlord' | 'doctor';
 export type When = 'asap' | 'thisWeek' | 'nextWeek';
 export type TimeOfDay = 'any' | 'morning' | 'afternoon';
 export type Problem = 'leak' | 'blocked' | 'noHotWater' | 'heating' | 'electrical' | 'other';
-export type DoctorType = 'gp' | 'dentist' | 'paediatrician';
+export type DoctorType = 'gp' | 'dentist' | 'paediatrician' | 'gynaecologist';
 export type Insurer = '111' | '201' | '205' | '207' | '209' | '211' | '213' | 'private';
 
 export type IntentId = 'repair' | 'quote' | 'defect' | 'deposit' | 'bill' | 'register' | 'appointment' | 'reschedule';
@@ -93,6 +93,7 @@ export const doctorTypes: { id: DoctorType; label: string }[] = [
   { id: 'gp', label: 'GP' },
   { id: 'dentist', label: 'Dentist' },
   { id: 'paediatrician', label: 'Children’s doctor' },
+  { id: 'gynaecologist', label: 'Gynaecologist' },
 ];
 
 /** Czech public health insurers by their official codes, plus commercial insurance for foreigners. */
@@ -141,10 +142,17 @@ const timeLine: Record<Exclude<TimeOfDay, 'any'>, Line> = {
   afternoon: { cs: 'Nejlépe se mi hodí odpoledne.', en: 'Afternoons suit me best.', say: 'NEY-leh-peh seh mi HOH-dyee OT-poh-led-neh.' },
 };
 
-const doctorCs: Record<DoctorType, { cs: string; en: string; say: string }> = {
+/** `patients` overrides "nové pacienty" where Czech uses another word (a gynaecologist takes "pacientky"). */
+const doctorCs: Record<DoctorType, { cs: string; en: string; say: string; patients?: { cs: string; say: string } }> = {
   gp: { cs: 'praktického lékaře', en: 'a GP', say: 'PRAK-tits-keh-hoh LEH-kah-rzheh' },
   dentist: { cs: 'zubního lékaře', en: 'a dentist', say: 'ZOOB-nyee-hoh LEH-kah-rzheh' },
   paediatrician: { cs: 'dětského lékaře pro své dítě', en: 'a children’s doctor for my child', say: 'DYET-skeh-hoh LEH-kah-rzheh proh sveh DYEE-tyeh' },
+  gynaecologist: {
+    cs: 'gynekologa',
+    en: 'a gynaecologist',
+    say: 'GI-neh-koh-loh-gah',
+    patients: { cs: 'nové pacientky', say: 'NOH-veh PAH-tsi-en-tki' },
+  },
 };
 
 const LITTLE_CZECH_WRITTEN: Line = {
@@ -304,12 +312,13 @@ function body(input: ComposeInput): { cs: string[]; en: string[]; say: Line[] } 
     case 'register': {
       const d = doctorCs[input.doctorType];
       const ins = insurerLines(input.insurer);
+      const patients = d.patients ?? { cs: 'nové pacienty', say: 'NOH-veh PAH-tsi-en-tih' };
       return {
-        cs: [`hledám ${d.cs} a chci se zeptat, zda přijímáte nové pacienty.`, ins.written.cs],
+        cs: [`hledám ${d.cs} a chci se zeptat, zda přijímáte ${patients.cs}.`, ins.written.cs],
         en: [`I’m looking for ${d.en} and would like to ask whether you are taking new patients.`, ins.written.en],
         say: [
           { cs: `Hledám ${d.cs}.`, en: `I’m looking for ${d.en}.`, say: `HLEH-dahm ${d.say}.` },
-          { cs: 'Přijímáte nové pacienty?', en: 'Are you taking new patients?', say: 'PRZHI-yee-mah-teh NOH-veh PAH-tsi-en-tih?' },
+          { cs: `Přijímáte ${patients.cs}?`, en: 'Are you taking new patients?', say: `PRZHI-yee-mah-teh ${patients.say}?` },
           ins.spoken,
         ],
       };
