@@ -1,11 +1,12 @@
 import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { Chip } from '@/components/ui/chip';
+import { Icon } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
 import { categoryById, providers, type Provider } from '@/lib/help/directory';
@@ -19,19 +20,12 @@ export default function HelpCategoryScreen() {
   const [fluentOnly, setFluentOnly] = useState(false);
   const [insuranceOnly, setInsuranceOnly] = useState(false);
 
-  const list = useMemo(
-    () =>
-      providers.filter(
-        (p) =>
-          p.category === id &&
-          (!fluentOnly || p.english === 'fluent') &&
-          (!insuranceOnly || p.publicInsurance === true),
-      ),
-    [id, fluentOnly, insuranceOnly],
+  const inCategory = useMemo(() => providers.filter((p) => p.category === id), [id]);
+  const list = inCategory.filter(
+    (p) => (!fluentOnly || p.english === 'fluent') && (!insuranceOnly || p.publicInsurance === true),
   );
 
   if (!category) return <Redirect href="/help" />;
-  const allSamples = list.length > 0 && list.every((p) => p.verification.status === 'sample');
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
@@ -54,33 +48,51 @@ export default function HelpCategoryScreen() {
         </Card>
       )}
 
-      <View style={styles.filters}>
-        <Chip label="Fluent English" role="checkbox" selected={fluentOnly} onPress={() => setFluentOnly((v) => !v)} />
-        {id === 'doctors' && (
-          <Chip label="Public insurance" role="checkbox" selected={insuranceOnly} onPress={() => setInsuranceOnly((v) => !v)} />
-        )}
-      </View>
-
-      <View>
-        <SectionHeader title={allSamples ? 'Sample listings' : 'Listings'} />
-        {list.length ? (
+      {category.officialSearch?.length ? (
+        <View>
+          <SectionHeader title="Official directories" />
           <List>
-            {list.map((p) => (
-              <ProviderRow key={p.id} provider={p} />
+            {category.officialSearch.map((s) => (
+              <Row
+                key={s.url}
+                icon="government"
+                title={s.title}
+                subtitle={s.detail}
+                accessory={<Icon name="external" size={14} color={colors.label3} />}
+                accessibilityHint="Opens the website"
+                onPress={() => Linking.openURL(s.url)}
+              />
             ))}
           </List>
-        ) : (
-          <Text variant="callout" color="label2" style={styles.empty}>
-            Nothing matches these filters yet. Turn one off, or write to any Czech provider above.
-          </Text>
-        )}
-        {allSamples && (
           <Text variant="footnote" color="label3" style={styles.note}>
-            These are made-up examples showing how listings will look. Real, phone-checked listings replace them before
-            launch.
+            Official Czech websites, mostly in Czech. Look for the language filter (jazyk).
           </Text>
-        )}
-      </View>
+        </View>
+      ) : null}
+
+      {/* Real listings only; this stays hidden until the first ones are checked. */}
+      {inCategory.length > 0 && (
+        <View>
+          <SectionHeader title="Listings" />
+          <View style={styles.filters}>
+            <Chip label="Fluent English" role="checkbox" selected={fluentOnly} onPress={() => setFluentOnly((v) => !v)} />
+            {id === 'doctors' && (
+              <Chip label="Public insurance" role="checkbox" selected={insuranceOnly} onPress={() => setInsuranceOnly((v) => !v)} />
+            )}
+          </View>
+          {list.length ? (
+            <List>
+              {list.map((p) => (
+                <ProviderRow key={p.id} provider={p} />
+              ))}
+            </List>
+          ) : (
+            <Text variant="callout" color="label2" style={styles.empty}>
+              Nothing matches these filters. Turn one off, or write to any Czech provider above.
+            </Text>
+          )}
+        </View>
+      )}
 
       <View>
         <SectionHeader title="What to ask" />
@@ -100,16 +112,13 @@ export default function HelpCategoryScreen() {
 }
 
 function ProviderRow({ provider: p }: { provider: Provider }) {
-  const status = p.verification.status;
   return (
     <Row
       title={p.name}
       subtitle={`${p.services.join(', ')} · ${p.area} · ${p.english === 'fluent' ? 'Fluent English' : 'Some English'}`}
       accessory={
-        status === 'verified' ? (
+        p.verification.status === 'verified' ? (
           <Badge label="Verified" tone="success" icon="verified" />
-        ) : status === 'sample' ? (
-          <Badge label="Sample" tone="neutral" />
         ) : (
           <Badge label="Unverified" tone="warning" />
         )
@@ -124,7 +133,7 @@ const styles = StyleSheet.create({
   content: { padding: layout.gutter, paddingBottom: space.huge, gap: space.xxl },
   bridge: { gap: space.sm },
   bridgeButton: { alignSelf: 'flex-start', marginTop: space.xs },
-  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginTop: -space.sm },
+  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, marginBottom: space.md },
   empty: { paddingHorizontal: space.xs },
   note: { paddingHorizontal: space.lg, marginTop: space.sm },
   tips: { gap: space.md, paddingHorizontal: space.xs },

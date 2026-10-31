@@ -58,6 +58,8 @@ export async function callStructured(opts: {
   schema: Record<string, unknown>;
   config?: ModelConfig;
   onText?: (delta: string) => void;
+  /** Aborts the call when the app has gone away, so nobody pays for an answer no one will read. */
+  signal?: AbortSignal;
 }): Promise<{ json: unknown; usage: Usage }> {
   const config = opts.config ?? DEFAULT_CONFIG;
   const params = {
@@ -72,7 +74,7 @@ export async function callStructured(opts: {
 
   let response: Anthropic.Beta.BetaMessage;
   try {
-    const stream = client.beta.messages.stream(params);
+    const stream = client.beta.messages.stream(params, { signal: opts.signal });
     if (opts.onText) {
       for await (const event of stream) {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') opts.onText(event.delta.text);
@@ -80,6 +82,9 @@ export async function callStructured(opts: {
     }
     response = await stream.finalMessage();
   } catch (e) {
+    if (e instanceof Anthropic.APIUserAbortError || opts.signal?.aborted) {
+      throw new AiError(499, 'cancelled', 'The app stopped waiting for this explanation.');
+    }
     if (e instanceof Anthropic.RateLimitError) throw new AiError(503, 'busy', 'CzechPal is busy right now. Try again in a minute.');
     if (e instanceof Anthropic.APIError) {
       console.error('Claude API error', e.status, e.message);

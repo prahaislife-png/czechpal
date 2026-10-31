@@ -37,6 +37,8 @@ const glyphs = {
   mail: ['envelope', 'mail'],
   refresh: ['arrow.clockwise', 'refresh'],
   close: ['xmark', 'close'],
+  plus: ['plus', 'add'],
+  external: ['arrow.up.right', 'open_in_new'],
   trash: ['trash', 'delete'],
   globe: ['globe', 'language'],
   translate: ['character.bubble', 'translate'],

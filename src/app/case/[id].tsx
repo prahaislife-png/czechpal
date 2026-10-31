@@ -25,20 +25,14 @@ import { Icon } from '@/components/ui/icon';
 import { IconWell, List, Row } from '@/components/ui/list';
 import { Segmented } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
-import type { Analysis, PartialAnalysis, PaymentInfo } from '@/lib/ai';
+import { languageByCode, type Analysis, type PartialAnalysis, type PaymentInfo } from '@/lib/ai';
 import { categoryById, helpForTextCategory } from '@/lib/help/directory';
 import { confirm } from '@/lib/dialogs';
-import { useCase, usePartial, useStore, type CaseItem } from '@/store/cases';
+import { pagesOf, useCase, usePartial, useStore, type CaseItem } from '@/store/cases';
 import { layout, motion, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
 type Tab = 'summary' | 'english' | 'czech';
-
-const tabs = [
-  { value: 'summary', label: 'Summary' },
-  { value: 'english', label: 'English' },
-  { value: 'czech', label: 'Czech' },
-] as const;
 
 export default function CaseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -99,6 +93,13 @@ function ResultView({
   const canReply = (analysis.replyIntents?.length ?? 0) > 0;
   const helpId = analysis.category ? helpForTextCategory(analysis.category) : undefined;
   const help = helpId ? categoryById(helpId) : undefined;
+  const pages = pagesOf(item);
+  // The translation tab is named after the language this was explained in.
+  const tabs: { value: Tab; label: string }[] = [
+    { value: 'summary', label: 'Summary' },
+    { value: 'english', label: languageByCode(item.language).name },
+    { value: 'czech', label: 'Czech' },
+  ];
 
   useEffect(() => {
     if (!copied) return;
@@ -199,7 +200,7 @@ function ResultView({
                   <Row
                     icon={help.icon}
                     title={`Find ${help.title.toLowerCase()}`}
-                    subtitle="English-speaking help, or write to anyone in Czech"
+                    subtitle="Official directories, what to ask, or write to them in Czech"
                     chevron
                     onPress={() => router.push({ pathname: '/help/[category]', params: { category: help.id } })}
                   />
@@ -229,9 +230,15 @@ function ResultView({
 
         {tab === 'czech' && (
           <Animated.View entering={FadeIn.duration(motion.fast)} style={styles.tab}>
-            {item.imageUri ? (
-              <Image source={{ uri: item.imageUri }} contentFit="cover" style={styles.image} accessibilityLabel="Your photo" />
-            ) : null}
+            {pages.map((uri, i) => (
+              <Image
+                key={`${uri}-${i}`}
+                source={{ uri }}
+                contentFit="cover"
+                style={styles.image}
+                accessibilityLabel={pages.length > 1 ? `Your photo, page ${i + 1} of ${pages.length}` : 'Your photo'}
+              />
+            ))}
             {result?.originalText || item.text ? (
               <DocumentPaper text={result?.originalText || item.text || ''} selectable />
             ) : (
@@ -296,30 +303,47 @@ function PayThisBill({ caseId, payment }: { caseId: string; payment: PaymentInfo
   );
 }
 
+const failureTitle: Record<NonNullable<CaseItem['errorCode']>, string> = {
+  network: 'Couldn’t connect',
+  rate: 'Busy right now',
+  limit: 'No free explanations left',
+  server: 'Something went wrong',
+  too_short: 'Couldn’t read this',
+  unreadable: 'Couldn’t read this',
+  too_large: 'Couldn’t read this',
+};
+
+/**
+ * The next step depends on what failed: a dropped connection is worth retrying as is, but the
+ * same blurry photo or too-short text would fail again, so those ask for a new one instead.
+ */
 function Failed({ item }: { item: CaseItem }) {
   const analyze = useStore((s) => s.analyze);
+  const code = item.errorCode ?? 'server';
+  const contentProblem = code === 'too_short' || code === 'unreadable' || code === 'too_large';
+  const startOver = (route: '/paste' | '/scan') => {
+    router.back();
+    router.push(route);
+  };
+
   return (
     <View style={styles.failed}>
       <IconWell name="alert" tone="danger" />
       <View style={styles.failedText}>
         <Text variant="title2" align="center" accessibilityRole="header">
-          Couldn’t read this
+          {failureTitle[code]}
         </Text>
         <Text variant="callout" color="label2" align="center">
           {item.error ?? 'Something went wrong. Please try again.'}
         </Text>
       </View>
       <View style={styles.failedActions}>
-        {item.source === 'text' ? (
-          <Button
-            label="Type it again"
-            onPress={() => {
-              router.back();
-              router.push('/paste');
-            }}
-          />
-        ) : (
+        {code === 'limit' ? null : !contentProblem ? (
           <Button label="Try again" icon="refresh" onPress={() => analyze(item.id)} />
+        ) : item.source === 'text' ? (
+          <Button label="Type it again" onPress={() => startOver('/paste')} />
+        ) : (
+          <Button label="Take a new photo" icon="camera" onPress={() => startOver('/scan')} />
         )}
         <Button label="Back to home" variant="plain" onPress={() => router.dismissTo('/')} />
       </View>

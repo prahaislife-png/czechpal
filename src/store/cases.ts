@@ -5,9 +5,12 @@ import { createJSONStorage, persist, type StateStorage } from 'zustand/middlewar
 import {
   analyzerFor,
   AnalyzeError,
+  DEFAULT_LANGUAGE,
+  isDemoMode,
   type Analysis,
   type AnalyzeResult,
   type Category,
+  type LanguageCode,
   type PartialAnalysis,
 } from '@/lib/ai';
 
@@ -17,20 +20,32 @@ export type CaseItem = {
   id: string;
   createdAt: string;
   source: CaseSource;
+  /** The photo, or the first page of a photographed document. */
   imageUri?: string;
+  /** Further pages of the same document, in order. */
+  morePages?: string[];
   /** Local copy of a picked or shared PDF. */
   fileUri?: string;
   fileName?: string;
   text?: string;
   sampleId?: string;
   hint?: Category;
+  /** The language the explanation was written in. */
+  language?: LanguageCode;
   status: 'draft' | 'analyzing' | 'ready' | 'error';
   error?: string;
+  errorCode?: AnalyzeError['code'];
   result?: AnalyzeResult;
   replied?: boolean;
 };
 
 export const FREE_ANALYSES_PER_MONTH = 5;
+/** Pages per photographed document. Must match MAX_PAGES in supabase/functions/_shared/analyze-input.ts. */
+export const MAX_PAGES = 5;
+
+/** All photographed pages of a case, first page first. */
+export const pagesOf = (item: Pick<CaseItem, 'imageUri' | 'morePages'>) =>
+  item.imageUri ? [item.imageUri, ...(item.morePages ?? [])] : [];
 
 const STORAGE_KEY = 'czechpal';
 /** The app was called CzechReply; saved data from before the rename is read once, then moved. */
@@ -52,6 +67,8 @@ type State = {
   usage: { month: string; used: number };
   /** The user agreed that their text may be sent to the AI service (asked once, before the first live explanation). */
   aiConsent: boolean;
+  /** The language explanations are written in. */
+  language: LanguageCode;
 };
 
 type Actions = {
@@ -59,6 +76,10 @@ type Actions = {
   resetOnboarding: () => void;
   createDraft: (input: Omit<CaseItem, 'id' | 'createdAt' | 'status'>) => string;
   setHint: (id: string, hint: Category | undefined) => void;
+  /** Adds photographed pages to a draft, up to MAX_PAGES. */
+  addPages: (id: string, uris: string[]) => void;
+  /** Removes one page of a draft; the last page can't be removed. */
+  removePage: (id: string, index: number) => void;
   discardDraft: (id: string) => void;
   analyze: (id: string) => Promise<void>;
   markReplied: (id: string) => void;
@@ -66,6 +87,7 @@ type Actions = {
   clearAll: () => void;
   resetUsage: () => void;
   setAiConsent: (value: boolean) => void;
+  setLanguage: (language: LanguageCode) => void;
 };
 
 /**
@@ -91,6 +113,7 @@ export const useStore = create<State & Actions>()(
         cases: [],
         usage: { month: thisMonth(), used: 0 },
         aiConsent: false,
+        language: DEFAULT_LANGUAGE,
 
         completeOnboarding: () => set({ onboarded: true }),
         resetOnboarding: () => set({ onboarded: false }),
@@ -105,18 +128,40 @@ export const useStore = create<State & Actions>()(
 
         setHint: (id, hint) => patch(id, { hint }),
 
+        addPages: (id, uris) => {
+          const item = get().cases.find((c) => c.id === id);
+          if (!item || item.status !== 'draft') return;
+          const pages = [...pagesOf(item), ...uris].slice(0, MAX_PAGES);
+          patch(id, { imageUri: pages[0], morePages: pages.slice(1) });
+        },
+
+        removePage: (id, index) => {
+          const item = get().cases.find((c) => c.id === id);
+          if (!item || item.status !== 'draft') return;
+          const pages = pagesOf(item);
+          if (pages.length < 2) return;
+          const kept = pages.filter((_, i) => i !== index);
+          patch(id, { imageUri: kept[0], morePages: kept.slice(1) });
+        },
+
         discardDraft: (id) =>
           set((s) => ({ cases: s.cases.filter((c) => !(c.id === id && c.status === 'draft')) })),
 
         analyze: async (id) => {
           const item = get().cases.find((c) => c.id === id);
           if (!item || item.status === 'analyzing') return;
-          patch(id, { status: 'analyzing', error: undefined });
+          // Built-in samples are written in English. A retry keeps the language it was first
+          // explained in; a new explanation uses the current setting.
+          const language = item.source === 'example' || isDemoMode ? DEFAULT_LANGUAGE : (item.language ?? get().language);
+          patch(id, { status: 'analyzing', error: undefined, errorCode: undefined, language });
           try {
             const result = await analyzerFor(item).analyzeDocument({
               kind: item.source === 'text' || item.source === 'example' ? 'text' : item.source === 'pdf' ? 'pdf' : 'image',
               text: item.text,
               uri: item.imageUri ?? item.fileUri,
+              uris: item.imageUri ? pagesOf(item) : undefined,
+              language,
+              requestId: id,
               sampleId: item.source === 'example' ? item.sampleId : undefined,
               hint: item.hint,
               onPartial: (partial) => setPartial(id, partial),
@@ -137,7 +182,7 @@ export const useStore = create<State & Actions>()(
           } catch (e) {
             const message =
               e instanceof AnalyzeError ? e.message : 'Something went wrong while reading this message. Please try again.';
-            patch(id, { status: 'error', error: message });
+            patch(id, { status: 'error', error: message, errorCode: e instanceof AnalyzeError ? e.code : 'server' });
           } finally {
             setPartial(id, undefined);
           }
@@ -148,18 +193,24 @@ export const useStore = create<State & Actions>()(
         clearAll: () => set({ cases: [] }),
         resetUsage: () => set({ usage: { month: thisMonth(), used: 0 } }),
         setAiConsent: (aiConsent) => set({ aiConsent }),
+        setLanguage: (language) => set({ language }),
       };
     },
     {
       name: STORAGE_KEY,
       storage: createJSONStorage(() => storage),
-      partialize: ({ onboarded, cases, usage, aiConsent }) => ({
+      partialize: ({ onboarded, cases, usage, aiConsent, language }) => ({
         onboarded,
         aiConsent,
+        language,
         // Interrupted analyses come back as errors the user can retry; drafts are not kept.
         cases: cases
           .filter((c) => c.status !== 'draft')
-          .map((c) => (c.status === 'analyzing' ? { ...c, status: 'error' as const, error: 'The analysis was interrupted.' } : c)),
+          .map((c) =>
+            c.status === 'analyzing'
+              ? { ...c, status: 'error' as const, error: 'The explanation was interrupted.', errorCode: 'network' as const }
+              : c,
+          ),
         usage,
       }),
       // v1: analyses gained `kind`, `typeLabel` and `caution` (replacing `officialMatter`).

@@ -4,14 +4,19 @@ import type { Recipient } from '@/lib/compose/templates';
 /**
  * The "Find help" directory.
  *
- * Trust is the product, so every listing carries a verification status:
- * - verified:   checked by phone by the CzechPal team on `checkedOn` (English level, insurance, prices)
- * - unverified: self-reported by the provider, shown with that label
- * - sample:     made-up demo data that only shows how listings look. Never callable.
+ * Trust is the product, so it only ever shows real things:
+ * - official public registers (`officialSearch`), checked to exist and to be searchable;
+ * - provider listings, each with a verification status:
+ *   - verified:   checked by phone by the CzechPal team on `checkedOn` (English level, insurance, prices)
+ *   - unverified: self-reported by the provider, shown with that label
+ * There is deliberately no "sample" status: made-up listings must never reach users.
  * Rankings are never for sale; paid placement, if it ever exists, is labelled.
  */
 
 export type HelpCategoryId = 'doctors' | 'trades' | 'accountants' | 'legal';
+
+/** A public register run by an official body. Last checked 31 Oct 2026. */
+export type OfficialSearch = { title: string; detail: string; url: string };
 
 export type HelpCategory = {
   id: HelpCategoryId;
@@ -21,6 +26,7 @@ export type HelpCategory = {
   /** Lets the user write to any Czech provider of this kind, not only English-speaking ones. */
   composeRecipient?: Recipient;
   composeLabel?: string;
+  officialSearch?: OfficialSearch[];
   tips: string[];
 };
 
@@ -36,6 +42,7 @@ export const helpCategories: HelpCategory[] = [
       'Ask whether they take your health insurer, by name and code (for example VZP, 111).',
       'Ask if there is an extra charge for English. Some clinics add one.',
       'GPs and dentists may not be taking new patients; ask that first.',
+      'Your health insurer can tell you which doctors near you work with it. Call the number on your insurance card.',
     ],
   },
   {
@@ -56,6 +63,13 @@ export const helpCategories: HelpCategory[] = [
     title: 'Accountants and tax',
     short: 'Tax returns, freelancer paperwork',
     icon: 'accountant',
+    officialSearch: [
+      {
+        title: 'Chamber of Tax Advisers directory',
+        detail: 'Every registered tax adviser. Filter by language, region and new clients.',
+        url: 'https://www.kdpcr.cz/seznam-danovych-poradcu',
+      },
+    ],
     tips: [
       'Freelancers (OSVČ) also file yearly overviews for social and health insurance, not just the tax return. Ask if that is included.',
       'Ask whether they can act for you with the tax office by power of attorney.',
@@ -66,6 +80,19 @@ export const helpCategories: HelpCategory[] = [
     title: 'Immigration lawyers and translators',
     short: 'Residence, contracts, certified translations',
     icon: 'legal',
+    officialSearch: [
+      {
+        title: 'Czech Bar Association lawyer search',
+        detail: 'Every practising lawyer. Filter by language and area of law.',
+        // The Bar Association says this search moves to its main website on 1 Jan 2027: recheck then.
+        url: 'https://vyhledavac.cak.cz/',
+      },
+      {
+        title: 'Official list of court translators',
+        detail: 'Ministry of Justice list. Certified translations come from these translators.',
+        url: 'https://seznat.justice.cz/',
+      },
+    ],
     tips: [
       'Foreign documents for the immigration office usually need an official certified translation (soudní překlad).',
       'For residence matters, ask how often they handle your permit type.',
@@ -87,26 +114,14 @@ export type Provider = {
   priceNote?: string;
   phone?: string;
   website?: string;
-  verification: { status: 'verified' | 'unverified' | 'sample'; checkedOn?: string };
+  verification: { status: 'verified' | 'unverified'; checkedOn?: string };
 };
 
 /**
- * SAMPLE DATA. Made-up names, no phone numbers, never presented as real.
- * Replace with phone-verified listings (status 'verified' + checkedOn) before launch.
+ * Real provider listings only, added as they are checked. Empty until the first ones are
+ * phone-verified; the Help screens show official registers and tips in the meantime.
  */
-export const providers: Provider[] = [
-  { id: 's-gp-vinohrady', name: 'Vinohrady family practice', category: 'doctors', services: ['GP'], area: 'Prague 2', languages: ['Czech', 'English'], english: 'fluent', publicInsurance: true, priceNote: 'No English surcharge', verification: { status: 'sample' } },
-  { id: 's-dent-karlin', name: 'Karlín dental studio', category: 'doctors', services: ['Dentist'], area: 'Prague 8', languages: ['Czech', 'English', 'Ukrainian'], english: 'fluent', publicInsurance: true, priceNote: 'Basic care on insurance, extras paid', verification: { status: 'sample' } },
-  { id: 's-ped-dejvice', name: 'Dejvice children’s clinic', category: 'doctors', services: ['Children’s doctor'], area: 'Prague 6', languages: ['Czech', 'English'], english: 'basic', publicInsurance: true, verification: { status: 'sample' } },
-  { id: 's-int-centre', name: 'Old Town international clinic', category: 'doctors', services: ['GP', 'Specialists'], area: 'Prague 1', languages: ['English', 'German', 'Russian'], english: 'fluent', publicInsurance: false, priceNote: 'Private fees, membership plans', verification: { status: 'sample' } },
-  { id: 's-plumb-zizkov', name: 'Žižkov plumbing', category: 'trades', services: ['Plumber'], area: 'Prague 3', languages: ['Czech', 'English'], english: 'basic', priceNote: 'Hourly rate plus call-out fee', verification: { status: 'sample' } },
-  { id: 's-elec-smichov', name: 'Smíchov electrical', category: 'trades', services: ['Electrician'], area: 'Prague 5', languages: ['Czech', 'English'], english: 'fluent', verification: { status: 'sample' } },
-  { id: 's-handy-holesovice', name: 'Holešovice handyman', category: 'trades', services: ['Handyman', 'Furniture assembly'], area: 'Prague 7', languages: ['Czech', 'English', 'Ukrainian'], english: 'fluent', verification: { status: 'sample' } },
-  { id: 's-acc-freelance', name: 'Freelancer tax desk', category: 'accountants', services: ['Tax returns', 'OSVČ overviews'], area: 'Prague 2', languages: ['Czech', 'English'], english: 'fluent', priceNote: 'Fixed price per return', verification: { status: 'sample' } },
-  { id: 's-acc-payroll', name: 'Riverside accounting', category: 'accountants', services: ['Accounting', 'Payroll'], area: 'Prague 4', languages: ['Czech', 'English', 'Vietnamese'], english: 'fluent', verification: { status: 'sample' } },
-  { id: 's-law-residence', name: 'Residence law office', category: 'legal', services: ['Residence permits', 'Employee cards'], area: 'Prague 1', languages: ['Czech', 'English', 'Russian'], english: 'fluent', verification: { status: 'sample' } },
-  { id: 's-trans-certified', name: 'Certified translations studio', category: 'legal', services: ['Certified translations'], area: 'Prague 2', languages: ['Czech', 'English', 'Ukrainian'], english: 'fluent', priceNote: 'Priced per page', verification: { status: 'sample' } },
-];
+export const providers: Provider[] = [];
 
 export const categoryById = (id: string | undefined) => helpCategories.find((c) => c.id === id);
 export const providerById = (id: string | undefined) => providers.find((p) => p.id === id);
