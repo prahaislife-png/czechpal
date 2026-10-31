@@ -13,7 +13,16 @@ import { List, Row } from '@/components/ui/list';
 import { Chip } from '@/components/ui/chip';
 import { Text } from '@/components/ui/text';
 import { categoryLabels, isDemoMode, languageByCode, type Category } from '@/lib/ai';
-import { MAX_PAGES, pagesOf, useCase, useRemainingAnalyses, useStore, type CaseItem } from '@/store/cases';
+import {
+  allowanceRenewsOn,
+  MAX_PAGES,
+  pagesOf,
+  useCase,
+  useFreeLimit,
+  useRemainingAnalyses,
+  useStore,
+  type CaseItem,
+} from '@/store/cases';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
@@ -33,12 +42,18 @@ export default function ReviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const item = useCase(id);
   const remaining = useRemainingAnalyses();
+  const limit = useFreeLimit();
   const aiConsent = useStore((s) => s.aiConsent);
   const language = useStore((s) => s.language);
   const { setHint, analyze, discardDraft, resetUsage, setAiConsent } = useStore.getState();
 
   // Leaving without explaining discards the draft; a started analysis is no longer a draft.
   useEffect(() => () => discardDraft(id), [id, discardDraft]);
+
+  // The count shown under Explain is the server's, refreshed when this screen opens.
+  useEffect(() => {
+    useStore.getState().syncAllowance();
+  }, []);
 
   if (!item) return <Redirect href="/" />;
 
@@ -95,7 +110,8 @@ export default function ReviewScreen() {
           // The allowance gate is inline state, not an alert.
           <>
             <Text variant="footnote" color="label2" align="center">
-              You’ve used this month’s free explanations. Pro with unlimited explanations is coming soon.
+              You’ve used all {limit} free explanations for this month. They renew on {allowanceRenewsOn()}. Built-in
+              examples are still free.
             </Text>
             {isDemoMode && <Button label="Reset demo allowance" variant="secondary" onPress={resetUsage} />}
           </>

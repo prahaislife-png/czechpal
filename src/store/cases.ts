@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 
 import {
+  ai,
   analyzerFor,
   AnalyzeError,
   DEFAULT_LANGUAGE,
@@ -39,7 +40,12 @@ export type CaseItem = {
   replied?: boolean;
 };
 
-export const FREE_ANALYSES_PER_MONTH = 5;
+/**
+ * The server decides the free allowance (FREE_ANALYSES_PER_MONTH in supabase/functions/_shared/allowance.ts)
+ * and the app keeps the last number it reported. This is only what the app shows before the
+ * server has answered once, and the allowance in demo mode.
+ */
+const FALLBACK_FREE_LIMIT = 20;
 /** Pages per photographed document. Must match MAX_PAGES in supabase/functions/_shared/analyze-input.ts. */
 export const MAX_PAGES = 5;
 
@@ -64,7 +70,8 @@ type State = {
   hydrated: boolean;
   onboarded: boolean;
   cases: CaseItem[];
-  usage: { month: string; used: number };
+  /** Free explanations this month; `limit` is the server's. */
+  usage: { month: string; used: number; limit: number };
   /** The user agreed that their text may be sent to the AI service (asked once, before the first live explanation). */
   aiConsent: boolean;
   /** The language explanations are written in. */
@@ -86,6 +93,8 @@ type Actions = {
   remove: (id: string) => void;
   clearAll: () => void;
   resetUsage: () => void;
+  /** Asks the server for this month's allowance. Quietly does nothing offline or in demo mode. */
+  syncAllowance: () => Promise<void>;
   setAiConsent: (value: boolean) => void;
   setLanguage: (language: LanguageCode) => void;
 };
@@ -111,7 +120,7 @@ export const useStore = create<State & Actions>()(
         hydrated: false,
         onboarded: false,
         cases: [],
-        usage: { month: thisMonth(), used: 0 },
+        usage: { month: thisMonth(), used: 0, limit: FALLBACK_FREE_LIMIT },
         aiConsent: false,
         language: DEFAULT_LANGUAGE,
 
@@ -167,15 +176,16 @@ export const useStore = create<State & Actions>()(
               onPartial: (partial) => setPartial(id, partial),
             });
             // Examples are free. Otherwise only a successful explanation counts, and the
-            // server's own count wins when it sends one.
+            // server's own count and limit win when it sends them.
             if (item.source !== 'example') {
               set((s) => {
                 const month = thisMonth();
+                const limit = result.limit ?? s.usage.limit;
                 const used =
                   result.remaining !== undefined
-                    ? Math.max(0, FREE_ANALYSES_PER_MONTH - result.remaining)
+                    ? Math.max(0, limit - result.remaining)
                     : (s.usage.month === month ? s.usage.used : 0) + 1;
-                return { usage: { month, used } };
+                return { usage: { month, used, limit } };
               });
             }
             patch(id, { status: 'ready', result, sampleId: result.sampleId });
@@ -183,6 +193,10 @@ export const useStore = create<State & Actions>()(
             const message =
               e instanceof AnalyzeError ? e.message : 'Something went wrong while reading this message. Please try again.';
             patch(id, { status: 'error', error: message, errorCode: e instanceof AnalyzeError ? e.code : 'server' });
+            // The server says the month is used up: show that everywhere, not just on this case.
+            if (e instanceof AnalyzeError && e.code === 'limit') {
+              set((s) => ({ usage: { month: thisMonth(), used: s.usage.limit, limit: s.usage.limit } }));
+            }
           } finally {
             setPartial(id, undefined);
           }
@@ -191,7 +205,16 @@ export const useStore = create<State & Actions>()(
         markReplied: (id) => patch(id, { replied: true }),
         remove: (id) => set((s) => ({ cases: s.cases.filter((c) => c.id !== id) })),
         clearAll: () => set({ cases: [] }),
-        resetUsage: () => set({ usage: { month: thisMonth(), used: 0 } }),
+        resetUsage: () => set((s) => ({ usage: { month: thisMonth(), used: 0, limit: s.usage.limit } })),
+        syncAllowance: async () => {
+          if (isDemoMode || !ai.getAllowance) return;
+          try {
+            const { limit, remaining } = await ai.getAllowance();
+            set({ usage: { month: thisMonth(), used: Math.max(0, limit - remaining), limit } });
+          } catch {
+            // Offline or signed out: keep the last known numbers.
+          }
+        },
         setAiConsent: (aiConsent) => set({ aiConsent }),
         setLanguage: (language) => set({ language }),
       };
@@ -214,9 +237,13 @@ export const useStore = create<State & Actions>()(
         usage,
       }),
       // v1: analyses gained `kind`, `typeLabel` and `caution` (replacing `officialMatter`).
-      version: 1,
+      // v2: usage gained the server's `limit`.
+      version: 2,
       migrate: (persisted, from) => {
-        const state = persisted as { cases?: CaseItem[] };
+        const state = persisted as { cases?: CaseItem[]; usage?: Partial<State['usage']> };
+        if (from < 2 && state.usage) {
+          state.usage = { month: state.usage.month ?? thisMonth(), used: state.usage.used ?? 0, limit: FALLBACK_FREE_LIMIT };
+        }
         if (from < 1 && state.cases) {
           state.cases = state.cases.map((c) => {
             const a = c.result?.analysis as (Analysis & { officialMatter?: boolean }) | undefined;
@@ -248,7 +275,14 @@ export const useCase = (id: string | undefined) => useStore((s) => s.cases.find(
 export const usePartial = (id: string | undefined) => usePartials((s) => (id ? s.byId[id] : undefined));
 
 export function useRemainingAnalyses() {
-  return useStore((s) =>
-    Math.max(0, FREE_ANALYSES_PER_MONTH - (s.usage.month === thisMonth() ? s.usage.used : 0)),
-  );
+  return useStore((s) => Math.max(0, s.usage.limit - (s.usage.month === thisMonth() ? s.usage.used : 0)));
+}
+
+export const useFreeLimit = () => useStore((s) => s.usage.limit);
+
+/** When this month's free explanations renew: the 1st of next month (UTC, like the server). */
+export function allowanceRenewsOn() {
+  const now = new Date();
+  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 12));
+  return next.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
 }

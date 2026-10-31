@@ -9,6 +9,7 @@ import { fileAsBase64, imageForUpload } from './prepare';
 import {
   AnalyzeError,
   type AIClient,
+  type Allowance,
   type Analysis,
   type AnalyzeInput,
   type AnalyzeResult,
@@ -73,7 +74,7 @@ async function accessToken(): Promise<string> {
   }
 }
 
-async function invoke<T>(name: 'reply', body: Record<string, unknown>): Promise<T> {
+async function invoke<T>(name: 'reply' | 'allowance', body: Record<string, unknown>): Promise<T> {
   await accessToken();
   const controller = new AbortController();
   let timedOut = false;
@@ -102,7 +103,7 @@ async function invoke<T>(name: 'reply', body: Record<string, unknown>): Promise<
   }
 }
 
-type AnalyzeResponse = { analysis: Analysis; originalText: string; remaining: number };
+type AnalyzeResponse = { analysis: Analysis; originalText: string; remaining: number; limit?: number };
 
 /**
  * /analyze with streaming: the server sends one JSON object per line, "delta" lines with the
@@ -138,7 +139,7 @@ async function analyzeStreaming(body: Record<string, unknown>, onPartial?: (p: P
       | ({ type: 'done' } & AnalyzeResponse)
       | { type: 'error'; code?: string; message?: string };
     if (msg.type === 'delta') raw += msg.text;
-    else if (msg.type === 'done') done = { analysis: msg.analysis, originalText: msg.originalText, remaining: msg.remaining };
+    else if (msg.type === 'done') done = { analysis: msg.analysis, originalText: msg.originalText, remaining: msg.remaining, limit: msg.limit };
     else throw new AnalyzeError(codeFor(msg.code), msg.message ?? 'Something went wrong. Please try again.');
   };
 
@@ -228,8 +229,10 @@ export const liveClient: AIClient = {
     body.language = input.language ?? DEFAULT_LANGUAGE;
 
     const data = await analyzeStreaming(body, input.onPartial);
-    return { analysis: data.analysis, originalText: data.originalText, demo: null, remaining: data.remaining };
+    return { analysis: data.analysis, originalText: data.originalText, demo: null, remaining: data.remaining, limit: data.limit };
   },
+
+  getAllowance: () => invoke<Allowance>('allowance', {}),
 
   async generateReply({ analysis, originalText, intentId, tone, language }: ReplyInput): Promise<ReplyDraft> {
     const intent = analysis.replyIntents.find((i) => i.id === intentId) ?? analysis.replyIntents[0];

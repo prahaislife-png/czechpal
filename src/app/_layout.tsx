@@ -26,6 +26,11 @@ export default function RootLayout() {
     if (hydrated) SplashScreen.hideAsync();
   }, [hydrated]);
 
+  // The server decides the free allowance; refresh the app's copy once per launch.
+  useEffect(() => {
+    if (hydrated && onboarded) useStore.getState().syncAllowance();
+  }, [hydrated, onboarded]);
+
   if (!hydrated) return null;
 
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
