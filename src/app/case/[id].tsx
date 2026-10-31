@@ -14,6 +14,7 @@ import {
   KeyFacts,
   NextSteps,
   ResultHero,
+  StillWriting,
   TranslatedLines,
 } from '@/components/analysis';
 import { DocumentPaper } from '@/components/document-paper';
@@ -24,10 +25,10 @@ import { Icon } from '@/components/ui/icon';
 import { IconWell, List, Row } from '@/components/ui/list';
 import { Segmented } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
-import type { Analysis, PaymentInfo } from '@/lib/ai';
+import type { Analysis, PartialAnalysis, PaymentInfo } from '@/lib/ai';
 import { categoryById, helpForTextCategory } from '@/lib/help/directory';
 import { confirm } from '@/lib/dialogs';
-import { useCase, useStore, type CaseItem } from '@/store/cases';
+import { useCase, usePartial, useStore, type CaseItem } from '@/store/cases';
 import { layout, motion, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
@@ -42,19 +43,26 @@ const tabs = [
 export default function CaseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const item = useCase(id);
+  const partial = usePartial(id);
   // Reveal choreography only for a result that lands while the user watches;
   // reopening a saved one shows it instantly.
   const [watchedAnalysis] = useState(() => item?.status === 'analyzing');
+  // Once part of the answer has been on screen, sections appear as they arrive, not in a staggered replay.
+  const [streamed, setStreamed] = useState(false);
+  if (partial && !streamed) setStreamed(true);
 
   if (!item) return <Redirect href="/" />;
+  const result = item.status === 'ready' ? item.result : undefined;
 
   return (
     <View style={styles.root}>
-      <Stack.Screen options={{ title: item.status === 'ready' ? item.result?.analysis.title : 'Reading' }} />
-      {item.status === 'ready' && item.result ? (
-        <Ready item={item} animate={watchedAnalysis} />
+      <Stack.Screen options={{ title: result?.analysis.title ?? partial?.title ?? 'Reading' }} />
+      {result ? (
+        <ResultView item={item} analysis={result.analysis} animate={watchedAnalysis} stagger={!streamed} />
       ) : item.status === 'error' ? (
         <Failed item={item} />
+      ) : partial ? (
+        <ResultView item={item} analysis={partial} animate stagger={false} />
       ) : (
         <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
           <AnalyzingView item={item} />
@@ -68,14 +76,28 @@ function plainTranslation(a: Analysis) {
   return a.lines?.length ? a.lines.map((l) => l.en).join('\n') : a.translation;
 }
 
-function Ready({ item, animate }: { item: CaseItem; animate: boolean }) {
+/**
+ * The result, finished or still streaming in. While streaming, `analysis` holds only the parts
+ * written so far, and the actions wait for the checked result.
+ */
+function ResultView({
+  item,
+  analysis,
+  animate,
+  stagger,
+}: {
+  item: CaseItem;
+  analysis: PartialAnalysis & Partial<Pick<Analysis, 'payment' | 'replyIntents'>>;
+  animate: boolean;
+  stagger: boolean;
+}) {
   const [tab, setTab] = useState<Tab>('summary');
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
-  const result = item.result!;
-  const { analysis } = result;
-  const canReply = analysis.replyIntents.length > 0;
-  const helpId = helpForTextCategory(analysis.category);
+  const result = item.status === 'ready' ? item.result : undefined;
+  const streaming = !result;
+  const canReply = (analysis.replyIntents?.length ?? 0) > 0;
+  const helpId = analysis.category ? helpForTextCategory(analysis.category) : undefined;
   const help = helpId ? categoryById(helpId) : undefined;
 
   useEffect(() => {
@@ -85,15 +107,17 @@ function Ready({ item, animate }: { item: CaseItem; animate: boolean }) {
   }, [copied]);
 
   // Explanation, not decoration: sections arrive in reading order, 40 ms apart, first view only.
+  // Streamed in, each section simply appears as it is written.
   const enter = (i: number) =>
-    animate ? FadeInDown.duration(motion.slow).delay(i * 40).easing(motion.easeOut) : undefined;
+    animate ? FadeInDown.duration(motion.slow).delay(stagger ? i * 40 : 0).easing(motion.easeOut) : undefined;
 
   const copyTranslation = async () => {
+    if (!result) return;
     setCopied(true);
     setCopyError(false);
     if (process.env.EXPO_OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     try {
-      await Clipboard.setStringAsync(plainTranslation(analysis));
+      await Clipboard.setStringAsync(plainTranslation(result.analysis));
     } catch {
       setCopied(false);
       setCopyError(true);
@@ -118,13 +142,13 @@ function Ready({ item, animate }: { item: CaseItem; animate: boolean }) {
     <>
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
         {/* A stand-in result is labelled before it can be mistaken for a reading of the user's text. */}
-        {result.demo === 'sample' && <DemoNotice demo={result.demo} />}
+        {result?.demo === 'sample' && <DemoNotice demo={result.demo} />}
 
         <Animated.View entering={enter(0)}>
           <ResultHero analysis={analysis} />
         </Animated.View>
 
-        {result.demo === 'matched' && <DemoNotice demo={result.demo} />}
+        {result?.demo === 'matched' && <DemoNotice demo={result.demo} />}
 
         <Animated.View entering={enter(section++)}>
           <Segmented options={tabs} value={tab} onChange={setTab} />
@@ -142,30 +166,33 @@ function Ready({ item, animate }: { item: CaseItem; animate: boolean }) {
                 <TranslatedLines lines={analysis.lines} />
               </Animated.View>
             ) : null}
-            {analysis.nextSteps.length > 0 && (
+            {analysis.nextSteps?.length ? (
               <Animated.View entering={enter(section++)}>
                 <NextSteps steps={analysis.nextSteps} />
               </Animated.View>
-            )}
+            ) : null}
             {analysis.payment && (
               <Animated.View entering={enter(section++)}>
                 <PayThisBill caseId={item.id} payment={analysis.payment} />
               </Animated.View>
             )}
-            {analysis.keyFacts.length > 0 && (
+            {analysis.keyFacts?.length ? (
               <Animated.View entering={enter(section++)}>
                 <KeyFacts facts={analysis.keyFacts} />
               </Animated.View>
-            )}
-            <Animated.View entering={enter(section++)}>
-              <Bullets title="What it means" items={analysis.meaning} />
-            </Animated.View>
-            {analysis.notStated.length > 0 && (
+            ) : null}
+            {analysis.meaning?.length ? (
+              <Animated.View entering={enter(section++)}>
+                <Bullets title="What it means" items={analysis.meaning} />
+              </Animated.View>
+            ) : null}
+            {analysis.notStated?.length ? (
               <Animated.View entering={enter(section++)}>
                 <Bullets title="Not mentioned" items={analysis.notStated} muted />
               </Animated.View>
-            )}
-            {help && (
+            ) : null}
+            {streaming && <StillWriting />}
+            {!streaming && help && (
               <View>
                 <SectionHeader title="Need a hand with this?" />
                 <List>
@@ -179,15 +206,21 @@ function Ready({ item, animate }: { item: CaseItem; animate: boolean }) {
                 </List>
               </View>
             )}
-            <Button label="Delete" variant="quietDestructive" size="medium" onPress={remove} style={styles.delete} />
+            {!streaming && (
+              <Button label="Delete" variant="quietDestructive" size="medium" onPress={remove} style={styles.delete} />
+            )}
           </>
         )}
 
         {tab === 'english' && (
           <Animated.View entering={FadeIn.duration(motion.fast)} style={styles.tab}>
-            <Text variant="body" selectable style={styles.longText}>
-              {analysis.translation}
-            </Text>
+            {analysis.translation ? (
+              <Text variant="body" selectable style={styles.longText}>
+                {analysis.translation}
+              </Text>
+            ) : (
+              <StillWriting />
+            )}
             <Text variant="footnote" color="label3">
               Translated by AI. For dates, amounts and names, the Czech original is what counts.
             </Text>
@@ -199,27 +232,33 @@ function Ready({ item, animate }: { item: CaseItem; animate: boolean }) {
             {item.imageUri ? (
               <Image source={{ uri: item.imageUri }} contentFit="cover" style={styles.image} accessibilityLabel="Your photo" />
             ) : null}
-            <DocumentPaper text={result.originalText} selectable />
+            {result?.originalText || item.text ? (
+              <DocumentPaper text={result?.originalText || item.text || ''} selectable />
+            ) : (
+              <StillWriting />
+            )}
           </Animated.View>
         )}
       </ScrollView>
 
-      <BottomBar>
-        {canReply ? (
-          <Button
-            label="Write a reply"
-            icon="reply"
-            onPress={() => router.push({ pathname: '/reply/[id]', params: { id: item.id } })}
-          />
-        ) : (
-          <Button label={copied ? 'Copied' : 'Copy translation'} icon={copied ? 'check' : 'copy'} onPress={copyTranslation} />
-        )}
-        {copyError && (
-          <Text variant="footnote" color="danger" align="center" accessibilityLiveRegion="polite">
-            Couldn’t copy. Open the English tab and copy the text from there.
-          </Text>
-        )}
-      </BottomBar>
+      {!streaming && (
+        <BottomBar>
+          {canReply ? (
+            <Button
+              label="Write a reply"
+              icon="reply"
+              onPress={() => router.push({ pathname: '/reply/[id]', params: { id: item.id } })}
+            />
+          ) : (
+            <Button label={copied ? 'Copied' : 'Copy translation'} icon={copied ? 'check' : 'copy'} onPress={copyTranslation} />
+          )}
+          {copyError && (
+            <Text variant="footnote" color="danger" align="center" accessibilityLiveRegion="polite">
+              Couldn’t copy. Open the English tab and copy the text from there.
+            </Text>
+          )}
+        </BottomBar>
+      )}
     </>
   );
 }

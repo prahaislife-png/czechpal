@@ -1,5 +1,7 @@
 import type { IconName } from '@/components/ui/icon';
 
+import type { PartialAnalysis } from './partial-analysis';
+
 export type Category =
   | 'housing'
   | 'utilities'
@@ -110,6 +112,8 @@ export type AnalyzeInput = {
   /** Present when the user picked a built-in example. */
   sampleId?: string;
   hint?: Category;
+  /** Called as the explanation is written, so the screen can show it before it is finished. */
+  onPartial?: (partial: PartialAnalysis) => void;
 };
 
 export type AnalyzeResult = {

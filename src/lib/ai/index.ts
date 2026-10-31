@@ -16,3 +16,4 @@ export const analyzerFor = (item: { source: string }): AIClient => (item.source 
 export const replierFor = (item: { sampleId?: string }): AIClient => (item.sampleId ? mockClient : ai);
 
 export * from './types';
+export type { PartialAnalysis } from './partial-analysis';

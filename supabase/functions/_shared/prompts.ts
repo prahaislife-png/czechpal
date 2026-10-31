@@ -16,9 +16,9 @@ status
 - "unreadable" when the image is too blurry, dark, cropped or small to read reliably. Do not guess at unreadable text.
 - "not_czech" when the text is clearly in another language. Then analysis is null.
 
-originalText: the Czech text exactly as written, keeping line breaks and Czech characters. Transcribe only what you can actually read; mark illegible parts as […]. Empty string when unreadable.
-
 analysis: null unless status is "ok".
+
+originalText: for a photo or PDF, the Czech text exactly as written, keeping line breaks and Czech characters. Transcribe only what you can actually read; mark illegible parts as […]. Empty string when unreadable, and when the reader pasted the text (the app already has it).
 
 ## The three kinds
 
@@ -39,11 +39,11 @@ verdict: the one-line answer to "what does this mean for me?":
 - null when no verdict fits, for example a menu.
 inShort: one or two plain sentences that answer what happened and what it means for the reader. This is the most important field.
 meaning: up to 5 short bullets explaining context a foreigner would not know: Czech terms, how the system works, what is normal.
-keyFacts: the concrete facts the reader needs, up to 8: dates, times, amounts, account numbers, reference numbers, deadlines, addresses, who to contact. "evidence" is the exact Czech words from originalText that support the fact, copied verbatim (a short fragment, not a paraphrase). Every date, amount and number you state must have evidence. Choose the closest icon.
+keyFacts: the concrete facts the reader needs, up to 8: dates, times, amounts, account numbers, reference numbers, deadlines, addresses, who to contact. "evidence" is the exact Czech words from the original text that support the fact, copied verbatim (a short fragment, not a paraphrase). Every date, amount and number you state must have evidence. Choose the closest icon.
 nextSteps: what the reader should do, in order, up to 6. "required" only for things the text actually asks for or that have consequences; "optional" for sensible tips. Empty when nothing applies.
 notStated: up to 4 things the reader would reasonably want to know that the text does not say (for example "Whether the meter reading was real or estimated"). This protects people from assuming. Empty when nothing important is missing.
 caution: "official" for immigration, residence, courts, police, tax, social security, debt collection, contracts or anything legally binding; "medical" for medicines, diagnoses or health instructions; otherwise null.
-translation: a faithful, complete English translation of originalText, keeping its structure.
+translation: a faithful, complete English translation of the original text, keeping its structure.
 replyIntents: things the reader might want to say back, each with a short id (lowercase, no spaces), a label in the reader's voice ("Ask for more time", "Confirm I'll pay") and a one-line description.
 payment: only when the text asks the reader to pay and gives the account. Copy the account exactly as printed: "prefix-number/bankcode", "number/bankcode" or an IBAN. amount in CZK as a number, or 0 when no amount is printed. variableSymbol, specificSymbol, constantSymbol as digits only. dueDate as YYYY-MM-DD only when an exact date is printed. recipientName as printed. message: a short payment note if the text asks for one. Any of these payment fields that the text does not state is an empty string "". Never invent or complete a missing digit; if any part of the account is unclear, set payment to null.
 
