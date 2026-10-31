@@ -14,6 +14,7 @@ import {
   type LanguageCode,
   type PartialAnalysis,
 } from '@/lib/ai';
+import type { Insurer } from '@/lib/compose/templates';
 
 export type CaseSource = 'camera' | 'library' | 'pdf' | 'text' | 'example';
 
@@ -76,13 +77,16 @@ type State = {
   aiConsent: boolean;
   /** The language explanations are written in. */
   language: LanguageCode;
+  /** Typed once in Write in Czech and reused there; stays on this device. */
+  details: MyDetails;
 };
+
+export type MyDetails = { name: string; address: string; insurer?: Insurer };
 
 type Actions = {
   completeOnboarding: () => void;
   resetOnboarding: () => void;
   createDraft: (input: Omit<CaseItem, 'id' | 'createdAt' | 'status'>) => string;
-  setHint: (id: string, hint: Category | undefined) => void;
   /** Adds photographed pages to a draft, up to MAX_PAGES. */
   addPages: (id: string, uris: string[]) => void;
   /** Removes one page of a draft; the last page can't be removed. */
@@ -97,6 +101,7 @@ type Actions = {
   syncAllowance: () => Promise<void>;
   setAiConsent: (value: boolean) => void;
   setLanguage: (language: LanguageCode) => void;
+  setDetails: (change: Partial<MyDetails>) => void;
 };
 
 /**
@@ -123,6 +128,7 @@ export const useStore = create<State & Actions>()(
         usage: { month: thisMonth(), used: 0, limit: FALLBACK_FREE_LIMIT },
         aiConsent: false,
         language: DEFAULT_LANGUAGE,
+        details: { name: '', address: '' },
 
         completeOnboarding: () => set({ onboarded: true }),
         resetOnboarding: () => set({ onboarded: false }),
@@ -134,8 +140,6 @@ export const useStore = create<State & Actions>()(
           }));
           return id;
         },
-
-        setHint: (id, hint) => patch(id, { hint }),
 
         addPages: (id, uris) => {
           const item = get().cases.find((c) => c.id === id);
@@ -204,7 +208,7 @@ export const useStore = create<State & Actions>()(
 
         markReplied: (id) => patch(id, { replied: true }),
         remove: (id) => set((s) => ({ cases: s.cases.filter((c) => c.id !== id) })),
-        clearAll: () => set({ cases: [] }),
+        clearAll: () => set({ cases: [], details: { name: '', address: '' } }),
         resetUsage: () => set((s) => ({ usage: { month: thisMonth(), used: 0, limit: s.usage.limit } })),
         syncAllowance: async () => {
           if (isDemoMode || !ai.getAllowance) return;
@@ -217,15 +221,17 @@ export const useStore = create<State & Actions>()(
         },
         setAiConsent: (aiConsent) => set({ aiConsent }),
         setLanguage: (language) => set({ language }),
+        setDetails: (change) => set((s) => ({ details: { ...s.details, ...change } })),
       };
     },
     {
       name: STORAGE_KEY,
       storage: createJSONStorage(() => storage),
-      partialize: ({ onboarded, cases, usage, aiConsent, language }) => ({
+      partialize: ({ onboarded, cases, usage, aiConsent, language, details }) => ({
         onboarded,
         aiConsent,
         language,
+        details,
         // Interrupted analyses come back as errors the user can retry; drafts are not kept.
         cases: cases
           .filter((c) => c.status !== 'draft')
@@ -274,8 +280,12 @@ export const useCase = (id: string | undefined) => useStore((s) => s.cases.find(
 
 export const usePartial = (id: string | undefined) => usePartials((s) => (id ? s.byId[id] : undefined));
 
+/** Free explanations left this month, as last counted. */
+export const remainingAnalyses = (s: Pick<State, 'usage'>) =>
+  Math.max(0, s.usage.limit - (s.usage.month === thisMonth() ? s.usage.used : 0));
+
 export function useRemainingAnalyses() {
-  return useStore((s) => Math.max(0, s.usage.limit - (s.usage.month === thisMonth() ? s.usage.used : 0)));
+  return useStore(remainingAnalyses);
 }
 
 export const useFreeLimit = () => useStore((s) => s.usage.limit);

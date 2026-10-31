@@ -25,6 +25,8 @@ export default function HomeScreen() {
   const remaining = useRemainingAnalyses();
   const cases = useStore((s) => s.cases);
   const recent = useMemo(() => cases.filter((c) => c.status !== 'draft').slice(0, 3), [cases]);
+  // Examples are for the first visit: gone once something real has been explained.
+  const triedForReal = cases.some((c) => c.source !== 'example' && c.status === 'ready');
 
   return (
     <ScrollView
@@ -38,9 +40,23 @@ export default function HomeScreen() {
           <FlagMark size={26} />
           <Text variant="headline">CzechPal</Text>
         </View>
-        <Pressable onPress={() => router.navigate('/profile')} hitSlop={8} accessibilityRole="link">
-          <Badge label={`${remaining} free left`} tone="neutral" />
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            onPress={() => router.push('/settings')}
+            hitSlop={8}
+            accessibilityRole="link"
+            accessibilityLabel={`${remaining} free explanations left. Settings`}>
+            <Badge label={`${remaining} free left`} tone="neutral" />
+          </Pressable>
+          <Pressable
+            onPress={() => router.push('/settings')}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Settings"
+            style={({ pressed }) => [styles.settings, pressed && { opacity: 0.5 }]}>
+            <Icon name="settings" size={22} color={colors.label2} />
+          </Pressable>
+        </View>
       </View>
 
       {/* Signature element: the viewfinder. One bold move on this screen; everything else stays quiet. */}
@@ -86,10 +102,10 @@ export default function HomeScreen() {
         <List>
           <Row
             icon="qrcode"
-            title="Pay a bill by QR code"
-            subtitle="Your banking app fills in the payment"
+            title="Pay a bill"
+            subtitle="Scan it, and get a QR code for your banking app"
             chevron
-            onPress={() => router.push('/pay')}
+            onPress={() => router.push('/scan')}
           />
           <Row
             icon="compose"
@@ -101,40 +117,42 @@ export default function HomeScreen() {
         </List>
       </View>
 
-      <View>
-        <SectionHeader title="Try it on" />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.examples}
-          style={styles.examplesBleed}>
-          {samples.map((s) => (
-            <PressableScale
-              key={s.id}
-              onPress={() => openReview(draftFromExample(s.id))}
-              accessibilityRole="button"
-              accessibilityLabel={`Try it on: ${s.label}`}
-              style={styles.example}>
-              <DocumentPaper text={s.original} size="small" maxLines={7} style={styles.examplePaper} />
-              <View style={styles.exampleText}>
-                <Text variant="subhead" weight="600" numberOfLines={1}>
-                  {s.label}
-                </Text>
-                <Text variant="caption" color="label2" weight="400">
-                  {categoryLabels[s.category]}
-                </Text>
-              </View>
-            </PressableScale>
-          ))}
-        </ScrollView>
-      </View>
+      {!triedForReal && (
+        <View>
+          <SectionHeader title="Try it on" />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.examples}
+            style={styles.examplesBleed}>
+            {samples.map((s) => (
+              <PressableScale
+                key={s.id}
+                onPress={() => openReview(draftFromExample(s.id))}
+                accessibilityRole="button"
+                accessibilityLabel={`Try it on: ${s.label}`}
+                style={styles.example}>
+                <DocumentPaper text={s.original} size="small" maxLines={7} style={styles.examplePaper} />
+                <View style={styles.exampleText}>
+                  <Text variant="subhead" weight="600" numberOfLines={1}>
+                    {s.label}
+                  </Text>
+                  <Text variant="caption" color="label2" weight="400">
+                    {categoryLabels[s.category]}
+                  </Text>
+                </View>
+              </PressableScale>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {recent.length > 0 && (
         <View>
           <SectionHeader
             title="Recent"
             action={
-              <Pressable onPress={() => router.navigate('/history')} hitSlop={12} accessibilityRole="link">
+              <Pressable onPress={() => router.push('/history')} hitSlop={12} accessibilityRole="link">
                 <Text variant="subhead" color="accent" weight="500" chrome>
                   See all
                 </Text>
@@ -193,6 +211,8 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: layout.gutter, paddingBottom: space.huge, gap: space.xxl },
   brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 },
   brand: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  settings: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   viewfinder: {
     borderRadius: radius.card,
     borderCurve: 'continuous',

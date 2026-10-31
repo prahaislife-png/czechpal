@@ -4,15 +4,12 @@ import { useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { DocumentPaper } from '@/components/document-paper';
-import { Badge } from '@/components/ui/badge';
 import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
-import { SectionHeader } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
-import { Chip } from '@/components/ui/chip';
 import { Text } from '@/components/ui/text';
-import { categoryLabels, isDemoMode, languageByCode, type Category } from '@/lib/ai';
+import { isDemoMode, languageByCode } from '@/lib/ai';
 import {
   allowanceRenewsOn,
   MAX_PAGES,
@@ -26,18 +23,6 @@ import {
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
-const topics: Category[] = [
-  'transport',
-  'food',
-  'health',
-  'housing',
-  'utilities',
-  'school',
-  'government',
-  'work',
-  'personal',
-];
-
 export default function ReviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const item = useCase(id);
@@ -45,7 +30,7 @@ export default function ReviewScreen() {
   const limit = useFreeLimit();
   const aiConsent = useStore((s) => s.aiConsent);
   const language = useStore((s) => s.language);
-  const { setHint, analyze, discardDraft, resetUsage, setAiConsent } = useStore.getState();
+  const { analyze, discardDraft, resetUsage, setAiConsent } = useStore.getState();
 
   // Leaving without explaining discards the draft; a started analysis is no longer a draft.
   useEffect(() => () => discardDraft(id), [id, discardDraft]);
@@ -72,24 +57,6 @@ export default function ReviewScreen() {
     <View style={styles.root}>
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
         <Preview item={item} />
-
-        <View>
-          <SectionHeader title="What is it about? (optional)" />
-          <Text variant="footnote" color="label2" style={styles.hintCopy}>
-            A topic helps when the photo is hard to read.
-          </Text>
-          <View style={styles.chips}>
-            {topics.map((topic) => (
-              <Chip
-                key={topic}
-                role="checkbox"
-                label={categoryLabels[topic]}
-                selected={item.hint === topic}
-                onPress={() => setHint(item.id, item.hint === topic ? undefined : topic)}
-              />
-            ))}
-          </View>
-        </View>
 
         {/* Examples are pre-written in English; the language only applies to live explanations. */}
         {!isDemoMode && !isExample && (
@@ -119,7 +86,7 @@ export default function ReviewScreen() {
           <>
             <Text variant="footnote" color="label2" align="center">
               To explain it, CzechPal sends this text or photo securely to Anthropic’s Claude AI. CzechPal doesn’t keep
-              it, and Anthropic doesn’t use it to train AI models. You can change this in Profile.
+              it, and Anthropic doesn’t use it to train AI models. You can change this in Settings.
             </Text>
             <Button
               label="Agree and explain"
@@ -148,19 +115,16 @@ export default function ReviewScreen() {
 
 function Preview({ item }: { item: CaseItem }) {
   const { colors } = useTheme();
-  const detected = (
-    <View style={styles.detected}>
-      <Badge label="Czech detected" tone="success" icon="checkCircle" />
-      <Text variant="footnote" color="label3">
-        Check that everything is readable
-      </Text>
-    </View>
+  const check = (
+    <Text variant="footnote" color="label2" style={styles.check}>
+      Check that everything is readable
+    </Text>
   );
 
   if (item.imageUri) {
     return (
       <View style={styles.preview}>
-        {detected}
+        {check}
         <Pages item={item} />
       </View>
     );
@@ -184,7 +148,7 @@ function Preview({ item }: { item: CaseItem }) {
   }
   return (
     <View style={styles.preview}>
-      {detected}
+      {check}
       <DocumentPaper text={item.text ?? ''} maxLines={16} />
     </View>
   );
@@ -267,9 +231,7 @@ const styles = StyleSheet.create({
   addRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   addCopy: { flex: 1, paddingHorizontal: space.xs },
   preview: { gap: space.md },
-  detected: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.xs },
+  check: { paddingHorizontal: space.xs },
   pdf: { flexDirection: 'row', alignItems: 'center', gap: space.lg, padding: space.xl },
   pdfText: { flex: 1, gap: 2 },
-  hintCopy: { paddingHorizontal: space.xs, marginTop: -space.xs, marginBottom: space.md },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
 });

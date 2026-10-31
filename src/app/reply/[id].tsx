@@ -10,21 +10,15 @@ import { Button } from '@/components/ui/button';
 import { HeaderTextButton } from '@/components/ui/header-button';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { ChoiceList } from '@/components/ui/choice-list';
-import { Segmented } from '@/components/ui/segmented';
 import { SkeletonLine } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
-import { languageByCode, replierFor, type ReplyDraft, type Tone } from '@/lib/ai';
+import { ai, isDemoMode, languageByCode, replierFor, type ReplyDraft } from '@/lib/ai';
 import { useCase, useStore } from '@/store/cases';
 import { layout, motion, radius, space, type as ramp } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
 const EDITOR_MIN_HEIGHT = 180;
-
-const tones = [
-  { value: 'formal', label: 'Formal' },
-  { value: 'friendly', label: 'Friendly' },
-  { value: 'short', label: 'Short' },
-] as const;
+const OWN = 'own';
 
 export default function ReplyScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,8 +26,11 @@ export default function ReplyScreen() {
   const { colors } = useTheme();
   const analysis = item?.result?.analysis;
 
-  const [intentId, setIntentId] = useState(analysis?.replyIntents[0]?.id ?? '');
-  const [tone, setTone] = useState<Tone>('formal');
+  const [intentId, setIntentId] = useState(analysis?.replyIntents[0]?.id ?? OWN);
+  // What the reader typed, and what was last sent to be written (only on tap, never per keystroke).
+  const [ownWords, setOwnWords] = useState('');
+  const [ownSent, setOwnSent] = useState('');
+  const aiConsent = useStore((s) => s.aiConsent);
   const [draft, setDraft] = useState<ReplyDraft | null>(null);
   const [edited, setEdited] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -43,23 +40,28 @@ export default function ReplyScreen() {
   // Uncontrolled editor: edits live in a ref, the draft only seeds it.
   const text = useRef('');
 
-  // A draft for a different intent or tone is stale: show the skeleton until the new one lands.
-  const current = draft && draft.intentId === intentId && draft.tone === tone ? draft : null;
+  // The reply being shown: a suggested intent, or the reader's own words once sent. A draft for
+  // anything else is stale, so the skeleton shows until the new one lands.
+  const own = intentId === OWN;
+  const wanted = own ? (ownSent ? `${OWN}:${ownSent}` : null) : intentId;
+  const current = draft && draft.intentId === wanted ? draft : null;
 
   const result = item?.result;
   const sampleId = item?.sampleId;
   const language = item?.language;
   const [attempt, setAttempt] = useState(0);
-  // An error belongs to the request that failed; changing intent or tone starts a fresh one.
-  const requestKey = `${intentId}-${tone}-${attempt}`;
+  // An error belongs to the request that failed; choosing something else starts a fresh one.
+  const requestKey = `${wanted}-${attempt}`;
   const [replyError, setReplyError] = useState<{ key: string; message: string } | null>(null);
   const failed = replyError?.key === requestKey ? replyError.message : null;
 
   useEffect(() => {
-    if (!result) return;
+    if (!result || !wanted) return;
     let active = true;
-    replierFor({ sampleId })
-      .generateReply({ analysis: result.analysis, originalText: result.originalText, sampleId, intentId, tone, language })
+    const words = wanted.startsWith(`${OWN}:`) ? wanted.slice(OWN.length + 1) : undefined;
+    // An example's suggested replies are built in; anything in the reader's own words is written live.
+    (words ? ai : replierFor({ sampleId }))
+      .generateReply({ analysis: result.analysis, originalText: result.originalText, sampleId, intentId: wanted, ownWords: words, language })
       .then((d) => {
         if (!active) return;
         text.current = d.czech;
@@ -71,12 +73,12 @@ export default function ReplyScreen() {
       .catch((e: unknown) => {
         if (!active) return;
         const message = e instanceof Error ? e.message : 'The reply couldn’t be written. Please try again.';
-        setReplyError({ key: `${intentId}-${tone}-${attempt}`, message });
+        setReplyError({ key: `${wanted}-${attempt}`, message });
       });
     return () => {
       active = false;
     };
-  }, [result, sampleId, intentId, tone, attempt, language]);
+  }, [result, sampleId, wanted, attempt, language]);
 
   useEffect(() => {
     if (!copied) return;
@@ -85,6 +87,14 @@ export default function ReplyScreen() {
   }, [copied]);
 
   if (!item || !analysis) return <Redirect href="/" />;
+
+  // Built-in examples never needed consent; writing from the reader's own words does.
+  const needsConsent = !isDemoMode && !aiConsent;
+  const sendOwnWords = () => {
+    if (ownWords.trim().length < 2) return;
+    if (needsConsent) useStore.getState().setAiConsent(true);
+    setOwnSent(ownWords.trim());
+  };
 
   // Optimistic: confirm on the same frame as the tap, roll back loudly if the write fails.
   const copy = async () => {
@@ -118,24 +128,59 @@ export default function ReplyScreen() {
         <View>
           <SectionHeader title="What do you want to say?" />
           <ChoiceList
-            options={analysis.replyIntents.map((i) => ({ id: i.id, label: i.label, description: i.description }))}
+            options={[
+              ...analysis.replyIntents.map((i) => ({ id: i.id, label: i.label, description: i.description })),
+              { id: OWN, label: 'In my own words', description: 'Say what you want, in any language' },
+            ]}
             value={intentId}
             onChange={setIntentId}
           />
-        </View>
-
-        <View>
-          <SectionHeader title="Tone" />
-          <Segmented options={tones} value={tone} onChange={setTone} />
+          {own && (
+            <Animated.View entering={FadeIn.duration(motion.fast)} style={styles.own}>
+              <TextInput
+                value={ownWords}
+                onChangeText={setOwnWords}
+                placeholder="For example: yes, Saturday at 10 works for me"
+                placeholderTextColor={colors.label3}
+                multiline
+                maxLength={1000}
+                autoFocus={!ownSent}
+                textAlignVertical="top"
+                accessibilityLabel="What you want to reply, in any language"
+                style={[styles.ownBox, ramp.body, { color: colors.label, backgroundColor: colors.surface, borderColor: colors.separator }]}
+              />
+              {needsConsent && (
+                <Text variant="footnote" color="label2">
+                  CzechPal sends this to Anthropic’s Claude AI to write the reply. CzechPal doesn’t keep it, and Anthropic
+                  doesn’t use it to train AI models.
+                </Text>
+              )}
+              <Button
+                label={needsConsent ? 'Agree and write my reply' : 'Write my reply'}
+                variant="secondary"
+                size="medium"
+                icon="compose"
+                disabled={ownWords.trim().length < 2 || ownSent === ownWords.trim()}
+                onPress={sendOwnWords}
+                style={styles.ownButton}
+              />
+            </Animated.View>
+          )}
         </View>
 
         <View>
           <SectionHeader title="Your reply in Czech" />
           <Card padded={false} style={styles.editorCard}>
-            {current ? (
+            {own && !ownSent ? (
+              <View style={styles.editorSkeleton}>
+                <Text variant="callout" color="label2">
+                  Write what you want to say above, and your reply in Czech appears here.
+                </Text>
+              </View>
+            ) : current ? (
               <Animated.View entering={FadeIn.duration(motion.base)}>
                 <TextInput
-                  key={`${current.intentId}-${current.tone}`}
+                  key={current.intentId}
                   defaultValue={current.czech}
                   onChangeText={(v) => {
                     text.current = v;
@@ -180,7 +225,11 @@ export default function ReplyScreen() {
         <View>
           <SectionHeader title={`What it says in ${languageByCode(language).name}`} />
           <Card style={{ backgroundColor: colors.surfaceMuted, boxShadow: 'none' }}>
-            {current ? (
+            {own && !ownSent ? (
+              <Text variant="subhead" color="label3">
+                The translation appears with the reply.
+              </Text>
+            ) : current ? (
               <Text variant="subhead" color="label2" selectable style={styles.english}>
                 {current.english}
               </Text>
@@ -227,4 +276,16 @@ const styles = StyleSheet.create({
   english: { lineHeight: 22 },
   englishSkeleton: { gap: space.sm },
   hint: { marginTop: space.sm, paddingHorizontal: space.xs },
+  own: { gap: space.md, marginTop: space.md },
+  ownBox: {
+    minHeight: 96,
+    borderRadius: radius.tile,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+    outlineWidth: 0,
+    outlineColor: 'transparent',
+  },
+  ownButton: { alignSelf: 'flex-start' },
 });

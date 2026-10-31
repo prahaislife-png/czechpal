@@ -3,8 +3,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import type { ResolvedSharePayload } from 'expo-sharing';
 
+import { isDemoMode } from '@/lib/ai';
 import { sampleById } from '@/lib/ai/samples';
-import { MAX_PAGES, useStore } from '@/store/cases';
+import { MAX_PAGES, remainingAnalyses, useStore } from '@/store/cases';
 
 /** Pickers create a draft and return its id (null when cancelled); callers decide how to navigate. */
 
@@ -93,11 +94,30 @@ export function draftFromShare(item: SharedItem): string {
   }
 }
 
-const review = (id: string) => ({ pathname: '/review/[id]', params: { id } }) as const;
+/**
+ * Where a new draft goes next. Photos stop at the review screen, to check the pages are readable
+ * and add more. Typed text, a PDF or an example has nothing to check, so it's explained right
+ * away, unless the review screen has something to ask first (consent, or no explanations left).
+ */
+function nextFor(id: string) {
+  const state = useStore.getState();
+  const item = state.cases.find((c) => c.id === id);
+  const example = item?.source === 'example';
+  const direct =
+    !!item &&
+    (example || item.source === 'text' || item.source === 'pdf') &&
+    (example || ((isDemoMode || state.aiConsent) && remainingAnalyses(state) > 0));
+  if (!direct) return { pathname: '/review/[id]', params: { id } } as const;
+  state.analyze(id);
+  return { pathname: '/case/[id]', params: { id } } as const;
+}
 
 export const openReview = (id: string | null) => {
-  if (id) router.push(review(id));
+  if (id) router.push(nextFor(id));
 };
+
+/** For a screen that is only a doorway (receiving a share): take its place, so back skips it. */
+export const replaceWithReview = (id: string) => router.replace(nextFor(id));
 
 /**
  * From a modal (scanner, paste): close it, then continue in the main stack.
@@ -107,8 +127,8 @@ export function leaveModalForReview(id: string | null) {
   if (!id) return;
   if (router.canDismiss()) {
     router.dismiss();
-    router.push(review(id));
+    router.push(nextFor(id));
   } else {
-    router.replace(review(id));
+    router.replace(nextFor(id));
   }
 }

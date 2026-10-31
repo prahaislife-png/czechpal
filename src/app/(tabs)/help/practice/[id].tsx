@@ -89,7 +89,7 @@ function PracticeDetails({ practice: p }: { practice: Practice }) {
     doctorType &&
     router.push({
       pathname: '/compose',
-      params: { recipient: 'doctor', intent: 'register', doctorType, to: p.name, phone: p.phone ?? '', mode },
+      params: { recipient: 'doctor', doctorType, to: p.name, phone: p.phone ?? '', mode },
     });
 
   return (

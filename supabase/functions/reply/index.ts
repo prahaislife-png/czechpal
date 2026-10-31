@@ -8,11 +8,11 @@ import { REPLY_SYSTEM } from '../_shared/prompts.ts';
 
 /**
  * POST /reply
- * { originalText, summary: { kind, sender?, inShort }, intent: { label, description }, tone: 'formal'|'friendly'|'short', name?, language? }
+ * { originalText, summary: { kind, sender?, inShort }, intent?: { label, description }, ownWords?, name?, language? }
+ * Either a suggested intent or the reader's own words (any language). The tone follows the original.
  * Replies don't use up the free allowance; they are rate-limited only.
  */
 
-const TONES = ['formal', 'friendly', 'short'] as const;
 const clip = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
 export default {
@@ -31,9 +31,9 @@ export default {
     const originalText = clip(body.originalText, 20_000);
     const summary = (body.summary ?? {}) as Record<string, unknown>;
     const intent = (body.intent ?? {}) as Record<string, unknown>;
-    const tone = TONES.find((t) => t === body.tone);
+    const ownWords = clip(body.ownWords, 1000);
     const name = clip(body.name, 80);
-    if (!originalText || !tone || !clip(intent.label, 200)) return fail(400, 'bad_request', 'Nothing to reply to was sent.');
+    if (!originalText || (!ownWords && !clip(intent.label, 200))) return fail(400, 'bad_request', 'Nothing to reply to was sent.');
 
     const admin = ctx.supabaseAdmin;
     let usage: Usage | undefined;
@@ -43,8 +43,12 @@ export default {
       const request = [
         `What it is: ${clip(summary.kind, 20) || 'message'}${clip(summary.sender, 200) ? `, from ${clip(summary.sender, 200)}` : ''}.`,
         `In short: ${clip(summary.inShort, 600)}`,
-        `The reader wants to: ${clip(intent.label, 200)}. ${clip(intent.description, 400)}`,
-        `Tone: ${tone}.`,
+        ownWords
+          ? `What the reader wants to reply, in their own words:
+<own_words>
+${ownWords}
+</own_words>`
+          : `The reader wants to: ${clip(intent.label, 200)}. ${clip(intent.description, 400)}`,
         // Spelled out: a short "translate into X" often comes back in English anyway.
         `Write the "translation" field entirely in ${languageName(body.language)}${languageName(body.language) === 'English' ? '' : ', not in English and not in Czech'}, placeholders included.`,
         name ? `Sign it as: ${name}.` : 'Sign it as: [Vaše jméno].',

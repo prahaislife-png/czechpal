@@ -15,7 +15,7 @@ import { useTheme } from '@/theme/use-theme';
 /** Testing tools: shown in demo mode and development builds, never in the App Store build. */
 const showDevTools = isDemoMode || __DEV__;
 
-export default function ProfileScreen() {
+export default function SettingsScreen() {
   const { colors } = useTheme();
   const remaining = useRemainingAnalyses();
   const limit = useFreeLimit();
@@ -33,7 +33,7 @@ export default function ProfileScreen() {
   const deleteAll = async () => {
     const ok = await confirm({
       title: 'Delete everything?',
-      message: `This removes ${caseCount === 1 ? '1 item' : `${caseCount} items`} and their replies from this device. It can’t be undone.`,
+      message: `This removes ${caseCount === 1 ? '1 item' : `${caseCount} items`}, their replies, and your saved name and address from this device. It can’t be undone.`,
       confirmLabel: 'Delete everything',
       destructive: true,
     });
@@ -55,7 +55,7 @@ export default function ProfileScreen() {
           </Text>
         </View>
         <Text variant="footnote" color="label3">
-          Renews on {allowanceRenewsOn()}. Built-in examples and replies are always free.
+          Renews on {allowanceRenewsOn()}. Examples, replies and messages you write are always free.
         </Text>
       </Card>
 
@@ -96,14 +96,14 @@ export default function ProfileScreen() {
           {!isDemoMode && (
             <Row
               icon="shield"
-              title="Send texts to the AI to explain them"
-              subtitle={aiConsent ? 'Allowed' : 'You’ll be asked before the next explanation'}
+              title="Send texts to the AI"
+              subtitle={aiConsent ? 'Allowed, to explain and write Czech' : 'You’ll be asked first next time'}
               accessory={
                 <Switch
                   value={aiConsent}
                   onValueChange={(v) => useStore.getState().setAiConsent(v)}
                   trackColor={{ true: colors.accentFill }}
-                  accessibilityLabel="Send texts to the AI to explain them"
+                  accessibilityLabel="Send texts to the AI"
                 />
               }
             />
@@ -111,9 +111,9 @@ export default function ProfileScreen() {
           <Row icon="trash" title="Delete everything" destructive onPress={deleteAll} />
         </List>
         <Text variant="footnote" color="label2" style={styles.footer}>
-          Your history is kept on this device. A photo or text is sent to Anthropic’s Claude AI only when you tap
-          Explain; CzechPal doesn’t keep it, and Anthropic doesn’t use it to train AI models. Nothing is ever sent to
-          anyone on your behalf.
+          Your history and saved name and address are kept on this device. A photo or text is sent to Anthropic’s
+          Claude AI only when you ask CzechPal to explain or write something; CzechPal doesn’t keep it, and Anthropic
+          doesn’t use it to train AI models. Nothing is ever sent to anyone on your behalf.
         </Text>
       </View>
 

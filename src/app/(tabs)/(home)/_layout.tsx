@@ -3,11 +3,17 @@ import { Stack } from 'expo-router';
 import { stackOptions } from '@/theme/navigation';
 import { useTheme } from '@/theme/use-theme';
 
+// Deep links to History or Settings land with Home underneath.
+export const unstable_settings = { anchor: 'index' };
+
+/** Home holds the history (from Recent) and settings (from the header), so the app needs two tabs. */
 export default function HomeStack() {
   const { colors } = useTheme();
   return (
     <Stack screenOptions={stackOptions(colors)}>
       <Stack.Screen name="index" options={{ headerShown: false, title: 'Home' }} />
+      <Stack.Screen name="history" options={{ title: 'History' }} />
+      <Stack.Screen name="settings" options={{ title: 'Settings' }} />
     </Stack>
   );
 }

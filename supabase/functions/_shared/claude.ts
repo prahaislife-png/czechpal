@@ -118,7 +118,7 @@ export async function callStructured(opts: {
 /** Cost and rate-limit log. Never stores document content. */
 export async function logCall(
   admin: SupabaseClient,
-  row: { userId: string; kind: 'analyze' | 'reply'; ok: boolean; usage?: Usage; error?: string },
+  row: { userId: string; kind: 'analyze' | 'reply' | 'compose'; ok: boolean; usage?: Usage; error?: string },
 ) {
   const { error } = await admin.from('ai_calls').insert({
     user_id: row.userId,
