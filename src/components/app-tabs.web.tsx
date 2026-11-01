@@ -27,7 +27,7 @@ export default function AppTabs() {
           <TabButton icon="home" label="Home" />
         </TabTrigger>
         <TabTrigger name="help" href="/help" asChild>
-          <TabButton icon="help" label="Help" />
+          <TabButton icon="search" label="Find" />
         </TabTrigger>
       </TabList>
     </Tabs>

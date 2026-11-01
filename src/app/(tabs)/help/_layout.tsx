@@ -10,7 +10,11 @@ export default function HelpStack() {
   const { colors } = useTheme();
   return (
     <Stack screenOptions={stackOptions(colors)}>
-      <Stack.Screen name="index" options={{ ...largeTitleOptions(colors), title: 'Help' }} />
+      <Stack.Screen name="index" options={{ ...largeTitleOptions(colors), title: 'Find' }} />
+      <Stack.Screen name="area/[area]" options={{ title: '' }} />
+      <Stack.Screen name="places/[kind]" options={{ title: '' }} />
+      <Stack.Screen name="place/[id]" options={{ title: '' }} />
+      <Stack.Screen name="translators" options={{ title: 'Translators' }} />
       <Stack.Screen name="[category]" options={{ title: '' }} />
       <Stack.Screen name="find/[kind]" options={{ title: '' }} />
       <Stack.Screen name="urgent" options={{ title: 'After-hours care' }} />
