@@ -72,6 +72,7 @@ const glyphs = {
   message: ['message', 'sms'],
   compose: ['square.and.pencil', 'edit_square'],
   help: ['lifepreserver', 'support'],
+  search: ['magnifyingglass', 'search'],
   share: ['square.and.arrow.up', 'share'],
   emergency: ['staroflife.fill', 'emergency'],
   doctor: ['stethoscope', 'stethoscope'],
