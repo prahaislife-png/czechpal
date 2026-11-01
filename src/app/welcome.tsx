@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { FlagMark } from '@/components/ui/flag-mark';
+import { BrandMark } from '@/components/ui/brand-mark';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useStore } from '@/store/cases';
@@ -37,7 +37,7 @@ export default function WelcomeScreen() {
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + space.lg }]}>
         <Animated.View entering={FadeIn.duration(motion.base)} style={styles.brand}>
-          <FlagMark size={30} />
+          <BrandMark size={30} />
           <Text variant="headline">CzechPal</Text>
         </Animated.View>
 

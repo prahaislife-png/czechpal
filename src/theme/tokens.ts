@@ -18,7 +18,7 @@ const light = {
   fillPressed: 'rgba(118, 128, 150, 0.2)',
   label: '#0B1220',
   label2: '#4B5567',
-  label3: '#7D8799',
+  label3: '#646D7E', // 4.7:1 on background, 5.2:1 on surface (HIG: 4.5:1 up to 17 pt)
   separator: '#E3E7ED',
   accent: '#2251D1',
   accentFill: '#2251D1',
@@ -49,7 +49,7 @@ const dark: typeof light = {
   fillPressed: 'rgba(130, 140, 160, 0.26)',
   label: '#F1F3F7',
   label2: '#A4ADBC',
-  label3: '#737C8B',
+  label3: '#858E9C', // 5.9:1 on background, 5.0:1 on muted surface
   separator: '#262B33',
   accent: '#86A2FF',
   accentFill: '#3A64EA',
@@ -74,6 +74,15 @@ const dark: typeof light = {
 export const palettes = { light, dark };
 export type Palette = typeof light;
 
+/**
+ * Increase Contrast (iOS Settings > Accessibility): text and separators pull further from the
+ * background, as Apple's own adaptive colours do. Everything else stays the same.
+ */
+export const highContrastPalettes: Record<'light' | 'dark', Palette> = {
+  light: { ...light, label2: '#2E3646', label3: '#454E5F', separator: '#B9C0CB', accent: '#1A3FAA' },
+  dark: { ...dark, label2: '#CBD2DD', label3: '#AAB2BF', separator: '#4A515D', accent: '#A9BEFF' },
+};
+
 /** Camera chrome: always light-on-black whatever the theme, because it sits on the live lens image. */
 export const camera = {
   background: '#000000',
@@ -85,8 +94,8 @@ export const camera = {
 /** QR codes stay dark-on-white in every theme: banking apps scan that most reliably. */
 export const qr = { dark: '#000000', light: '#FFFFFF' } as const;
 
-/** Czech flag colours — brand mark only, never UI state. */
-export const flag = { blue: '#11457E', red: '#D7141A', white: '#FFFFFF' };
+/** Brand mark colours (the app icon): never UI state. */
+export const brand = { inkTop: '#1B2333', inkBottom: '#0B1019', corners: '#7F9DFF', glyph: '#FFFFFF', hacek: '#E8333A' };
 
 export const space = {
   xxs: 2,

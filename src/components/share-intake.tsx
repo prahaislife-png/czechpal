@@ -30,9 +30,9 @@ export function ShareIntake({ fallback }: { fallback: React.ReactNode }) {
   if (!isResolving && (error || !pickSharedItem(resolvedSharedPayloads))) return fallback;
 
   return (
-    <View style={styles.center} accessibilityLiveRegion="polite">
+    <View style={styles.center}>
       <ActivityIndicator color={colors.accent} />
-      <Text variant="callout" color="label2">
+      <Text variant="callout" color="label2" accessibilityLiveRegion="polite">
         Opening what you shared…
       </Text>
     </View>

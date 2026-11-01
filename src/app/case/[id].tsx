@@ -27,12 +27,23 @@ import { Segmented } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
 import { languageByCode, type Analysis, type PartialAnalysis, type PaymentInfo } from '@/lib/ai';
 import { categoryById, helpForTextCategory } from '@/lib/help/directory';
+import { announce } from '@/lib/a11y';
 import { confirm } from '@/lib/dialogs';
 import { pagesOf, useCase, usePartial, useStore, type CaseItem } from '@/store/cases';
 import { layout, motion, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
 type Tab = 'summary' | 'english' | 'czech';
+
+/**
+ * HIG: "keep a short title under 15 characters". The full title is the heading on the page, so
+ * the bar names the kind of text: its own label when short enough, otherwise its broad kind.
+ */
+function navTitle(a?: { typeLabel?: string; kind?: string }) {
+  if (!a) return 'Reading';
+  if (a.typeLabel && a.typeLabel.length < 15) return a.typeLabel;
+  return a.kind === 'message' ? 'Message' : a.kind === 'document' ? 'Letter' : a.kind === 'text' ? 'Text' : 'Reading';
+}
 
 export default function CaseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -50,7 +61,7 @@ export default function CaseScreen() {
 
   return (
     <View style={styles.root}>
-      <Stack.Screen options={{ title: result?.analysis.title ?? partial?.title ?? 'Reading' }} />
+      <Stack.Screen options={{ title: navTitle(result?.analysis ?? partial) }} />
       {result ? (
         <ResultView item={item} analysis={result.analysis} animate={watchedAnalysis} stagger={!streamed} />
       ) : item.status === 'error' ? (
@@ -90,6 +101,11 @@ function ResultView({
   const [copyError, setCopyError] = useState(false);
   const result = item.status === 'ready' ? item.result : undefined;
   const streaming = !result;
+  // The text appears bit by bit; VoiceOver users hear once that it's complete.
+  const [wasStreaming] = useState(streaming);
+  useEffect(() => {
+    if (wasStreaming && !streaming) announce('Explanation ready');
+  }, [wasStreaming, streaming]);
   const canReply = (analysis.replyIntents?.length ?? 0) > 0;
   const helpId = analysis.category ? helpForTextCategory(analysis.category) : undefined;
   const help = helpId ? categoryById(helpId) : undefined;
@@ -115,6 +131,7 @@ function ResultView({
   const copyTranslation = async () => {
     if (!result) return;
     setCopied(true);
+    announce('Copied');
     setCopyError(false);
     if (process.env.EXPO_OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     try {

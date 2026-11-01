@@ -1,7 +1,7 @@
 import { router, Stack } from 'expo-router';
 import { ScrollView, StyleSheet } from 'react-native';
 
-import { HeaderTextButton } from '@/components/ui/header-button';
+import { HeaderCloseButton } from '@/components/ui/header-button';
 import { Icon } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
@@ -17,7 +17,7 @@ export default function LanguageScreen() {
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
-      <Stack.Screen options={{ headerLeft: () => <HeaderTextButton label="Close" /> }} />
+      <Stack.Screen options={{ headerLeft: () => <HeaderCloseButton /> }} />
       <List>
         {LANGUAGES.map((l) => (
           <Row

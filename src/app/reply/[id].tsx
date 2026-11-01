@@ -7,11 +7,13 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
-import { HeaderTextButton } from '@/components/ui/header-button';
+import { HeaderCloseButton } from '@/components/ui/header-button';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { ChoiceList } from '@/components/ui/choice-list';
 import { SkeletonLine } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
+import { useConfirmDiscard } from '@/hooks/use-confirm-discard';
+import { announce } from '@/lib/a11y';
 import { ai, isDemoMode, languageByCode, replierFor, type ReplyDraft } from '@/lib/ai';
 import { useCase, useStore } from '@/store/cases';
 import { layout, motion, radius, space, type as ramp } from '@/theme/tokens';
@@ -35,6 +37,8 @@ export default function ReplyScreen() {
   const [edited, setEdited] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
+  // Edits and the reader's own words are theirs; once copied or emailed, closing loses nothing.
+  const [used, setUsed] = useState(false);
   // Web textareas don't auto-grow; native multiline inputs do with scrollEnabled={false}.
   const [editorHeight, setEditorHeight] = useState(EDITOR_MIN_HEIGHT);
   // Uncontrolled editor: edits live in a ref, the draft only seeds it.
@@ -69,6 +73,7 @@ export default function ReplyScreen() {
         setCopied(false);
         setEditorHeight(EDITOR_MIN_HEIGHT);
         setDraft(d);
+        announce('Reply written in Czech');
       })
       .catch((e: unknown) => {
         if (!active) return;
@@ -79,6 +84,11 @@ export default function ReplyScreen() {
       active = false;
     };
   }, [result, sampleId, wanted, attempt, language]);
+
+  useConfirmDiscard((edited || ownWords.trim().length > 0) && !used, {
+    title: 'Discard this reply?',
+    message: 'Your changes and what you typed will be lost.',
+  });
 
   useEffect(() => {
     if (!copied) return;
@@ -99,6 +109,8 @@ export default function ReplyScreen() {
   // Optimistic: confirm on the same frame as the tap, roll back loudly if the write fails.
   const copy = async () => {
     setCopied(true);
+    setUsed(true);
+    announce('Copied');
     setCopyError(false);
     if (process.env.EXPO_OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     try {
@@ -111,6 +123,7 @@ export default function ReplyScreen() {
   };
 
   const email = () => {
+    setUsed(true);
     useStore.getState().markReplied(item.id);
     Linking.openURL(`mailto:?body=${encodeURIComponent(text.current)}`);
   };
@@ -121,7 +134,7 @@ export default function ReplyScreen() {
       behavior={process.env.EXPO_OS === 'ios' ? 'padding' : undefined}>
       <Stack.Screen
         options={{
-          headerLeft: () => <HeaderTextButton label="Close" />,
+          headerLeft: () => <HeaderCloseButton />,
         }}
       />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -201,8 +214,8 @@ export default function ReplyScreen() {
                 />
               </Animated.View>
             ) : failed ? (
-              <View style={styles.editorSkeleton} accessibilityLiveRegion="polite">
-                <Text variant="callout" color="danger">
+              <View style={styles.editorSkeleton}>
+                <Text variant="callout" color="danger" accessibilityLiveRegion="polite">
                   {failed}
                 </Text>
                 <Button label="Try again" variant="secondary" size="medium" icon="refresh" onPress={() => setAttempt((a) => a + 1)} style={styles.retry} />

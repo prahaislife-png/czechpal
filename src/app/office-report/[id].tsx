@@ -3,6 +3,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Switch, View } from 'react-native';
 
+import { useConfirmDiscard } from '@/hooks/use-confirm-discard';
 import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/ui/card';
@@ -36,6 +37,7 @@ export default function ReportOfficeScreen() {
 
   const walkIn = booked === 'no';
   const answered = wait !== 'skip' || (walkIn && ticketsGone);
+  const leave = useConfirmDiscard(answered, { title: 'Discard your answers?', message: 'Your report hasn’t been sent.' });
 
   const send = async () => {
     if (!office || !answered || sending) return;
@@ -48,7 +50,7 @@ export default function ReportOfficeScreen() {
         ...(walkIn && ticketsGone ? { ticketsGone: true } : {}),
       });
       if (process.env.EXPO_OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.back();
+      leave(() => router.back());
     } catch (e) {
       setSending(false);
       setError(e instanceof WaitsError ? e.message : 'Your report couldn’t be saved. Please try again.');

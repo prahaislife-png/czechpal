@@ -38,7 +38,7 @@ export default function OfficeScreen() {
 
   return (
     <View style={styles.root}>
-      <Stack.Screen options={{ title: '' }} />
+      <Stack.Screen options={{ title: office.navTitle }} />
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
         <View style={styles.head}>
           <Text variant="title2" weight="700" accessibilityRole="header">

@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.xs,
-    minHeight: 40,
+    minHeight: 44, // HIG iOS default control size 44×44 pt
     paddingHorizontal: space.lg,
     borderRadius: radius.pill,
   },

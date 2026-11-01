@@ -1,8 +1,10 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useIncreaseContrast } from '@/lib/a11y';
 
-import { palettes } from './tokens';
+import { highContrastPalettes, palettes } from './tokens';
 
 export function useTheme() {
   const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  return { scheme, colors: palettes[scheme] } as const;
+  const increaseContrast = useIncreaseContrast();
+  return { scheme, colors: (increaseContrast ? highContrastPalettes : palettes)[scheme] } as const;
 }

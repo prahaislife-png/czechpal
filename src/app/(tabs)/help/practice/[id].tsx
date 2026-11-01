@@ -56,7 +56,7 @@ export default function PracticeScreen() {
   if (!current) {
     return (
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
-        <Stack.Screen options={{ title: '' }} />
+        <Stack.Screen options={{ title: 'Practice' }} />
         <View style={styles.loading} accessibilityLabel="Loading">
           <SkeletonLine width="80%" height={24} />
           <SkeletonLine width="50%" />
@@ -68,7 +68,7 @@ export default function PracticeScreen() {
   if (!current.practice) {
     return (
       <View style={styles.message}>
-        <Stack.Screen options={{ title: '' }} />
+        <Stack.Screen options={{ title: 'Practice' }} />
         <Text variant="title3" align="center">
           {current.error ? 'Couldn’t load this practice' : 'This practice isn’t listed any more'}
         </Text>
@@ -94,7 +94,7 @@ function PracticeDetails({ practice: p }: { practice: Practice }) {
 
   return (
     <View style={styles.root}>
-      <Stack.Screen options={{ title: '' }} />
+      <Stack.Screen options={{ title: kindById(p.kinds[0])?.one ?? 'Practice' }} />
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
         <View style={styles.head}>
           <Text variant="title2" weight="700" accessibilityRole="header" selectable>

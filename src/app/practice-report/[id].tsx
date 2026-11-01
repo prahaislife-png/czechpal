@@ -3,6 +3,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { useConfirmDiscard } from '@/hooks/use-confirm-discard';
 import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/ui/card';
@@ -53,6 +54,7 @@ export default function ReportPracticeScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const answered = english !== 'skip' || (forPatients && (newPatients !== 'skip' || fee !== 'skip'));
+  const leave = useConfirmDiscard(answered, { title: 'Discard your answers?', message: 'Your report hasn’t been sent.' });
 
   const send = async () => {
     if (!answered || sending) return;
@@ -67,7 +69,7 @@ export default function ReportPracticeScreen() {
     try {
       await reportPractice(Number(id), report);
       if (process.env.EXPO_OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.back();
+      leave(() => router.back());
     } catch (e) {
       setSending(false);
       setError(e instanceof DirectoryError ? e.message : 'Your report couldn’t be saved. Please try again.');

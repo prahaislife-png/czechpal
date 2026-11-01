@@ -25,7 +25,7 @@ export default function ChecklistScreen() {
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
-      <Stack.Screen options={{ title: '' }} />
+      <Stack.Screen options={{ title: checklist.navTitle }} />
       <Text variant="title2" weight="700" accessibilityRole="header">
         {checklist.title}
       </Text>

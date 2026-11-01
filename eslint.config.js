@@ -5,7 +5,8 @@ const expoConfig = require('eslint-config-expo/flat');
 module.exports = defineConfig([
   expoConfig,
   {
-    // Supabase functions run on Deno and are checked with `deno check`.
-    ignores: ['dist/*', 'supabase/functions/*'],
+    // Supabase functions run on Deno and are checked with `deno check`; the icon generator runs
+    // from its own scratch folder (see scripts/icons/build.mjs).
+    ignores: ['dist/*', 'supabase/functions/*', 'scripts/icons/*'],
   },
 ]);

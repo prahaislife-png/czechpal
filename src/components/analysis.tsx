@@ -18,6 +18,7 @@ import { Icon, type IconName } from '@/components/ui/icon';
 import { List, RowIcon } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
 import type { Analysis, AnalyzeResult, KeyFact, NextStep, PartialAnalysis, TranslatedLine, Urgency } from '@/lib/ai';
+import { announce } from '@/lib/a11y';
 import { ANALYZE_DURATION_MS } from '@/lib/ai/mock-client';
 import type { CaseItem } from '@/store/cases';
 import { motion, radius, space } from '@/theme/tokens';
@@ -273,6 +274,8 @@ export function AnalyzingView({ item }: { item: CaseItem }) {
     const timers = stages.slice(1).map((_, i) => setTimeout(() => setStage(i + 1), step * (i + 1)));
     return () => timers.forEach(clearTimeout);
   }, []);
+
+  useEffect(() => announce(stages[stage]), [stage]);
 
   useEffect(() => {
     if (!reduceMotion) sweep.set(withRepeat(withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.quad) }), -1, true));
