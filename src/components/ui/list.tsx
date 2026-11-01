@@ -1,6 +1,7 @@
 import { Children, Fragment, isValidElement } from 'react';
 import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
 
+import { useLargeText } from '@/lib/a11y';
 import { radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
@@ -76,28 +77,32 @@ type RowProps = {
   destructive?: boolean;
   /** For rows in a pick-one list: announced as selected to screen readers. */
   selected?: boolean;
+  /** For rows that show or hide content below them: announced as expanded or collapsed. */
+  expanded?: boolean;
   onPress?: () => void;
   accessibilityHint?: string;
 };
 
 /** List rows highlight their background on press, never scale. */
-export function Row({ title, subtitle, icon, value, accessory, chevron, destructive, selected, onPress, accessibilityHint }: RowProps) {
+export function Row({ title, subtitle, icon, value, accessory, chevron, destructive, selected, expanded, onPress, accessibilityHint }: RowProps) {
   const { colors } = useTheme();
+  // HIG: "Avoid truncating text in scrollable regions"; at accessibility sizes rows grow instead.
+  const lines = useLargeText() ? undefined : 2;
   return (
     <Pressable
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole={onPress ? 'button' : undefined}
-      accessibilityState={selected === undefined ? undefined : { selected }}
+      accessibilityState={selected === undefined && expanded === undefined ? undefined : { selected, expanded }}
       accessibilityHint={accessibilityHint}
       style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.fill }]}>
       {icon && <RowIcon name={icon} color={destructive ? colors.danger : undefined} />}
       <View style={styles.rowText}>
-        <Text variant="callout" weight="500" color={destructive ? 'danger' : 'label'} numberOfLines={2}>
+        <Text variant="callout" weight="500" color={destructive ? 'danger' : 'label'} numberOfLines={lines}>
           {title}
         </Text>
         {subtitle ? (
-          <Text variant="footnote" color="label2" numberOfLines={2}>
+          <Text variant="footnote" color="label2" numberOfLines={lines}>
             {subtitle}
           </Text>
         ) : null}

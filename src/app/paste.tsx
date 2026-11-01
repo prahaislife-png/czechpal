@@ -7,6 +7,7 @@ import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
 import { HeaderTextButton } from '@/components/ui/header-button';
 import { Text } from '@/components/ui/text';
+import { useConfirmDiscard } from '@/hooks/use-confirm-discard';
 import { draftFromText, leaveModalForReview } from '@/lib/capture';
 import { layout, radius, space, type as ramp } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -34,9 +35,9 @@ export default function PasteScreen() {
     setSeed((s) => ({ key: s.key + 1, value }));
   };
 
-  const submit = () => {
-    leaveModalForReview(draftFromText(text.current.trim()));
-  };
+  const leave = useConfirmDiscard(length > 0, { title: 'Discard this text?', message: 'What you typed or pasted will be lost.' });
+
+  const submit = () => leave(() => leaveModalForReview(draftFromText(text.current.trim())));
 
   return (
     <KeyboardAvoidingView

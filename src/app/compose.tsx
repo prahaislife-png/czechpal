@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { ChipGroup } from '@/components/ui/chip';
 import { Field } from '@/components/ui/field';
-import { HeaderTextButton } from '@/components/ui/header-button';
+import { HeaderCloseButton } from '@/components/ui/header-button';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
 import { Segmented } from '@/components/ui/segmented';
@@ -28,6 +28,8 @@ import {
   type Line,
   type Recipient,
 } from '@/lib/compose/templates';
+import { useConfirmDiscard } from '@/hooks/use-confirm-discard';
+import { announce, useLargeText } from '@/lib/a11y';
 import { speakCzech, stopSpeaking } from '@/lib/speech';
 import { useStore } from '@/store/cases';
 import { layout, motion, radius, space, type as ramp } from '@/theme/tokens';
@@ -74,6 +76,14 @@ export default function ComposeScreen() {
   const [copied, setCopied] = useState(false);
   const [openError, setOpenError] = useState<string | null>(null);
   const alive = useRef(true);
+  const largeText = useLargeText();
+  // Typing is the work here; once the message was copied or sent on, closing loses nothing.
+  const [initialRequest] = useState(request);
+  const [used, setUsed] = useState(false);
+  useConfirmDiscard(request.trim() !== initialRequest.trim() && !used, {
+    title: 'Discard this message?',
+    message: 'What you wrote here will be lost.',
+  });
 
   const phone = params.phone?.replace(/[^\d+]/g, '');
   const needsConsent = !isDemoMode && !aiConsent;
@@ -112,6 +122,7 @@ export default function ComposeScreen() {
       });
       if (!alive.current) return;
       setWritten({ key: writtenFor, result: out });
+      announce('Message written in Czech');
       if (process.env.EXPO_OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e) {
       if (alive.current) setWriteError(e instanceof AnalyzeError ? e.message : 'The message couldn’t be written. Please try again.');
@@ -123,6 +134,8 @@ export default function ComposeScreen() {
   const copy = async () => {
     if (!result) return;
     setCopied(true);
+    setUsed(true);
+    announce('Copied');
     setOpenError(null);
     if (process.env.EXPO_OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     try {
@@ -135,6 +148,7 @@ export default function ComposeScreen() {
 
   const open = async (url: string, app: string) => {
     setOpenError(null);
+    setUsed(true);
     try {
       await Linking.openURL(url);
     } catch {
@@ -153,7 +167,7 @@ export default function ComposeScreen() {
     <KeyboardAvoidingView
       style={[styles.root, { backgroundColor: colors.background }]}
       behavior={process.env.EXPO_OS === 'ios' ? 'padding' : undefined}>
-      <Stack.Screen options={{ headerLeft: () => <HeaderTextButton label="Close" /> }} />
+      <Stack.Screen options={{ headerLeft: () => <HeaderCloseButton /> }} />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {params.to ? (
           <View style={styles.to}>
@@ -198,6 +212,7 @@ export default function ComposeScreen() {
           <List>
             <Row
               icon="person"
+              expanded={detailsOpen}
               title="Your name and address"
               subtitle={savedSummary || 'Saved on this phone, added only when the message needs them'}
               accessory={<Icon name={detailsOpen ? 'close' : 'compose'} size={16} color={colors.label3} />}
@@ -302,7 +317,7 @@ export default function ComposeScreen() {
             ) : (
               <Button label={copied ? 'Copied' : 'Copy message'} icon={copied ? 'check' : 'copy'} onPress={copy} />
             )}
-            <View style={styles.sendRow}>
+            <View style={[styles.sendRow, largeText && styles.sendColumn]}>
               <SendButton icon="message" label="SMS" onPress={() => open(sms, 'Messages')} />
               <SendButton icon="personal" label="WhatsApp" onPress={() => open(whatsapp, 'WhatsApp')} />
               <SendButton icon="mail" label="Email" onPress={() => open(`mailto:?body=${body}`, 'Mail')} />
@@ -402,5 +417,6 @@ const styles = StyleSheet.create({
   line: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md },
   lineText: { flex: 1, gap: 2 },
   sendRow: { flexDirection: 'row', justifyContent: 'space-around' },
+  sendColumn: { flexDirection: 'column', alignItems: 'center' },
   send: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, minHeight: 44, paddingHorizontal: space.md },
 });

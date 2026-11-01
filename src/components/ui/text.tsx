@@ -1,5 +1,7 @@
+import { Children, useEffect } from 'react';
 import { Platform, Text as RNText, type TextProps, type TextStyle } from 'react-native';
 
+import { announce } from '@/lib/a11y';
 import { type Palette, type TypeVariant, type as ramp } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
@@ -24,11 +26,12 @@ export type AppTextProps = TextProps & {
   weight?: TextStyle['fontWeight'];
   align?: TextStyle['textAlign'];
   tabular?: boolean;
-  /** Custom chrome (buttons, badges, bar labels): bound Dynamic Type so controls never break. Body text stays unbounded. */
+  /** Custom chrome (buttons, badges, bar labels): bounded Dynamic Type so controls never break. Body text stays unbounded. */
   chrome?: boolean;
 };
 
-export const CHROME_MAX_SCALE = 1.4;
+/** HIG: "Ideally, offer text enlargement of at least 200%", so even chrome reaches double size. */
+export const CHROME_MAX_SCALE = 2;
 
 const webFont = Platform.OS === 'web' ? { fontFamily: 'var(--font-display)' } : null;
 
@@ -43,6 +46,17 @@ export function Text({
   ...rest
 }: AppTextProps) {
   const { colors } = useTheme();
+  // A live region is read out on Android only; VoiceOver needs the same message announced.
+  const live = rest.accessibilityLiveRegion && rest.accessibilityLiveRegion !== 'none';
+  const spoken = live
+    ? Children.toArray(rest.children)
+        .filter((c) => typeof c === 'string' || typeof c === 'number')
+        .join('')
+    : '';
+  useEffect(() => {
+    if (spoken) announce(spoken);
+  }, [spoken]);
+
   return (
     <RNText
       maxFontSizeMultiplier={chrome ? CHROME_MAX_SCALE : undefined}

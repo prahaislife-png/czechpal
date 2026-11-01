@@ -16,6 +16,8 @@ export type Office = {
   /** Official name. */
   name: string;
   short: string;
+  /** Navigation bar title: under 15 characters (HIG). */
+  navTitle: string;
   address: string;
   /** As published; null when the office only sees booked clients. */
   hours: { days: string; time: string }[] | null;
@@ -57,6 +59,7 @@ export const offices: Office[] = [
     id: 'zukovskeho',
     name: 'Oddělení pobytu cizinců Praha I – Žukovského',
     short: 'Praha I – Žukovského',
+    navTitle: 'Žukovského',
     address: 'Žukovského 888/2, 161 00 Praha 6 – Ruzyně',
     hours: weekdays,
     bookedOnly: true,
@@ -72,6 +75,7 @@ export const offices: Office[] = [
     id: 'chodov',
     name: 'Oddělení pobytu cizinců Praha II – Chodov',
     short: 'Praha II – Chodov',
+    navTitle: 'Chodov',
     address: 'Cigánkova 1861/2, 148 00 Praha 4 – Chodov',
     hours: weekdays,
     bookedOnly: false,
@@ -87,6 +91,7 @@ export const offices: Office[] = [
     id: 'kolbenova',
     name: 'Oddělení pobytu cizinců Praha V – Kolbenova',
     short: 'Praha V – Kolbenova',
+    navTitle: 'Kolbenova',
     address: 'Kolbenova 942/38a, 190 00 Praha 9 – Vysočany',
     hours: null,
     bookedOnly: true,
@@ -102,6 +107,7 @@ export const offices: Office[] = [
     id: 'hladkov',
     name: 'Oddělení pobytu cizinců Praha III – Hládkov',
     short: 'Praha III – Hládkov (students)',
+    navTitle: 'Hládkov',
     address: 'Hládkov 682/9, 169 00 Praha 6 – Střešovice',
     hours: [
       { days: 'Mon to Thu', time: '8:00 to 16:00, booked clients only' },
@@ -116,6 +122,7 @@ export const offices: Office[] = [
     id: 'pekarska',
     name: 'Oddělení pobytu cizinců Střední Čechy – Pekařská',
     short: 'Pekařská (urgent walk-ins)',
+    navTitle: 'Pekařská',
     address: 'Pekařská 641/16, 155 00 Praha 5 – Jinonice',
     hours: weekdays,
     bookedOnly: false,
@@ -127,6 +134,7 @@ export const offices: Office[] = [
     id: 'specialised',
     name: 'Oddělení pobytu cizinců Praha – Specializované pracoviště',
     short: 'Specialised office (Letná)',
+    navTitle: 'Letná',
     address: 'Nad Štolou 936/3, 170 00 Praha 7 – Holešovice (Letná)',
     hours: null,
     bookedOnly: true,

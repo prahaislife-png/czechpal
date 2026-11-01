@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/ui/card';
 import { Field } from '@/components/ui/field';
-import { HeaderTextButton } from '@/components/ui/header-button';
+import { HeaderCloseButton } from '@/components/ui/header-button';
 import { Icon } from '@/components/ui/icon';
 import { List } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
@@ -86,7 +86,7 @@ export default function PayScreen() {
     <KeyboardAvoidingView
       style={[styles.root, { backgroundColor: colors.background }]}
       behavior={process.env.EXPO_OS === 'ios' ? 'padding' : undefined}>
-      <Stack.Screen options={{ headerLeft: () => <HeaderTextButton label="Close" /> }} />
+      <Stack.Screen options={{ headerLeft: () => <HeaderCloseButton /> }} />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {/* The code itself: the signature element of this screen. */}
         <View style={[styles.qrPanel, { backgroundColor: colors.surface }]}>

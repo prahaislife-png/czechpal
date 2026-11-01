@@ -14,6 +14,7 @@ import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { categoryLabels } from '@/lib/ai';
 import { samples } from '@/lib/ai/samples';
+import { useLargeText } from '@/lib/a11y';
 import { draftFromExample, openReview, pickImage, pickPdf } from '@/lib/capture';
 import { useRemainingAnalyses, useStore } from '@/store/cases';
 import { layout, radius, space } from '@/theme/tokens';
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const remaining = useRemainingAnalyses();
+  const largeText = useLargeText();
   const cases = useStore((s) => s.cases);
   const recent = useMemo(() => cases.filter((c) => c.status !== 'draft').slice(0, 3), [cases]);
   // Examples are for the first visit: gone once something real has been explained.
@@ -40,23 +42,22 @@ export default function HomeScreen() {
           <BrandMark size={26} />
           <Text variant="headline">CzechPal</Text>
         </View>
-        <View style={styles.headerActions}>
-          <Pressable
-            onPress={() => router.push('/settings')}
-            hitSlop={8}
-            accessibilityRole="link"
-            accessibilityLabel={`${remaining} free explanations left. Settings`}>
+        {/* One control, one destination: VoiceOver hears "Settings" once, with the count. */}
+        <Pressable
+          onPress={() => router.push('/settings')}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
+          accessibilityValue={{ text: `${remaining} free explanations left this month` }}
+          style={({ pressed }) => [styles.headerActions, pressed && { opacity: 0.5 }]}>
+          {/* Badges pin themselves to the top (alignSelf); centre it against the gear. */}
+          <View style={styles.badgeSlot}>
             <Badge label={`${remaining} free left`} tone="neutral" />
-          </Pressable>
-          <Pressable
-            onPress={() => router.push('/settings')}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="Settings"
-            style={({ pressed }) => [styles.settings, pressed && { opacity: 0.5 }]}>
+          </View>
+          <View style={styles.settings}>
             <Icon name="settings" size={22} color={colors.label2} />
-          </Pressable>
-        </View>
+          </View>
+        </Pressable>
       </View>
 
       {/* Signature element: the viewfinder. One bold move on this screen; everything else stays quiet. */}
@@ -88,11 +89,11 @@ export default function HomeScreen() {
       </PressableScale>
 
       <List inset={false} style={styles.sources}>
-        <View style={styles.sourceRow}>
+        <View style={[styles.sourceRow, largeText && styles.sourceColumn]}>
           <Source icon="photo" label="Photo" onPress={async () => openReview(await pickImage())} />
-          <View style={[styles.sourceDivider, { backgroundColor: colors.separator }]} />
+          <View style={[largeText ? styles.sourceDividerStacked : styles.sourceDivider, { backgroundColor: colors.separator }]} />
           <Source icon="pdf" label="PDF" onPress={async () => openReview(await pickPdf())} />
-          <View style={[styles.sourceDivider, { backgroundColor: colors.separator }]} />
+          <View style={[largeText ? styles.sourceDividerStacked : styles.sourceDivider, { backgroundColor: colors.separator }]} />
           <Source icon="keyboard" label="Type" onPress={() => router.push('/paste')} />
         </View>
       </List>
@@ -212,6 +213,7 @@ const styles = StyleSheet.create({
   brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 },
   brand: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  badgeSlot: { justifyContent: 'center' },
   settings: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   viewfinder: {
     borderRadius: radius.card,
@@ -238,6 +240,8 @@ const styles = StyleSheet.create({
   sourceRow: { flexDirection: 'row', alignItems: 'stretch' },
   source: { flex: 1, minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
   sourceDivider: { width: StyleSheet.hairlineWidth, marginVertical: space.md },
+  sourceColumn: { flexDirection: 'column' },
+  sourceDividerStacked: { height: StyleSheet.hairlineWidth, marginHorizontal: space.lg },
   examplesBleed: { marginHorizontal: -layout.gutter },
   examples: { paddingHorizontal: layout.gutter, gap: space.md },
   example: { width: EXAMPLE_WIDTH, gap: space.sm },

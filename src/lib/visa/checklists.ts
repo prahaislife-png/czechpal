@@ -22,6 +22,8 @@ export type Checklist = {
   id: string;
   title: string;
   short: string;
+  /** Navigation bar title: under 15 characters (HIG). */
+  navTitle: string;
   source: string;
   variants: ChecklistVariant[];
 };
@@ -37,6 +39,7 @@ export const checklists: Checklist[] = [
     id: 'registration',
     title: 'Registering after you arrive',
     short: 'Tell the authorities where you live',
+    navTitle: 'Registering',
     source: 'https://ipc.gov.cz/povinnosti-cizincu/registrace-po-prijezdu/',
     variants: [
       {
@@ -75,6 +78,7 @@ export const checklists: Checklist[] = [
     id: 'address',
     title: 'Reporting a new address',
     short: 'You moved: tell the ministry',
+    navTitle: 'New address',
     source: 'https://ipc.gov.cz/povinnosti-cizincu/zmeny-u-obcanu-tretich-zemi/zmena-adresy-u-obcanu-tretich-zemi/',
     variants: [
       {
@@ -123,6 +127,7 @@ export const checklists: Checklist[] = [
     id: 'employer',
     title: 'Changing employer on an employee card',
     short: 'New job, new position or a second job',
+    navTitle: 'New employer',
     source: 'https://ipc.gov.cz/typy-viz-a-pobytu/obcane-tretich-zemi/dlouhodobe-pobyty/zamestnanecka-karta/zamestnanecka-karta-zmena-zamestnani/',
     variants: [
       {
@@ -169,6 +174,7 @@ export const checklists: Checklist[] = [
     id: 'extend-employee-card',
     title: 'Extending an employee card',
     short: 'Before it runs out',
+    navTitle: 'Extending',
     source: 'https://ipc.gov.cz/typy-viz-a-pobytu/obcane-tretich-zemi/dlouhodobe-pobyty/zamestnanecka-karta/',
     variants: [
       {
@@ -205,6 +211,7 @@ export const checklists: Checklist[] = [
     id: 'lost-card',
     title: 'Lost, stolen or damaged card or visa',
     short: 'Report it fast',
+    navTitle: 'Lost card',
     source: 'https://ipc.gov.cz/povinnosti-cizincu/ztrata-odcizeni-nebo-poskozeni-dokladu/',
     variants: [
       {
