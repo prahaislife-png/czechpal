@@ -1,0 +1,191 @@
+/* CzechPal's app look, shared by every scene on the website: the app's own
+   tokens (src/theme/tokens.ts), light and dark, and the screen parts the
+   scenes draw inside a Phone (nav bar, section headers, cards, buttons).
+   Everything is scoped to .cp-scene. */
+.cp-scene {
+  --cp-bg: #F2F4F7;
+  --cp-surface: #FFFFFF;
+  --cp-fill: rgba(118, 128, 150, 0.12);
+  --cp-label: #0B1220;
+  --cp-label2: #4B5567;
+  --cp-label3: #646D7E;
+  --cp-separator: #E3E7ED;
+  --cp-accent: #2251D1;
+  --cp-accent-fill: #2251D1;
+  --cp-accent-soft: #E8EEFD;
+  --cp-success: #14804A;
+  --cp-warning: #A65800;
+  --cp-warning-soft: #FDF0DF;
+  --cp-brand: #2251D1;
+  --cp-paper: #FFFEFB;
+  --cp-paper-ink: #1E2430;
+  --cp-paper-line: #D9DDE4;
+  --cp-shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 18px 48px -12px rgba(16, 24, 40, 0.18);
+  --cp-phone-shadow: 0 30px 60px -18px rgba(16, 24, 40, 0.35);
+  --cp-ease: cubic-bezier(0.3, 0.75, 0.1, 1);
+  --cp-arrive: cubic-bezier(0.25, 0.8, 0.25, 1);
+  --ss-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  .cp-scene {
+    --cp-bg: #0A0C10;
+    --cp-surface: #15181E;
+    --cp-fill: rgba(130, 140, 160, 0.16);
+    --cp-label: #F1F3F7;
+    --cp-label2: #A4ADBC;
+    --cp-label3: #858E9C;
+    --cp-separator: #262B33;
+    --cp-accent: #86A2FF;
+    --cp-accent-fill: #3A64EA;
+    --cp-accent-soft: #18213A;
+    --cp-success: #3FCF8E;
+    --cp-warning: #F2B14C;
+    --cp-warning-soft: #2A1F0E;
+    /* Paper stays a light document on a dark page */
+    --cp-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 24px 60px -16px rgba(0, 0, 0, 0.7);
+    --cp-phone-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+  }
+  /* The app's placeholder lines on its dark surfaces */
+  .cp-scene .cp-app {
+    --ss-ink-1: rgba(255, 255, 255, 0.05);
+    --ss-ink-2: rgba(255, 255, 255, 0.08);
+    --ss-ink-3: rgba(255, 255, 255, 0.11);
+    --ss-ink-4: rgba(255, 255, 255, 0.14);
+    --ss-ink-5: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* The page is the ground: no plate, the stage masks */
+.cp-scene .ss-stage {
+  overflow: hidden;
+  background: transparent;
+  font-family: var(--ss-font);
+}
+
+.cp-scene .ss-phone.cp-phone {
+  box-shadow: var(--cp-phone-shadow);
+}
+
+/* ───────────── The app inside a phone ───────────── */
+
+.cp-scene .cp-app {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--cp-bg);
+  color: var(--cp-label);
+  font-family: var(--ss-font);
+}
+
+.cp-scene .cp-page {
+  position: absolute;
+  inset: 0;
+  background: var(--cp-bg);
+  transition: transform 0.5s var(--cp-ease), filter 0.5s var(--cp-ease);
+  /* On a layer for good, so text never hops as a push lands */
+  will-change: transform;
+}
+
+.cp-scene .cp-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  margin-top: 62px;
+  padding: 0 8px;
+}
+
+.cp-scene .cp-back {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  color: var(--cp-accent);
+  transition: background 0.15s ease;
+}
+
+.cp-scene .cp-back[data-pressed] {
+  background: var(--cp-accent-soft);
+}
+
+.cp-scene .cp-nav__title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 17px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cp-scene .cp-body {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 20px 0;
+}
+
+.cp-scene .cp-section {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+  margin: 26px 4px 10px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--cp-label2);
+}
+
+.cp-scene .cp-section:first-child {
+  margin-top: 8px;
+}
+
+.cp-scene .cp-card {
+  border-radius: 20px;
+  background: var(--cp-surface);
+}
+
+.cp-scene .cp-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 52px;
+  border-radius: 999px;
+  background: var(--cp-accent-fill);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  will-change: transform;
+}
+
+.cp-scene .cp-btn[data-pressed] {
+  transform: scale(0.97);
+  filter: brightness(0.92);
+}
+
+.cp-scene .cp-lines {
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px;
+}
+
+.cp-scene .cp-lines__row {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--cp-separator);
+}
+
+.cp-scene .cp-lines__row:last-child {
+  border-bottom: 0;
+}
+
+/* Where a finger rests between taps */
+.cp-scene .cp-rest {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+}
