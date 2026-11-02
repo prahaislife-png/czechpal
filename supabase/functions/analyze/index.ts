@@ -2,7 +2,7 @@ import { withSupabase } from 'npm:@supabase/server@1';
 
 import { analyzeOutputSchema, CATEGORIES, validateAnalyzeOutput } from '../_shared/analysis-schema.ts';
 import { FREE_LIMIT, LIMIT_REACHED_MESSAGE } from '../_shared/allowance.ts';
-import { parseInput, userContent, type Input } from '../_shared/analyze-input.ts';
+import { aboutReader, parseInput, userContent, type Input } from '../_shared/analyze-input.ts';
 import { AiError, callStructured, fail, isRateLimited, logCall, type Usage } from '../_shared/claude.ts';
 import { languageName } from '../_shared/languages.ts';
 import { ANALYZE_SYSTEM } from '../_shared/prompts.ts';
@@ -10,6 +10,7 @@ import { ANALYZE_SYSTEM } from '../_shared/prompts.ts';
 /**
  * POST /analyze with a body described in _shared/analyze-input.ts
  * optional: hint (a category), language (a code from _shared/languages.ts, default English),
+ * about ({ stay, expires, district } from the app's About you; fixed values only),
  * stream (true: NDJSON as the explanation is written)
  *
  * Reserves one free explanation first and refunds it if the explanation fails.
@@ -33,6 +34,7 @@ export default {
     const hint = CATEGORIES.find((c) => c === body.hint);
     // A code from a fixed list; free text here would end up inside the prompt.
     const language = languageName(body.language);
+    const about = aboutReader(body.about);
 
     const admin = ctx.supabaseAdmin;
     try {
@@ -80,7 +82,7 @@ export default {
       try {
         const result = await callStructured({
           system: ANALYZE_SYSTEM,
-          content: userContent(input, hint, language),
+          content: userContent(input, hint, language, about),
           schema: analyzeOutputSchema,
           onText,
           signal: gone.signal,

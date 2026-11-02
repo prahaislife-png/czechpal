@@ -10,9 +10,11 @@ import { Text } from '@/components/ui/text';
 import { useLargeText } from '@/lib/a11y';
 import { allEntries, areas } from '@/lib/help/areas';
 import { emergencyNumbers } from '@/lib/help/directory';
-import { placeKinds, placeTitle, searchPlaces, type Place } from '@/lib/help/places';
+import { ELSEWHERE } from '@/lib/about';
+import { listPlaces, placeKinds, placeTitle, searchPlaces, type Place } from '@/lib/help/places';
 import { fold } from '@/lib/help/practices';
 import { supportLines } from '@/lib/help/urgent';
+import { useStore } from '@/store/cases';
 import { layout, radius, space, type as ramp } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
@@ -65,6 +67,8 @@ export default function FindScreen() {
               onPress={() => router.push('/help/urgent')}
             />
           </List>
+
+          <YourTownHall />
 
           <View style={styles.tiles}>
             {areas.map((a) => (
@@ -244,6 +248,40 @@ function EmergencyRow({
       </View>
       <Icon name="phone" size={18} color={colors.accent} />
     </Pressable>
+  );
+}
+
+/** The town hall for the district in About you; nothing until one is chosen, or offline. */
+function YourTownHall() {
+  const district = useStore((s) => s.about.district);
+  const [found, setFound] = useState<{ district: string; place?: Place } | null>(null);
+
+  useEffect(() => {
+    if (!district || district === ELSEWHERE) return;
+    let active = true;
+    listPlaces('town_hall')
+      .then((all) => {
+        if (active) setFound({ district, place: all.find((p) => p.district === district) });
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [district]);
+
+  // Only the answer for the district chosen now, never a stale one.
+  const place = found && found.district === district ? found.place : undefined;
+  if (!place) return null;
+  return (
+    <List>
+      <Row
+        icon="government"
+        title="Your town hall"
+        subtitle={[district, place.address].filter(Boolean).join(' · ')}
+        chevron
+        onPress={() => router.push({ pathname: '/help/place/[id]', params: { id: place.id } })}
+      />
+    </List>
   );
 }
 

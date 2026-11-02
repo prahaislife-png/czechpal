@@ -83,8 +83,17 @@ export type Analysis = {
   /** Matters that need confirmation from an office or a professional. */
   caution?: 'official' | 'medical';
   translation: string;
+  /** The one exact date the reader must act by, when the text prints one: for a reminder. */
+  deadline?: Deadline;
   /** Empty when replying makes no sense (signs, menus, labels). */
   replyIntents: ReplyIntent[];
+};
+
+export type Deadline = {
+  /** YYYY-MM-DD, as printed. */
+  date: string;
+  /** What to do by then, in a few words in the reader's language: "Pay 1 840 Kč". */
+  title: string;
 };
 
 export type ReplyDraft = { intentId: string; czech: string; english: string };
@@ -103,6 +112,8 @@ export type AnalyzeInput = {
   /** Present when the user picked a built-in example. */
   sampleId?: string;
   hint?: Category;
+  /** From About you: residence type, its expiry and district, so the explanation fits. */
+  about?: { stay?: string; expires?: string; district?: string };
   /** Called as the explanation is written, so the screen can show it before it is finished. */
   onPartial?: (partial: PartialAnalysis) => void;
 };

@@ -1,11 +1,12 @@
 import '@/global.css';
 
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { reminderHref, useReminderTap } from '@/lib/reminders';
 import { useStore } from '@/store/cases';
 import { stackOptions } from '@/theme/navigation';
 import { layout } from '@/theme/tokens';
@@ -30,6 +31,18 @@ export default function RootLayout() {
   useEffect(() => {
     if (hydrated && onboarded) useStore.getState().syncAllowance();
   }, [hydrated, onboarded]);
+
+  // A tapped reminder opens its letter, or About you for the permit. Waits until the app is ready.
+  const openReminder = useCallback(
+    (id: string) => {
+      if (!hydrated || !onboarded) return false;
+      const reminder = useStore.getState().reminders.find((r) => r.id === id);
+      if (reminder) router.push(reminderHref(reminder));
+      return true;
+    },
+    [hydrated, onboarded],
+  );
+  useReminderTap(openReminder);
 
   if (!hydrated) return null;
 
@@ -70,6 +83,7 @@ export default function RootLayout() {
               <Stack.Screen name="paste" options={{ presentation: 'modal', title: 'Type or paste' }} />
               <Stack.Screen name="compose" options={{ presentation: 'modal', title: 'Write in Czech' }} />
               <Stack.Screen name="language" options={{ presentation: 'modal', title: 'Explanation language' }} />
+              <Stack.Screen name="about" options={{ presentation: 'modal', title: 'About you' }} />
               <Stack.Screen name="practice-report/[id]" options={{ presentation: 'modal', title: 'What did you find out?' }} />
               <Stack.Screen name="office-report/[id]" options={{ presentation: 'modal', title: 'Waiting time today' }} />
               <Stack.Screen name="handle-share" options={{ headerShown: false, animation: 'none' }} />

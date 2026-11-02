@@ -6,16 +6,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CaseRow } from '@/components/case-row';
 import { DocumentPaper } from '@/components/document-paper';
 import { Badge } from '@/components/ui/badge';
-import { SectionHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Card, SectionHeader } from '@/components/ui/card';
 import { BrandMark } from '@/components/ui/brand-mark';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
+import { daysUntil, shortDate } from '@/lib/about';
 import { categoryLabels } from '@/lib/ai';
 import { samples } from '@/lib/ai/samples';
 import { useLargeText } from '@/lib/a11y';
 import { draftFromExample, openReview, pickImage, pickPdf } from '@/lib/capture';
+import { reminderHref, upcoming } from '@/lib/reminders';
 import { useRemainingAnalyses, useStore } from '@/store/cases';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -29,6 +32,10 @@ export default function HomeScreen() {
   const recent = useMemo(() => cases.filter((c) => c.status !== 'draft').slice(0, 3), [cases]);
   // Examples are for the first visit: gone once something real has been explained.
   const triedForReal = cases.some((c) => c.source !== 'example' && c.status === 'ready');
+  const reminders = useStore((s) => s.reminders);
+  const comingUp = useMemo(() => upcoming(reminders).slice(0, 3), [reminders]);
+  const about = useStore((s) => s.about);
+  const askAbout = !about.stay && !about.district && !about.dismissed;
 
   return (
     <ScrollView
@@ -97,6 +104,47 @@ export default function HomeScreen() {
           <Source icon="keyboard" label="Type" onPress={() => router.push('/paste')} />
         </View>
       </List>
+
+      {comingUp.length > 0 && (
+        <View>
+          <SectionHeader title="Coming up" />
+          <List>
+            {comingUp.map((r) => (
+              <Row
+                key={r.id}
+                icon="calendar"
+                title={r.title}
+                subtitle={`${shortDate(r.date)} · ${inDays(daysUntil(r.date))}`}
+                chevron
+                onPress={() => router.push(reminderHref(r))}
+              />
+            ))}
+          </List>
+        </View>
+      )}
+
+      {askAbout && (
+        <Card style={styles.about}>
+          <View style={styles.aboutHead}>
+            <Text variant="headline" style={styles.aboutTitle}>
+              Make CzechPal fit you
+            </Text>
+            <Pressable
+              onPress={() => useStore.getState().setAbout({ dismissed: true })}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Not now"
+              style={styles.aboutClose}>
+              <Icon name="close" size={18} color={colors.label3} />
+            </Pressable>
+          </View>
+          <Text variant="subhead" color="label2">
+            Your permit and where you live, in three quick questions. Explanations then fit your situation, and you get
+            a reminder before your permit expires.
+          </Text>
+          <Button label="Add" variant="secondary" size="medium" onPress={() => router.push('/about')} style={styles.aboutButton} />
+        </Card>
+      )}
 
       <View>
         <SectionHeader title="Get things done" />
@@ -171,6 +219,12 @@ export default function HomeScreen() {
   );
 }
 
+function inDays(days: number) {
+  if (days === 0) return 'today';
+  if (days === 1) return 'tomorrow';
+  return `in ${days} days`;
+}
+
 function Source({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
   const { colors } = useTheme();
   return (
@@ -230,6 +284,11 @@ const styles = StyleSheet.create({
   },
   shutterCore: { width: 44, height: 44, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   sources: { marginTop: -space.md },
+  about: { gap: space.sm },
+  aboutHead: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
+  aboutTitle: { flex: 1 },
+  aboutClose: { minWidth: 28, minHeight: 28, alignItems: 'center', justifyContent: 'center' },
+  aboutButton: { alignSelf: 'flex-start', marginTop: space.xs },
   sourceRow: { flexDirection: 'row', alignItems: 'stretch' },
   source: { flex: 1, minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
   sourceDivider: { width: StyleSheet.hairlineWidth, marginVertical: space.md },

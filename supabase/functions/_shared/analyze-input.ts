@@ -66,14 +66,43 @@ export function parseInput(body: Record<string, unknown>): Input | Response {
   return fail(400, 'bad_request', 'Nothing to explain was sent.');
 }
 
-export function userContent(input: Input, hint: string | undefined, language: string): Anthropic.Beta.BetaContentBlockParam[] {
+/** Residence types the app's "About you" offers (src/lib/about.ts), as the model should read them. */
+const STAYS: Record<string, string> = {
+  employee_card: 'an employee card (zaměstnanecká karta)',
+  blue_card: 'an EU Blue Card (modrá karta)',
+  study: 'a long-term visa or residence permit for study',
+  family: 'a residence permit to live with family',
+  business: 'a residence permit for business, with a trade licence',
+  protection: 'temporary protection (dočasná ochrana)',
+  permanent: 'permanent residence (trvalý pobyt)',
+  eu: 'EU, EEA or Swiss citizenship',
+};
+
+/**
+ * What the reader told the app about themselves, rebuilt here from fixed values only, so no free
+ * text from the request reaches the prompt. Undefined when nothing usable was sent.
+ */
+export function aboutReader(raw: unknown): string | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const { stay, expires, district } = raw as Record<string, unknown>;
+  const parts: string[] = [];
+  if (typeof stay === 'string' && STAYS[stay]) {
+    const date = typeof expires === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(expires) && stay !== 'eu' ? `, valid until ${expires}` : '';
+    parts.push(`They live in Czechia on ${STAYS[stay]}${date}.`);
+  }
+  if (typeof district === 'string' && /^Praha (?:[1-9]|1\d|2[0-2])$/.test(district)) parts.push(`They live in ${district}.`);
+  return parts.length ? parts.join(' ') : undefined;
+}
+
+export function userContent(input: Input, hint: string | undefined, language: string, about?: string): Anthropic.Beta.BetaContentBlockParam[] {
   // Spelled out field by field: with a language close to Czech (Ukrainian, Polish, Russian) a short
   // "write in X" lets the model slide back into Czech for labels and line translations.
   const instruction =
     `Explain this for the reader. The reader's language is ${language}. ` +
-    `Write typeLabel, title, inShort, verdict, every lines[].translated, meaning, keyFacts labels and values, nextSteps, notStated, translation and replyIntents in ${language}, not in Czech. ` +
+    `Write typeLabel, title, inShort, verdict, every lines[].translated, meaning, keyFacts labels and values, nextSteps, the deadline title, notStated, translation and replyIntents in ${language}, not in Czech. ` +
     `Only originalText, evidence and lines[].cs stay in Czech.` +
-    (hint ? ` The reader says it is about: ${hint}.` : '');
+    (hint ? ` The reader says it is about: ${hint}.` : '') +
+    (about ? ` About the reader: ${about} Use this only where it changes what the text means for them, and never assume anything beyond it.` : '');
   switch (input.kind) {
     case 'images': {
       const n = input.images.length;

@@ -8,9 +8,11 @@ import { Icon } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
 import { deleteServerData } from '@/lib/account';
+import { stayById } from '@/lib/about';
 import { isDemoMode, languageByCode } from '@/lib/ai';
 import { confirm } from '@/lib/dialogs';
 import { PRIVACY_URL, SUPPORT_URL } from '@/lib/links';
+import { testReminder } from '@/lib/reminders';
 import { allowanceRenewsOn, useFreeLimit, useRemainingAnalyses, useStore } from '@/store/cases';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -31,6 +33,7 @@ export default function SettingsScreen() {
   const caseCount = useStore((s) => s.cases.length);
   const aiConsent = useStore((s) => s.aiConsent);
   const language = useStore((s) => s.language);
+  const about = useStore((s) => s.about);
   const { clearAll, resetUsage, resetOnboarding } = useStore.getState();
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -40,7 +43,7 @@ export default function SettingsScreen() {
     if (deleting) return;
     const ok = await confirm({
       title: 'Delete everything?',
-      message: `This deletes ${caseCount === 1 ? '1 item' : `${caseCount} items`} and their replies, your saved name and address, and your anonymous account on CzechPal’s server with any doctor or office reports you sent. It can’t be undone.`,
+      message: `This deletes ${caseCount === 1 ? '1 item' : `${caseCount} items`} and their replies, your reminders, About you, your saved name and address, and your anonymous account on CzechPal’s server with any doctor or office reports you sent. It can’t be undone.`,
       confirmLabel: 'Delete everything',
       destructive: true,
     });
@@ -83,6 +86,13 @@ export default function SettingsScreen() {
         <SectionHeader title="Preferences" />
         <List>
           <Row
+            icon="person"
+            title="About you"
+            value={stayById(about.stay)?.label ?? about.district}
+            chevron
+            onPress={() => router.push('/about')}
+          />
+          <Row
             icon="globe"
             title="Explanations in"
             value={languageByCode(language).native}
@@ -98,6 +108,14 @@ export default function SettingsScreen() {
           <List>
             {/* Live, the server counts explanations, so only a demo allowance can be reset here. */}
             {isDemoMode && <Row icon="refresh" title="Reset free explanations" onPress={resetUsage} />}
+            {process.env.EXPO_OS !== 'web' && (
+              <Row
+                icon="bell"
+                title="Send a test reminder"
+                subtitle="Arrives in 10 seconds. Lock the phone to see it."
+                onPress={() => testReminder()}
+              />
+            )}
             <Row
               icon="star"
               title="Show the welcome screen again"

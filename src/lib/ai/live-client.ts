@@ -227,6 +227,7 @@ export const liveClient: AIClient = {
   async analyzeDocument(input: AnalyzeInput): Promise<AnalyzeResult> {
     const body = await requestBody(input);
     if (input.hint) body.hint = input.hint;
+    if (input.about) body.about = input.about;
     if (input.requestId) body.requestId = input.requestId;
     body.language = input.language ?? DEFAULT_LANGUAGE;
 

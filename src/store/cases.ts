@@ -14,7 +14,9 @@ import {
   type LanguageCode,
   type PartialAnalysis,
 } from '@/lib/ai';
+import type { AboutMe } from '@/lib/about';
 import type { Insurer } from '@/lib/compose/templates';
+import { cancelReminder, type Reminder } from '@/lib/reminders';
 
 export type CaseSource = 'camera' | 'library' | 'pdf' | 'text' | 'example';
 
@@ -79,6 +81,10 @@ type State = {
   language: LanguageCode;
   /** Typed once in Write in Czech and reused there; stays on this device. */
   details: MyDetails;
+  /** About you: permit, its expiry and district; stays on this device. */
+  about: AboutMe;
+  /** Deadline and permit reminders scheduled on this phone. */
+  reminders: Reminder[];
 };
 
 export type MyDetails = { name: string; address: string; insurer?: Insurer };
@@ -102,6 +108,11 @@ type Actions = {
   setAiConsent: (value: boolean) => void;
   setLanguage: (language: LanguageCode) => void;
   setDetails: (change: Partial<MyDetails>) => void;
+  setAbout: (change: Partial<AboutMe>) => void;
+  /** Adds a reminder, or replaces the one with the same id. */
+  saveReminder: (reminder: Reminder) => void;
+  /** Cancels its notifications and forgets it. */
+  dropReminder: (id: string) => Promise<void>;
 };
 
 /**
@@ -129,6 +140,8 @@ export const useStore = create<State & Actions>()(
         aiConsent: false,
         language: DEFAULT_LANGUAGE,
         details: { name: '', address: '' },
+        about: {},
+        reminders: [],
 
         completeOnboarding: () => set({ onboarded: true }),
         resetOnboarding: () => set({ onboarded: false }),
@@ -177,6 +190,7 @@ export const useStore = create<State & Actions>()(
               requestId: id,
               sampleId: item.source === 'example' ? item.sampleId : undefined,
               hint: item.hint,
+              about: (({ stay, expires, district }) => ({ stay, expires, district }))(get().about),
               onPartial: (partial) => setPartial(id, partial),
             });
             // Examples are free. Otherwise only a successful explanation counts, and the
@@ -207,8 +221,17 @@ export const useStore = create<State & Actions>()(
         },
 
         markReplied: (id) => patch(id, { replied: true }),
-        remove: (id) => set((s) => ({ cases: s.cases.filter((c) => c.id !== id) })),
-        clearAll: () => set({ cases: [], details: { name: '', address: '' } }),
+        remove: (id) => {
+          // A deleted letter takes its reminder with it.
+          get()
+            .reminders.filter((r) => r.caseId === id)
+            .forEach((r) => get().dropReminder(r.id));
+          set((s) => ({ cases: s.cases.filter((c) => c.id !== id) }));
+        },
+        clearAll: () => {
+          get().reminders.forEach((r) => cancelReminder(r));
+          set({ cases: [], details: { name: '', address: '' }, about: {}, reminders: [] });
+        },
         resetUsage: () => set((s) => ({ usage: { month: thisMonth(), used: 0, limit: s.usage.limit } })),
         syncAllowance: async () => {
           if (isDemoMode || !ai.getAllowance) return;
@@ -222,16 +245,26 @@ export const useStore = create<State & Actions>()(
         setAiConsent: (aiConsent) => set({ aiConsent }),
         setLanguage: (language) => set({ language }),
         setDetails: (change) => set((s) => ({ details: { ...s.details, ...change } })),
+        setAbout: (change) => set((s) => ({ about: { ...s.about, ...change } })),
+        saveReminder: (reminder) =>
+          set((s) => ({ reminders: [...s.reminders.filter((r) => r.id !== reminder.id), reminder] })),
+        dropReminder: async (id) => {
+          const reminder = get().reminders.find((r) => r.id === id);
+          set((s) => ({ reminders: s.reminders.filter((r) => r.id !== id) }));
+          if (reminder) await cancelReminder(reminder);
+        },
       };
     },
     {
       name: STORAGE_KEY,
       storage: createJSONStorage(() => storage),
-      partialize: ({ onboarded, cases, usage, aiConsent, language, details }) => ({
+      partialize: ({ onboarded, cases, usage, aiConsent, language, details, about, reminders }) => ({
         onboarded,
         aiConsent,
         language,
         details,
+        about,
+        reminders,
         // Interrupted analyses come back as errors the user can retry; drafts are not kept.
         cases: cases
           .filter((c) => c.status !== 'draft')
