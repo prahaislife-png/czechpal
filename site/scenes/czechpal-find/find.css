@@ -1,0 +1,208 @@
+/* Find: a lone phone in its column, pinned a gutter from the top, centered,
+   running off the bottom. */
+.cp-find .ss-stage {
+  --gutter: 32px;
+}
+
+.cp-find .cp-phone {
+  position: absolute;
+  top: var(--gutter);
+  left: 40px;
+}
+
+.cp-find .ss-stage[data-layout='compact'] {
+  --gutter: 24px;
+}
+
+.cp-find .ss-stage[data-layout='compact'] .cp-phone {
+  left: 16px;
+}
+
+/* The push between the search and a place */
+.cp-find .cp-page--place {
+  transform: translateX(100%);
+  box-shadow: -8px 0 24px rgba(16, 24, 40, 0.08);
+}
+
+.cp-find .cp-app[data-page='place'] .cp-page--find {
+  transform: translateX(-30%);
+  filter: brightness(0.94);
+}
+
+.cp-find .cp-app[data-page='place'] .cp-page--place {
+  transform: none;
+}
+
+.cp-find .cp-large {
+  margin: 62px 20px 0;
+  padding-top: 8px;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.cp-find .cp-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--cp-fill);
+  color: var(--cp-label3);
+  font-size: 17px;
+}
+
+.cp-find .cp-search svg {
+  flex: none;
+}
+
+.cp-find .cp-search__text {
+  color: var(--cp-label);
+}
+
+.cp-find .cp-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.15em;
+  margin: 0 1px -0.2em;
+  border-radius: 1px;
+  background: var(--cp-accent);
+}
+
+.cp-find .cp-find__views {
+  position: relative;
+}
+
+.cp-find .cp-areas,
+.cp-find .cp-results {
+  transition: opacity 0.3s ease, transform 0.4s var(--cp-arrive);
+  will-change: transform;
+}
+
+.cp-find .cp-areas[data-hidden] {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.cp-find .cp-results {
+  position: absolute;
+  inset: 0 0 auto;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+
+.cp-find .cp-results[data-shown] {
+  opacity: 1;
+  transform: none;
+}
+
+.cp-find .cp-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px;
+}
+
+.cp-find .cp-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  border-bottom: 1px solid var(--cp-separator);
+  transition: background 0.15s ease;
+}
+
+.cp-find .cp-row:last-child {
+  border-bottom: 0;
+}
+
+.cp-find .cp-row--tall {
+  padding: 12px 0;
+}
+
+.cp-find .cp-list {
+  isolation: isolate;
+}
+
+/* The press fill runs edge to edge of the card, under the row */
+.cp-find .cp-row {
+  position: relative;
+}
+
+.cp-find .cp-row::before {
+  content: '';
+  position: absolute;
+  inset: 0 -16px;
+  z-index: -1;
+  background: var(--cp-fill);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.cp-find .cp-row[data-pressed]::before {
+  opacity: 1;
+}
+
+.cp-find .cp-row__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--cp-accent-soft);
+  color: var(--cp-accent);
+}
+
+.cp-find .cp-row__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.cp-find .cp-row__title {
+  flex: 1;
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+.cp-find .cp-row__sub {
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--cp-label2);
+}
+
+.cp-find .cp-row__sub--link {
+  color: var(--cp-accent);
+}
+
+.cp-find .cp-row__chev {
+  flex: none;
+  color: var(--cp-label3);
+}
+
+.cp-find .cp-place__name {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.cp-find .cp-place__full {
+  margin-top: 4px;
+  font-size: 15px;
+  line-height: 1.3;
+  color: var(--cp-label2);
+}
+
+.cp-find .cp-place__rows {
+  margin-top: 18px;
+}
+
+.cp-find .cp-list {
+  overflow: hidden;
+}

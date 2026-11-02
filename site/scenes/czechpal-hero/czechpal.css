@@ -1,0 +1,405 @@
+/* The hero: a bill on the page's own ground with the phone straddling its
+   right margin. One gutter for the bill's top and left and the phone's top
+   and right. App tokens and screen parts come from czechpal-app/app.css. */
+.cp-hero-stage .ss-stage {
+  --gutter: 40px;
+}
+
+/* ───────────── The bill ───────────── */
+
+.cp-hero-stage .cp-paper {
+  position: absolute;
+  top: var(--gutter);
+  left: var(--gutter);
+  width: 470px;
+  height: 620px;
+  border-radius: 6px;
+  background: var(--cp-paper);
+  box-shadow: var(--cp-shadow);
+}
+
+.cp-hero-stage .cp-letter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 470px;
+  padding: 30px 34px;
+  color: var(--cp-paper-ink);
+  /* Paper keeps its own ink in dark mode */
+  --ss-ink-2: rgba(0, 0, 0, 0.06);
+  --ss-ink-3: rgba(0, 0, 0, 0.08);
+  --ss-ink-4: rgba(0, 0, 0, 0.1);
+}
+
+.cp-hero-stage .cp-letter__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  align-self: stretch;
+}
+
+.cp-hero-stage .cp-letter__from {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.cp-hero-stage .cp-letter__title {
+  margin: 30px 0 10px;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.cp-hero-stage .cp-due {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  width: 286px;
+  margin: 20px 0 26px;
+  padding: 12px 14px;
+  border: 1px solid var(--cp-paper-line);
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.cp-hero-stage .cp-due__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cp-hero-stage .cp-due__row span {
+  color: #555D6B;
+}
+
+.cp-hero-stage .cp-due__row b {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cp-hero-stage .cp-letter__para {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 22px;
+}
+
+/* CzechPal's viewfinder corners (the app icon's own mark), closing in on
+   what the app reads: the amount, the due date, the new advance */
+.cp-hero-stage .cp-finder {
+  position: absolute;
+  inset: -22px;
+  opacity: 0;
+  pointer-events: none;
+  transition: inset 0.7s var(--cp-arrive), opacity 0.35s ease;
+}
+
+.cp-hero-stage .cp-finder[data-on] {
+  inset: -9px;
+  opacity: 1;
+}
+
+.cp-hero-stage .cp-finder__c {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 0 solid var(--cp-brand);
+}
+
+.cp-hero-stage .cp-finder__c--tl { top: 0; left: 0; border-top-width: 3px; border-left-width: 3px; border-top-left-radius: 6px; }
+.cp-hero-stage .cp-finder__c--tr { top: 0; right: 0; border-top-width: 3px; border-right-width: 3px; border-top-right-radius: 6px; }
+.cp-hero-stage .cp-finder__c--bl { bottom: 0; left: 0; border-bottom-width: 3px; border-left-width: 3px; border-bottom-left-radius: 6px; }
+.cp-hero-stage .cp-finder__c--br { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; border-bottom-right-radius: 6px; }
+
+/* ───────────── The phone ───────────── */
+
+.cp-hero-stage .cp-phone {
+  position: absolute;
+  top: var(--gutter);
+  right: var(--gutter);
+}
+
+.cp-hero-stage .cp-hero-body {
+  position: relative;
+  height: 760px;
+}
+
+/* Reading: the photo and the app's three steps */
+.cp-hero-stage .cp-reading,
+.cp-hero-stage .cp-result {
+  position: absolute;
+  top: 12px;
+  left: 20px;
+  right: 20px;
+}
+
+.cp-hero-stage .cp-reading {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  transition: opacity 0.4s ease 0.2s, transform 0.5s var(--cp-arrive) 0.2s;
+  will-change: transform;
+}
+
+.cp-hero-stage .cp-reading[data-hidden] {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.cp-hero-stage .cp-reading__photo {
+  position: relative;
+  height: 236px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #E9E7E1;
+}
+
+.cp-hero-stage .cp-reading__photo .cp-letter {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  background: var(--cp-paper);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transform: scale(0.7);
+  transform-origin: 0 0;
+}
+
+.cp-hero-stage .cp-reading__line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--cp-brand);
+  box-shadow: 0 0 16px var(--cp-brand);
+  animation: cp-sweep 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes cp-sweep {
+  from { transform: translateY(0); }
+  to { transform: translateY(234px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-hero-stage .cp-reading__line { animation: none; opacity: 0; }
+}
+
+.cp-hero-stage .cp-reading__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 4px;
+}
+
+.cp-hero-stage .cp-reading__step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  line-height: 1.3;
+  color: var(--cp-label3);
+  transition: color 0.3s ease;
+}
+
+.cp-hero-stage .cp-reading__step[data-state='active'] {
+  color: var(--cp-label);
+  font-weight: 600;
+}
+
+.cp-hero-stage .cp-reading__step[data-state='done'] {
+  color: var(--cp-label);
+}
+
+.cp-hero-stage .cp-reading__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+}
+
+.cp-hero-stage .cp-reading__icon > * {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.35s var(--cp-arrive);
+}
+
+.cp-hero-stage .cp-reading__done {
+  color: var(--cp-success);
+  transform: scale(0.6);
+}
+
+.cp-hero-stage .cp-reading__spin {
+  color: var(--cp-accent);
+}
+
+.cp-hero-stage .cp-reading__todo {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--cp-label3);
+  border-radius: 50%;
+}
+
+.cp-hero-stage [data-state='done'] .cp-reading__done { opacity: 1; transform: none; }
+.cp-hero-stage [data-state='active'] .cp-reading__spin { opacity: 1; }
+.cp-hero-stage [data-state='todo'] .cp-reading__todo { opacity: 0.6; }
+
+/* The explanation: its parts arrive in reading order, and leave the other way */
+.cp-hero-stage .cp-result {
+  pointer-events: none;
+}
+
+.cp-hero-stage .cp-result__part {
+  opacity: 0;
+  transform: translateY(14px);
+  will-change: transform;
+  transition: opacity 0.3s ease calc((3 - var(--i)) * 60ms), transform 0.35s ease calc((3 - var(--i)) * 60ms);
+}
+
+.cp-hero-stage .cp-result[data-shown] .cp-result__part {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.5s ease calc(var(--i) * 90ms), transform 0.7s var(--cp-arrive) calc(var(--i) * 90ms);
+}
+
+.cp-hero-stage .cp-result__part:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cp-hero-stage .cp-type {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--cp-label2);
+}
+
+.cp-hero-stage .cp-title {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.cp-hero-stage .cp-verdict {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--cp-warning-soft);
+}
+
+.cp-hero-stage .cp-verdict__icon {
+  flex: none;
+  margin-top: 1px;
+  color: var(--cp-warning);
+}
+
+.cp-hero-stage .cp-verdict__text {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding-top: 1px;
+}
+
+.cp-hero-stage .cp-verdict__label {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--cp-warning);
+}
+
+.cp-hero-stage .cp-steps {
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px;
+}
+
+.cp-hero-stage .cp-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--cp-separator);
+}
+
+.cp-hero-stage .cp-step:last-child {
+  border-bottom: 0;
+}
+
+.cp-hero-stage .cp-step__n {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--cp-accent-fill);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cp-hero-stage .cp-step__text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.cp-hero-stage .cp-step__title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* The line from the bill to the app, in the brand cobalt */
+.cp-hero-stage .cp-link {
+  --ss-accent: #2251D1;
+}
+
+/* ───────────── Compact: the phone column ───────────── */
+
+.cp-hero-stage .ss-stage[data-layout='compact'] {
+  --gutter: 16px;
+}
+
+.cp-hero-stage .ss-stage[data-layout='compact'] .cp-paper {
+  width: 420px;
+}
+
+.cp-hero-stage .ss-stage[data-layout='compact'] .cp-paper > .cp-letter {
+  padding: 24px 26px;
+}
+
+.cp-hero-stage .ss-stage[data-layout='compact'] .cp-paper > .cp-letter .cp-letter__head {
+  display: none;
+}
+
+.cp-hero-stage .ss-stage[data-layout='compact'] .cp-paper > .cp-letter .cp-letter__title {
+  margin-top: 0;
+}
+
+.cp-hero-stage .ss-stage[data-layout='compact'] .cp-paper > .cp-letter .cp-due {
+  margin-top: 18px;
+}
+
+/* Under the bill's figures, never over them */
+.cp-hero-stage .ss-stage[data-layout='compact'] .cp-phone {
+  top: 222px;
+  right: auto;
+  left: var(--gutter);
+}
