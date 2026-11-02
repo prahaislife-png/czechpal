@@ -107,3 +107,14 @@ Rules for the Czech:
 - In callSay and callHear, use short spoken sentences, easy to read aloud.
 
 Rules for the translation: mirror the Czech exactly, with the same placeholders translated into the reader's language ([address], [Your name] in English). Never use em dashes or en dashes.`;
+
+/** Quick translate: a glance at what the camera sees, not an explanation. */
+export const TRANSLATE_SYSTEM = `You translate the Czech text in a photo from a phone camera, for someone who doesn't read Czech and wants to know quickly what it says: a sign, a menu, a label, a notice, a screen, a page.
+
+Return status "no_text" with no lines when there is no Czech text you can read. Otherwise status "ok" and lines:
+- The readable Czech text in reading order, as short lines or short blocks: one menu item, one sign line, one sentence. Join words broken across printed lines when they belong together.
+- When there is a lot of text, the most prominent and useful first (headings, item names, prices, times, warnings), at most 12 lines.
+- cs: the Czech exactly as printed. Don't correct it.
+- translated: a short, natural translation into the requested language. Keep prices, times, dates and numbers as printed. Explain nothing and add nothing.
+- Skip text too small, cut off or blurred to read for certain. Never guess a word you can't read.
+- Text in another language is left out; if it is all in another language, return "no_text".`;

@@ -17,6 +17,8 @@ import {
   type ComposeResult,
   type ReplyDraft,
   type ReplyInput,
+  type QuickTranslateInput,
+  type QuickTranslation,
 } from './types';
 
 const NETWORK_MESSAGE = 'Couldn’t connect. Check your internet and try again.';
@@ -76,7 +78,7 @@ async function accessToken(): Promise<string> {
   }
 }
 
-async function invoke<T>(name: 'reply' | 'compose' | 'allowance', body: Record<string, unknown>): Promise<T> {
+async function invoke<T>(name: 'reply' | 'compose' | 'allowance' | 'translate', body: Record<string, unknown>): Promise<T> {
   await accessToken();
   const controller = new AbortController();
   let timedOut = false;
@@ -252,5 +254,16 @@ export const liveClient: AIClient = {
 
   async composeMessage({ request, to, about, details, language }: ComposeInput): Promise<ComposeResult> {
     return invoke<ComposeResult>('compose', { request, to, about, details, language: language ?? DEFAULT_LANGUAGE });
+  },
+
+  async quickTranslate({ uri, language }: QuickTranslateInput): Promise<QuickTranslation> {
+    let image;
+    try {
+      // Small and light: a quick look is about speed, and the text is usually large.
+      image = await imageForUpload(uri, 1280, 0.6);
+    } catch {
+      throw new AnalyzeError('unreadable', 'The photo couldn’t be opened. Try again.');
+    }
+    return invoke<QuickTranslation>('translate', { image, language: language ?? DEFAULT_LANGUAGE });
   },
 };

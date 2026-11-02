@@ -118,12 +118,21 @@ export async function callStructured(opts: {
 /** Cost and rate-limit log. Never stores document content. */
 export async function logCall(
   admin: SupabaseClient,
-  row: { userId: string; kind: 'analyze' | 'reply' | 'compose'; ok: boolean; usage?: Usage; error?: string },
+  row: {
+    userId: string;
+    kind: 'analyze' | 'reply' | 'compose' | 'translate';
+    ok: boolean;
+    usage?: Usage;
+    error?: string;
+    /** The model this call used, when it isn't the default. */
+    config?: ModelConfig;
+  },
 ) {
+  const config = row.config ?? DEFAULT_CONFIG;
   const { error } = await admin.from('ai_calls').insert({
     user_id: row.userId,
     kind: row.kind,
-    model: `${DEFAULT_CONFIG.model} ${DEFAULT_CONFIG.effort}${DEFAULT_CONFIG.thinking === 'off' ? ' no-thinking' : ''}`,
+    model: `${config.model} ${config.effort}${config.thinking === 'off' ? ' no-thinking' : ''}`,
     ok: row.ok,
     input_tokens: row.usage?.input ?? null,
     output_tokens: row.usage?.output ?? null,
@@ -133,14 +142,19 @@ export async function logCall(
   if (error) console.error('ai_calls insert failed', error.message);
 }
 
-/** At most `limit` AI calls per user per minute, across explanations and replies. */
-export async function isRateLimited(admin: SupabaseClient, userId: string, limit = 6) {
-  const since = new Date(Date.now() - 60_000).toISOString();
-  const { count, error } = await admin
+/**
+ * At most `limit` AI calls per user per minute, across explanations and replies; or, with `kind`
+ * and `windowMs`, of one kind over another window (quick translations have their own budget).
+ */
+export async function isRateLimited(admin: SupabaseClient, userId: string, limit = 6, kind?: string, windowMs = 60_000) {
+  const since = new Date(Date.now() - windowMs).toISOString();
+  let query = admin
     .from('ai_calls')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
     .gte('created_at', since);
+  if (kind) query = query.eq('kind', kind);
+  const { count, error } = await query;
   if (error) throw new AiError(500, 'server', 'Something went wrong. Please try again.');
   return (count ?? 0) >= limit;
 }

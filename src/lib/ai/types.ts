@@ -184,4 +184,10 @@ export interface AIClient {
   composeMessage(input: ComposeInput): Promise<ComposeResult>;
   /** Live only: the server decides the free allowance. */
   getAllowance?(): Promise<Allowance>;
+  /** A quick look at a camera frame: the Czech lines and their translation. */
+  quickTranslate(input: QuickTranslateInput): Promise<QuickTranslation>;
 }
+
+export type QuickTranslateInput = { uri: string; language?: LanguageCode };
+/** `no_text`: nothing Czech could be read. */
+export type QuickTranslation = { status: 'ok' | 'no_text'; lines: { cs: string; translated: string }[] };

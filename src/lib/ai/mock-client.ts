@@ -6,6 +6,7 @@ import {
   type AnalyzeResult,
   type ComposeInput,
   type ComposeResult,
+  type QuickTranslation,
   type ReplyDraft,
   type ReplyInput,
 } from './types';
@@ -19,6 +20,16 @@ export const ANALYZE_DURATION_MS = 2600;
  * built-in examples and recognisable pasted text get their matching sample; anything
  * else gets a clearly labelled sample result.
  */
+/** What the demo shows for any camera frame: a sample, the street sign from the examples. */
+const DEMO_TRANSLATION: QuickTranslation = {
+  status: 'ok',
+  lines: [
+    { cs: 'ZÁKAZ STÁNÍ', translated: 'No stopping or waiting' },
+    { cs: 'Po–Pá 7–18 h', translated: 'Mon–Fri, 7:00–18:00' },
+    { cs: 'MIMO VOZIDEL ZÁSOBOVÁNÍ', translated: 'Except delivery vehicles' },
+  ],
+};
+
 export const mockClient: AIClient = {
   async analyzeDocument(input: AnalyzeInput): Promise<AnalyzeResult> {
     if (input.kind === 'text' && !input.sampleId && (input.text ?? '').trim().length < 20) {
@@ -63,5 +74,10 @@ export const mockClient: AIClient = {
       english: `Hello,\n\n${demo}\n\nI only speak a little Czech, so please reply in writing.\n\nKind regards\n${details.name?.trim() || '[Your name]'}`,
       call: { say: [], hear: [] },
     };
+  },
+
+  async quickTranslate(): Promise<QuickTranslation> {
+    await wait(900);
+    return DEMO_TRANSLATION;
   },
 };

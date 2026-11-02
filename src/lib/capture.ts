@@ -96,21 +96,27 @@ export function draftFromShare(item: SharedItem): string {
 
 /**
  * Where a new draft goes next. Photos stop at the review screen, to check the pages are readable
- * and add more. Typed text, a PDF or an example has nothing to check, so it's explained right
+ * and add more, except a quick shot from Home (`quick`). Typed text, a PDF or an example has nothing to check, so it's explained right
  * away, unless the review screen has something to ask first (consent, or no explanations left).
  */
-function nextFor(id: string) {
+function nextFor(id: string, quick = false) {
   const state = useStore.getState();
   const item = state.cases.find((c) => c.id === id);
   const example = item?.source === 'example';
   const direct =
     !!item &&
-    (example || item.source === 'text' || item.source === 'pdf') &&
+    (example || quick || item.source === 'text' || item.source === 'pdf') &&
     (example || ((isDemoMode || state.aiConsent) && remainingAnalyses(state) > 0));
   if (!direct) return { pathname: '/review/[id]', params: { id } } as const;
   state.analyze(id);
   return { pathname: '/case/[id]', params: { id } } as const;
 }
+
+/**
+ * Home's shutter: one photo, explained straight away. The review screen (to add pages) still comes
+ * first when it has something to ask: consent, or no explanations left.
+ */
+export const explainPhoto = (uri: string) => router.push(nextFor(draftFromPhoto(uri), true));
 
 export const openReview = (id: string | null) => {
   if (id) router.push(nextFor(id));

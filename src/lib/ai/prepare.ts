@@ -9,14 +9,15 @@ const MAX_EDGE = 1568;
 
 const stripDataUrl = (b64: string) => b64.replace(/^data:[^,]*,/, '');
 
-export async function imageForUpload(uri: string): Promise<{ data: string; mediaType: 'image/jpeg' }> {
+/** `maxEdge` and `compress` go lower for a quick translation, where speed matters more than detail. */
+export async function imageForUpload(uri: string, maxEdge = MAX_EDGE, compress = 0.8): Promise<{ data: string; mediaType: 'image/jpeg' }> {
   const original = await ImageManipulator.manipulate(uri).renderAsync();
   const context = ImageManipulator.manipulate(uri);
-  if (Math.max(original.width, original.height) > MAX_EDGE) {
-    context.resize(original.width >= original.height ? { width: MAX_EDGE } : { height: MAX_EDGE });
+  if (Math.max(original.width, original.height) > maxEdge) {
+    context.resize(original.width >= original.height ? { width: maxEdge } : { height: maxEdge });
   }
   const rendered = await context.renderAsync();
-  const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.8, base64: true });
+  const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress, base64: true });
   if (!saved.base64) throw new Error('Image could not be encoded');
   return { data: stripDataUrl(saved.base64), mediaType: 'image/jpeg' };
 }

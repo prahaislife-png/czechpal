@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { reminderHref, useReminderTap } from '@/lib/reminders';
 import { useStore } from '@/store/cases';
@@ -60,42 +61,45 @@ export default function RootLayout() {
   };
 
   return (
-    <ThemeProvider value={navTheme}>
-      <StatusBar style="auto" />
-      <View style={[styles.frame, { backgroundColor: colors.background }]}>
-        <View style={styles.column}>
-          <Stack screenOptions={stackOptions(colors)}>
-            {/* One-way door: once onboarding completes, Welcome leaves the stack for good. */}
-            <Stack.Protected guard={!onboarded}>
-              <Stack.Screen name="welcome" options={{ headerShown: false }} />
-            </Stack.Protected>
+    <GestureHandlerRootView style={styles.gestures}>
+      <ThemeProvider value={navTheme}>
+        <StatusBar style="auto" />
+        <View style={[styles.frame, { backgroundColor: colors.background }]}>
+          <View style={styles.column}>
+            <Stack screenOptions={stackOptions(colors)}>
+              {/* One-way door: once onboarding completes, Welcome leaves the stack for good. */}
+              <Stack.Protected guard={!onboarded}>
+                <Stack.Screen name="welcome" options={{ headerShown: false }} />
+              </Stack.Protected>
 
-            <Stack.Protected guard={onboarded}>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="scan"
-                // Fade into the camera on device; on web the fade leaves a stale transformed layer.
-                options={{ presentation: 'fullScreenModal', headerShown: false, animation: process.env.EXPO_OS === 'web' ? 'none' : 'fade' }}
-              />
-              <Stack.Screen name="review/[id]" options={{ title: 'Check the text' }} />
-              <Stack.Screen name="case/[id]" options={{ title: '' }} />
-              <Stack.Screen name="reply/[id]" options={{ presentation: 'modal', title: 'Write a reply' }} />
-              <Stack.Screen name="paste" options={{ presentation: 'modal', title: 'Type or paste' }} />
-              <Stack.Screen name="compose" options={{ presentation: 'modal', title: 'Write in Czech' }} />
-              <Stack.Screen name="language" options={{ presentation: 'modal', title: 'Explanation language' }} />
-              <Stack.Screen name="about" options={{ presentation: 'modal', title: 'About you' }} />
-              <Stack.Screen name="practice-report/[id]" options={{ presentation: 'modal', title: 'What did you find out?' }} />
-              <Stack.Screen name="office-report/[id]" options={{ presentation: 'modal', title: 'Waiting time today' }} />
-              <Stack.Screen name="handle-share" options={{ headerShown: false, animation: 'none' }} />
-            </Stack.Protected>
-          </Stack>
+              <Stack.Protected guard={onboarded}>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="scan"
+                  // Fade into the camera on device; on web the fade leaves a stale transformed layer.
+                  options={{ presentation: 'fullScreenModal', headerShown: false, animation: process.env.EXPO_OS === 'web' ? 'none' : 'fade' }}
+                />
+                <Stack.Screen name="review/[id]" options={{ title: 'Check the text' }} />
+                <Stack.Screen name="case/[id]" options={{ title: '' }} />
+                <Stack.Screen name="reply/[id]" options={{ presentation: 'modal', title: 'Write a reply' }} />
+                <Stack.Screen name="paste" options={{ presentation: 'modal', title: 'Type or paste' }} />
+                <Stack.Screen name="compose" options={{ presentation: 'modal', title: 'Write in Czech' }} />
+                <Stack.Screen name="language" options={{ presentation: 'modal', title: 'Explanation language' }} />
+                <Stack.Screen name="about" options={{ presentation: 'modal', title: 'About you' }} />
+                <Stack.Screen name="practice-report/[id]" options={{ presentation: 'modal', title: 'What did you find out?' }} />
+                <Stack.Screen name="office-report/[id]" options={{ presentation: 'modal', title: 'Waiting time today' }} />
+                <Stack.Screen name="handle-share" options={{ headerShown: false, animation: 'none' }} />
+              </Stack.Protected>
+            </Stack>
+          </View>
         </View>
-      </View>
-    </ThemeProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
+  gestures: { flex: 1 },
   frame: { flex: 1, alignItems: 'center' },
   // Phones fill the screen; tablets and desktop web get a readable column.
   column: { flex: 1, width: '100%', maxWidth: process.env.EXPO_OS === 'web' ? layout.maxWidth : undefined },

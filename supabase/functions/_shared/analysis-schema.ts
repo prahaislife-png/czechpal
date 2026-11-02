@@ -128,6 +128,23 @@ export function validateAnalyzeOutput(raw: unknown): ValidAnalyzeOutput {
   };
 }
 
+/** Quick translate: what the camera sees, line by line. */
+export const translateOutputSchema: Json = obj({
+  status: oneOf(['ok', 'no_text']),
+  lines: arr(obj({ cs: str, translated: str })),
+});
+
+const TranslateOutput = z.object({
+  status: z.enum(['ok', 'no_text']),
+  lines: z.array(z.object({ cs: text, translated: text })),
+});
+
+export function validateTranslateOutput(raw: unknown) {
+  const out = TranslateOutput.parse(raw);
+  const lines = out.lines.slice(0, 12);
+  return { status: lines.length ? out.status : ('no_text' as const), lines };
+}
+
 const ReplyOutput = z.object({ czech: text, translation: text });
 /** The app reads the translation as `english` (its name from before other languages existed). */
 export const validateReplyOutput = (raw: unknown) => {
