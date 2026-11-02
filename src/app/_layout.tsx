@@ -69,7 +69,6 @@ export default function RootLayout() {
               <Stack.Screen name="reply/[id]" options={{ presentation: 'modal', title: 'Write a reply' }} />
               <Stack.Screen name="paste" options={{ presentation: 'modal', title: 'Type or paste' }} />
               <Stack.Screen name="compose" options={{ presentation: 'modal', title: 'Write in Czech' }} />
-              <Stack.Screen name="pay" options={{ presentation: 'modal', title: 'Pay by QR code' }} />
               <Stack.Screen name="language" options={{ presentation: 'modal', title: 'Explanation language' }} />
               <Stack.Screen name="practice-report/[id]" options={{ presentation: 'modal', title: 'What did you find out?' }} />
               <Stack.Screen name="office-report/[id]" options={{ presentation: 'modal', title: 'Waiting time today' }} />

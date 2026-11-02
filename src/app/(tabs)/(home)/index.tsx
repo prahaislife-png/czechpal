@@ -102,13 +102,6 @@ export default function HomeScreen() {
         <SectionHeader title="Get things done" />
         <List>
           <Row
-            icon="qrcode"
-            title="Pay a bill"
-            subtitle="Scan it, and get a QR code for your banking app"
-            chevron
-            onPress={() => router.push('/scan')}
-          />
-          <Row
             icon="compose"
             title="Write to someone in Czech"
             subtitle="Landlord, doctor or tradesperson"

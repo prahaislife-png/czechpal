@@ -21,17 +21,15 @@ import { DocumentPaper } from '@/components/document-paper';
 import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/ui/card';
-import { Icon } from '@/components/ui/icon';
 import { IconWell, List, Row } from '@/components/ui/list';
 import { Segmented } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
-import { languageByCode, type Analysis, type PartialAnalysis, type PaymentInfo } from '@/lib/ai';
+import { languageByCode, type Analysis, type PartialAnalysis } from '@/lib/ai';
 import { categoryById, helpForTextCategory } from '@/lib/help/directory';
 import { announce } from '@/lib/a11y';
 import { confirm } from '@/lib/dialogs';
 import { pagesOf, useCase, usePartial, useStore, type CaseItem } from '@/store/cases';
 import { layout, motion, radius, space } from '@/theme/tokens';
-import { useTheme } from '@/theme/use-theme';
 
 type Tab = 'summary' | 'english' | 'czech';
 
@@ -92,7 +90,7 @@ function ResultView({
   stagger,
 }: {
   item: CaseItem;
-  analysis: PartialAnalysis & Partial<Pick<Analysis, 'payment' | 'replyIntents'>>;
+  analysis: PartialAnalysis & Partial<Pick<Analysis, 'replyIntents'>>;
   animate: boolean;
   stagger: boolean;
 }) {
@@ -189,11 +187,6 @@ function ResultView({
                 <NextSteps steps={analysis.nextSteps} />
               </Animated.View>
             ) : null}
-            {analysis.payment && (
-              <Animated.View entering={enter(section++)}>
-                <PayThisBill caseId={item.id} payment={analysis.payment} />
-              </Animated.View>
-            )}
             {analysis.keyFacts?.length ? (
               <Animated.View entering={enter(section++)}>
                 <KeyFacts facts={analysis.keyFacts} />
@@ -287,39 +280,6 @@ function ResultView({
   );
 }
 
-/** Bills get a one-tap path to QR Platba. Amount and due date are copied from the bill, never computed. */
-function PayThisBill({ caseId, payment }: { caseId: string; payment: PaymentInfo }) {
-  const { colors } = useTheme();
-  const amount = payment.amount?.toLocaleString('cs-CZ', { maximumFractionDigits: 2 });
-  const due = payment.dueDate
-    ? new Date(`${payment.dueDate}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-    : undefined;
-  return (
-    <View>
-      <SectionHeader title="Pay this bill" />
-      <List inset={false}>
-        <View style={styles.pay}>
-          <Icon name="qrcode" size={28} color={colors.accent} />
-          <View style={styles.payText}>
-            <Text variant="headline" tabular>
-              {amount ? `${amount} Kč` : 'Amount on the bill'}
-            </Text>
-            <Text variant="footnote" color="label2">
-              {due ? `Due ${due} · ` : ''}Scan the QR code with your banking app
-            </Text>
-          </View>
-          <Button
-            label="Pay"
-            size="medium"
-            variant="secondary"
-            onPress={() => router.push({ pathname: '/pay', params: { caseId } })}
-          />
-        </View>
-      </List>
-    </View>
-  );
-}
-
 const failureTitle: Record<NonNullable<CaseItem['errorCode']>, string> = {
   network: 'Couldn’t connect',
   rate: 'Busy right now',
@@ -375,8 +335,6 @@ const styles = StyleSheet.create({
   longText: { lineHeight: 26 },
   image: { width: '100%', aspectRatio: 3 / 4, maxHeight: 420, borderRadius: radius.tile },
   delete: { alignSelf: 'center' },
-  pay: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg },
-  payText: { flex: 1, gap: 2 },
   failed: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space.xxxl, gap: space.xl },
   failedText: { gap: space.sm, maxWidth: 360 },
   failedActions: { alignSelf: 'stretch', gap: space.xs, maxWidth: layout.maxWidth },

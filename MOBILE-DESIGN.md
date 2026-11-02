@@ -52,22 +52,19 @@ src/app/
   scan                         fullScreenModal, explicit Close; camera permission primed here
   paste                        modal, explicit Cancel
   compose                      modal, explicit Close; ?recipient&to&phone prefill from Find help
-  pay                          modal, explicit Close; ?caseId prefills from a scanned bill
   handle-share                 landing for the share extension; replaces itself with review/[id]
   review/[id]                  push; leaving discards the draft
   case/[id]                    push via replace from review (a stale review is never re-entered)
   reply/[id]                   modal, explicit Close
 anchors: root (tabs) · home stack index · help stack index   deep links always land with a back stack
 sheets: none
-deep links: /case/:id, /reply/:id, /help/:category, /help/area/:area, /help/places/:kind, /help/place/:id, /pay, /compose
+deep links: /case/:id, /reply/:id, /help/:category, /help/area/:area, /help/places/:kind, /help/place/:id, /compose
 android back: default pop everywhere
 max taps to any core screen: 2
 ```
 
 ## Trust rules for the new tools
 
-- **QR payments:** SPAYD built from bill data only, ASCII-only, validated (Czech mod-11 + IBAN mod-97). Example
-  bills never render a scannable code. The app never moves money.
 - **Find help:** every listing shows its verification status (verified with date / unverified / sample).
   Sample listings have no phone number and can't be contacted. Rankings are never sold.
 - **Write in Czech:** hand-written templates, formal register, gender-neutral first person, user text inserted

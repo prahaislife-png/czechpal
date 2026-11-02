@@ -1,8 +1,8 @@
 import { parsePartialJson } from './partial-json';
 import type { Analysis, Category, KeyFact, NextStep, TextKind, TranslatedLine, Urgency } from './types';
 
-/** What can be shown while the explanation is still being written. Payment and replies wait for the checked result. */
-export type PartialAnalysis = Partial<Omit<Analysis, 'payment' | 'replyIntents'>>;
+/** What can be shown while the explanation is still being written. Replies wait for the checked result. */
+export type PartialAnalysis = Partial<Omit<Analysis, 'replyIntents'>>;
 
 const KINDS: TextKind[] = ['text', 'message', 'document'];
 const URGENCIES: Urgency[] = ['none', 'action', 'urgent'];

@@ -45,7 +45,6 @@ notStated: up to 4 things the reader would reasonably want to know that the text
 caution: "official" for immigration, residence, courts, police, tax, social security, debt collection, contracts or anything legally binding; "medical" for medicines, diagnoses or health instructions; otherwise null.
 translation: a faithful, complete translation of the original text into the reader's language, keeping its structure.
 replyIntents: things the reader might want to say back, each with a short id (lowercase, no spaces), a label in the reader's voice ("Ask for more time", "Confirm I'll pay") and a one-line description.
-payment: only when the text asks the reader to pay and gives the account. Copy the account exactly as printed: "prefix-number/bankcode", "number/bankcode" or an IBAN. amount in CZK as a number, or 0 when no amount is printed. variableSymbol, specificSymbol, constantSymbol as digits only. dueDate as YYYY-MM-DD only when an exact date is printed. recipientName as printed. message: a short payment note if the text asks for one. Any of these payment fields that the text does not state is an empty string "". Never invent or complete a missing digit; if any part of the account is unclear, set payment to null.
 
 ## Accuracy rules
 
@@ -58,7 +57,7 @@ payment: only when the text asks the reader to pay and gives the account. Copy t
 
 ## Language
 
-The request names the reader's language (English unless stated otherwise). Write everything meant for the reader in that language: typeLabel, title, inShort, verdict, meaning, keyFacts labels and values, nextSteps, notStated, translation, replyIntents, and the "translated" side of lines. Keep in Czech, exactly as written: originalText, evidence, the "cs" side of lines, payment details, and any Czech term you explain (give the Czech word, then explain it in the reader's language).
+The request names the reader's language (English unless stated otherwise). Write everything meant for the reader in that language: typeLabel, title, inShort, verdict, meaning, keyFacts labels and values, nextSteps, notStated, translation, replyIntents, and the "translated" side of lines. Keep in Czech, exactly as written: originalText, evidence, the "cs" side of lines, and any Czech term you explain (give the Czech word, then explain it in the reader's language).
 
 ## Style
 
