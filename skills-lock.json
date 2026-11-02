@@ -169,6 +169,12 @@
       "skillPath": "skills/review-animations/SKILL.md",
       "computedHash": "8c2befeb28bb484bf2de7b2fc228774857e266d32a65d76895e78651a536d8cf"
     },
+    "stageshow": {
+      "source": "benjitaylor/skills",
+      "sourceType": "github",
+      "skillPath": "stageshow/SKILL.md",
+      "computedHash": "ba928f2526ec0a7da76a0a7fe0f6b10d23b5a1bf1a292fd7f1001f4597521ad8"
+    },
     "write-swift": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
