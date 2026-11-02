@@ -12,6 +12,7 @@ import { stayById } from '@/lib/about';
 import { isDemoMode, languageByCode } from '@/lib/ai';
 import { confirm } from '@/lib/dialogs';
 import { PRIVACY_URL, SUPPORT_URL } from '@/lib/links';
+import { testReminder } from '@/lib/reminders';
 import { allowanceRenewsOn, useFreeLimit, useRemainingAnalyses, useStore } from '@/store/cases';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -107,6 +108,14 @@ export default function SettingsScreen() {
           <List>
             {/* Live, the server counts explanations, so only a demo allowance can be reset here. */}
             {isDemoMode && <Row icon="refresh" title="Reset free explanations" onPress={resetUsage} />}
+            {process.env.EXPO_OS !== 'web' && (
+              <Row
+                icon="bell"
+                title="Send a test reminder"
+                subtitle="Arrives in 10 seconds. Lock the phone to see it."
+                onPress={() => testReminder()}
+              />
+            )}
             <Row
               icon="star"
               title="Show the welcome screen again"

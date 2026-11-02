@@ -104,6 +104,16 @@ export async function scheduleReminder(input: Omit<Reminder, 'notificationIds'>)
   return { reminder: { ...input, notificationIds }, denied: false };
 }
 
+/** For testing on a phone: a sample reminder 10 seconds from now. False when notifications are off. */
+export async function testReminder() {
+  if (!supported || !(await allowed())) return false;
+  await Notifications.scheduleNotificationAsync({
+    content: { title: 'Due in 3 days: Pay 1 840 Kč', body: 'A test reminder from CzechPal.' },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 10, channelId: CHANNEL },
+  });
+  return true;
+}
+
 export async function cancelReminder(reminder: Pick<Reminder, 'notificationIds'>) {
   if (!supported) return;
   await Promise.all(reminder.notificationIds.map((id) => Notifications.cancelScheduledNotificationAsync(id).catch(() => {})));
