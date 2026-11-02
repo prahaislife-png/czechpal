@@ -17,6 +17,7 @@ import {
   StillWriting,
   TranslatedLines,
 } from '@/components/analysis';
+import { DeadlineReminder } from '@/components/deadline-reminder';
 import { DocumentPaper } from '@/components/document-paper';
 import { BottomBar } from '@/components/ui/bottom-bar';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,8 @@ import { SectionHeader } from '@/components/ui/card';
 import { IconWell, List, Row } from '@/components/ui/list';
 import { Segmented } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
-import { languageByCode, type Analysis, type PartialAnalysis } from '@/lib/ai';
+import { daysUntil } from '@/lib/about';
+import { isDemoMode, languageByCode, type Analysis, type PartialAnalysis } from '@/lib/ai';
 import { categoryById, helpForTextCategory } from '@/lib/help/directory';
 import { announce } from '@/lib/a11y';
 import { confirm } from '@/lib/dialogs';
@@ -90,7 +92,7 @@ function ResultView({
   stagger,
 }: {
   item: CaseItem;
-  analysis: PartialAnalysis & Partial<Pick<Analysis, 'replyIntents'>>;
+  analysis: PartialAnalysis & Partial<Pick<Analysis, 'replyIntents' | 'deadline'>>;
   animate: boolean;
   stagger: boolean;
 }) {
@@ -165,6 +167,17 @@ function ResultView({
         </Animated.View>
 
         {result?.demo === 'matched' && <DemoNotice demo={result.demo} />}
+
+        {/* The one action most letters ask for: don't miss the date. Examples are fictional, so no
+            reminders for them outside demo and development builds. */}
+        {!streaming &&
+          analysis.deadline &&
+          daysUntil(analysis.deadline.date) >= 0 &&
+          (item.source !== 'example' || isDemoMode || __DEV__) && (
+            <Animated.View entering={enter(section++)}>
+              <DeadlineReminder caseId={item.id} deadline={analysis.deadline} />
+            </Animated.View>
+          )}
 
         <Animated.View entering={enter(section++)}>
           <Segmented options={tabs} value={tab} onChange={setTab} />

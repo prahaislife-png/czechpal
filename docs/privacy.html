@@ -32,7 +32,7 @@
 <p>The controller of your personal data is <strong>[Full name or company name]</strong>, <strong>[postal address]</strong>. Contact: <strong>[contact email]</strong>.</p>
 
 <h2>What stays on your phone</h2>
-<p>Everything you scan, type or receive in the app is kept only on your device: photos and PDFs, the Czech text, explanations, replies and messages, your history, and the name, address and health insurer you can save in Write in Czech. We can't see any of it. Deleting the app, or <em>Settings → Delete everything</em>, removes it.</p>
+<p>Everything you scan, type or receive in the app is kept only on your device: photos and PDFs, the Czech text, explanations, replies and messages, your history, the name, address and health insurer you can save in Write in Czech, what you tell CzechPal in <em>About you</em> (your type of residence permit, its expiry date and your district), and your reminders. Reminders are scheduled by your phone itself, not by us. We can't see any of it. Deleting the app, or <em>Settings → Delete everything</em>, removes it.</p>
 
 <h2>What we process on our server</h2>
 
@@ -40,7 +40,7 @@
 <p>The first time you use a feature that needs the server, the app creates an anonymous account: a random ID with no name, email or phone number attached. It lets us count your free explanations each month and stop abuse.</p>
 
 <h3>2. What you ask us to explain or write</h3>
-<p>When you tap <em>Explain</em>, or ask CzechPal to write a reply or a message, the text, photos or PDF (and what you typed) are sent over an encrypted connection to our server, which passes them to Anthropic's Claude API to produce the answer and sends the answer back to your phone.</p>
+<p>When you tap <em>Explain</em>, or ask CzechPal to write a reply or a message, the text, photos or PDF (and what you typed) are sent over an encrypted connection, together with your <em>About you</em> answers if you gave any, so the explanation fits your situation, to our server, which passes them to Anthropic's Claude API to produce the answer and sends the answer back to your phone.</p>
 <ul>
   <li><strong>We don't store this content.</strong> It isn't saved in our database or logs.</li>
   <li>To make sure an answer lost to a bad connection can be retried without counting twice, we keep a one-way fingerprint (a hash) of the request. It can't be turned back into your text, is removed automatically once it's over a day old, and is deleted with your account.</li>

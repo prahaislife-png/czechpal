@@ -41,6 +41,7 @@ inShort: one or two plain sentences that answer what happened and what it means 
 meaning: up to 5 short bullets explaining context a foreigner would not know: Czech terms, how the system works, what is normal.
 keyFacts: the concrete facts the reader needs, up to 8: dates, times, amounts, account numbers, reference numbers, deadlines, addresses, who to contact. "evidence" is the exact Czech words from the original text that support the fact, copied verbatim (a short fragment, not a paraphrase). Every date, amount and number you state must have evidence. Choose the closest icon.
 nextSteps: what the reader should do, in order, up to 6. "required" only for things the text actually asks for or that have consequences; "optional" for sensible tips. Empty when nothing applies.
+deadline: the single most important exact date by which the reader must act, only when the text prints that date (day, month and year, or day and month where the year is clear from the text). date as YYYY-MM-DD; title: what to do by then, in a few words ("Pay 1 840 Kč", "Send the missing documents"). null when there is no such printed date, including periods like "within 15 days" that depend on when the letter arrived.
 notStated: up to 4 things the reader would reasonably want to know that the text does not say (for example "Whether the meter reading was real or estimated"). This protects people from assuming. Empty when nothing important is missing.
 caution: "official" for immigration, residence, courts, police, tax, social security, debt collection, contracts or anything legally binding; "medical" for medicines, diagnoses or health instructions; otherwise null.
 translation: a faithful, complete translation of the original text into the reader's language, keeping its structure.
@@ -57,7 +58,7 @@ replyIntents: things the reader might want to say back, each with a short id (lo
 
 ## Language
 
-The request names the reader's language (English unless stated otherwise). Write everything meant for the reader in that language: typeLabel, title, inShort, verdict, meaning, keyFacts labels and values, nextSteps, notStated, translation, replyIntents, and the "translated" side of lines. Keep in Czech, exactly as written: originalText, evidence, the "cs" side of lines, and any Czech term you explain (give the Czech word, then explain it in the reader's language).
+The request names the reader's language (English unless stated otherwise). Write everything meant for the reader in that language: typeLabel, title, inShort, verdict, meaning, keyFacts labels and values, nextSteps, deadline title, notStated, translation, replyIntents, and the "translated" side of lines. Keep in Czech, exactly as written: originalText, evidence, the "cs" side of lines, and any Czech term you explain (give the Czech word, then explain it in the reader's language).
 
 ## Style
 

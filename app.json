@@ -43,6 +43,13 @@
         }
       ],
       [
+        "expo-notifications",
+        {
+          "enableRemoteNotifications": false,
+          "color": "#2251D1"
+        }
+      ],
+      [
         "expo-camera",
         {
           "cameraPermission": "CzechPal uses the camera to read Czech text you point it at.",

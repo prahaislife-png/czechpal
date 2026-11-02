@@ -23,6 +23,7 @@ const glyphs = {
   info: ['info.circle', 'info'],
   question: ['questionmark.circle', 'help'],
   calendar: ['calendar', 'calendar_today'],
+  bell: ['bell', 'notifications'],
   clock: ['clock', 'schedule'],
   person: ['person.crop.circle', 'account_circle'],
   sender: ['envelope.open', 'drafts'],

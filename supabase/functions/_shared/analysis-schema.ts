@@ -50,6 +50,7 @@ const analysisJson = obj({
   // "translated", not "en": a field named after a language pulls the model into English.
   lines: nullable(arr(obj({ cs: str, translated: str, note: nullable(str) }))),
   nextSteps: arr(obj({ id: str, title: str, detail: nullable(str), kind: oneOf(['required', 'optional']) })),
+  deadline: nullable(obj({ date: str, title: str })),
   keyFacts: arr(obj({ id: str, label: str, value: str, icon: oneOf(FACT_ICONS), evidence: nullable(str) })),
   meaning: arr(str),
   notStated: arr(str),
@@ -92,6 +93,10 @@ const Analysis = z.object({
   caution: opt(z.enum(['official', 'medical'])),
   translation: text,
   replyIntents: z.array(z.object({ id: text, label: text, description: text })),
+  // A date that isn't a real YYYY-MM-DD is dropped rather than failing the whole explanation.
+  deadline: opt(z.object({ date: z.string().trim(), title: text })).transform((d) =>
+    d && /^\d{4}-\d{2}-\d{2}$/.test(d.date) && !Number.isNaN(Date.parse(d.date)) ? d : undefined,
+  ),
 });
 
 const AnalyzeOutput = z.object({
