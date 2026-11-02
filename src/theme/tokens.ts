@@ -91,9 +91,6 @@ export const camera = {
   glass: 'rgba(12, 14, 18, 0.48)',
 } as const;
 
-/** QR codes stay dark-on-white in every theme: banking apps scan that most reliably. */
-export const qr = { dark: '#000000', light: '#FFFFFF' } as const;
-
 /** Brand mark colours (the app icon): never UI state. */
 export const brand = { inkTop: '#1B2333', inkBottom: '#0B1019', corners: '#7F9DFF', glyph: '#FFFFFF', hacek: '#E8333A' };
 

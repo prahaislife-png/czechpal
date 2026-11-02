@@ -72,7 +72,7 @@ export function userContent(input: Input, hint: string | undefined, language: st
   const instruction =
     `Explain this for the reader. The reader's language is ${language}. ` +
     `Write typeLabel, title, inShort, verdict, every lines[].translated, meaning, keyFacts labels and values, nextSteps, notStated, translation and replyIntents in ${language}, not in Czech. ` +
-    `Only originalText, evidence, lines[].cs and payment stay in Czech.` +
+    `Only originalText, evidence and lines[].cs stay in Czech.` +
     (hint ? ` The reader says it is about: ${hint}.` : '');
   switch (input.kind) {
     case 'images': {

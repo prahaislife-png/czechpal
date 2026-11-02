@@ -67,7 +67,6 @@ const glyphs = {
   flashOff: ['bolt.slash', 'flash_off'],
   keyboard: ['keyboard', 'keyboard'],
   settings: ['gearshape', 'settings'],
-  qrcode: ['qrcode', 'qr_code'],
   phone: ['phone.fill', 'call'],
   message: ['message', 'sms'],
   compose: ['square.and.pencil', 'edit_square'],

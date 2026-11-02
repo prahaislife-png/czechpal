@@ -6,8 +6,7 @@ import { z } from 'npm:zod@3.25.76';
  *
  * Structured-output rules: every object has additionalProperties: false and lists all keys
  * as required; optional values are expressed as "or null" and normalised away afterwards.
- * The API allows at most 16 nullable (union) parameters per schema, so the payment fields
- * use "" and 0 for "not stated" instead of null.
+ * The API allows at most 16 nullable (union) parameters per schema.
  */
 
 export const CATEGORIES = [
@@ -25,7 +24,6 @@ export const FACT_ICONS = [
 
 type Json = Record<string, unknown>;
 const str: Json = { type: 'string' };
-const num: Json = { type: 'number' };
 const nullable = (s: Json): Json => ({ anyOf: [s, { type: 'null' }] });
 const arr = (items: Json): Json => ({ type: 'array', items });
 const oneOf = (values: readonly string[]): Json => ({ type: 'string', enum: [...values] });
@@ -52,18 +50,6 @@ const analysisJson = obj({
   // "translated", not "en": a field named after a language pulls the model into English.
   lines: nullable(arr(obj({ cs: str, translated: str, note: nullable(str) }))),
   nextSteps: arr(obj({ id: str, title: str, detail: nullable(str), kind: oneOf(['required', 'optional']) })),
-  payment: nullable(
-    obj({
-      account: str,
-      amount: num,
-      variableSymbol: str,
-      specificSymbol: str,
-      constantSymbol: str,
-      dueDate: str,
-      recipientName: str,
-      message: str,
-    }),
-  ),
   keyFacts: arr(obj({ id: str, label: str, value: str, icon: oneOf(FACT_ICONS), evidence: nullable(str) })),
   meaning: arr(str),
   notStated: arr(str),
@@ -84,12 +70,6 @@ export const replyOutputSchema: Json = obj({ czech: str, translation: str });
 
 const opt = <T extends z.ZodTypeAny>(s: T) => s.nullable().transform((v) => v ?? undefined);
 const text = z.string().trim().min(1);
-/** "" means not stated. A malformed value is dropped rather than failing the whole explanation. */
-const blank = z.string().trim().transform((v) => v || undefined);
-const matching = (pattern: RegExp) => z.string().transform((v) => {
-  const s = v.replace(/\s/g, '');
-  return pattern.test(s) ? s : undefined;
-});
 
 const Analysis = z.object({
   kind: z.enum(['text', 'message', 'document']),
@@ -112,18 +92,6 @@ const Analysis = z.object({
   caution: opt(z.enum(['official', 'medical'])),
   translation: text,
   replyIntents: z.array(z.object({ id: text, label: text, description: text })),
-  payment: opt(
-    z.object({
-      account: blank,
-      amount: z.number().transform((v) => (v === 0 ? undefined : v)),
-      variableSymbol: matching(/^\d{1,10}$/),
-      specificSymbol: matching(/^\d{1,10}$/),
-      constantSymbol: matching(/^\d{1,4}$/),
-      dueDate: matching(/^\d{4}-\d{2}-\d{2}$/),
-      recipientName: blank,
-      message: blank,
-    }),
-  ),
 });
 
 const AnalyzeOutput = z.object({
@@ -151,7 +119,6 @@ export function validateAnalyzeOutput(raw: unknown): ValidAnalyzeOutput {
       nextSteps: unique(a.nextSteps).slice(0, 6),
       notStated: a.notStated.slice(0, 4),
       replyIntents: unique(a.replyIntents).slice(0, 3),
-      payment: a.payment?.account && (a.payment.amount === undefined || a.payment.amount > 0) ? { ...a.payment, account: a.payment.account } : undefined,
     },
   };
 }

@@ -387,14 +387,6 @@ Elektro Vltava a. s.`,
       { id: 'explain', label: 'Question the amount', description: 'Ask how it was calculated and if the reading was real.' },
       { id: 'advance', label: 'Keep my advance lower', description: 'Ask to stay at 1 085 Kč a month.' },
     ],
-    payment: {
-      account: '2701453802/0300',
-      amount: 1840,
-      variableSymbol: '5512048873',
-      dueDate: '2026-11-20',
-      recipientName: 'Elektro Vltava a. s.',
-      message: 'Nedoplatek elektřina 2026',
-    },
   },
   replies: {
     instalments: {
