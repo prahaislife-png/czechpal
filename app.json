@@ -50,6 +50,12 @@
         }
       ],
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "CzechPal shows where you are on the Explore map, so you can find parks and viewpoints near you."
+        }
+      ],
+      [
         "expo-camera",
         {
           "cameraPermission": "CzechPal uses the camera to read Czech text you point it at.",
