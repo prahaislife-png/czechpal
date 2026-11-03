@@ -45,7 +45,8 @@ src/app/
     (home)/index    Home       → scan (fullscreen) · paste, compose (modals) · review/[id] (push)
     (home)/history  History    push from Home's "See all" → push case/[id]
     (home)/settings Settings   push from Home's header
-    learn/index     Learn      today's plan (or make one → learn-plan modal) · missions → mission/[id] (push) · your words → flashcards (fullScreenModal) · library → lesson/[id] (push, over the tabs)
+    learn/index     Learn      your N minutes (→ session, fullScreenModal) · Get ready: situations coming up from About you,
+                               reminders and scanned letters → prepare/[id] (push) · missions · your words · library
     learn/words     Your words push from Learn; own cards, delete
     learn/missions  Missions   push from Learn; all missions, plan's topics first
     learn/progress  Progress   push from Learn; streak, totals, the four A2 exam parts, checked exam facts
@@ -61,6 +62,8 @@ src/app/
                                data: every public outdoor place from OpenStreetMap (~5,000) in `explore_places`, refreshed
                                by `npm run import:explore`; cached on the phone for a week; hand-written places on top
     explore/place/[id]  Place  push from a card's Details; Directions (Apple/Google Maps), Save, Show on map
+  session                      fullScreenModal: due words, then phrases for the situation coming up, then hearing them; ?focus=<situation>
+  prepare/[id]                 push: one situation's phrases (play, practise, add to your words, read the scene)
   scan                         fullScreenModal, explicit Close; camera permission primed here
   paste                        modal, explicit Cancel
   compose                      modal, explicit Close; ?recipient&to&phone prefill from Find help

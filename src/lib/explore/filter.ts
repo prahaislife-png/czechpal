@@ -55,22 +55,52 @@ export function areasOf(places: ExplorePlace[]): Area[] {
   return ['prague', ...districts.sort((a, b) => n(a) - n(b) || a.localeCompare(b, 'cs'))];
 }
 
-export const areaLabel = (area: Area) => (area === 'prague' ? 'Prague' : area);
+/** The area that follows the person: places within walking distance of where they are. */
+export const NEAR = 'near';
+/** Near me widens from a short walk until it finds a handful of places. */
+export const NEAR_RADII = [1500, 3000, 6000];
 
-export type Filters = { activities: ActivityId[]; area: Area; query?: string };
+export const areaLabel = (area: Area) => (area === 'prague' ? 'Prague' : area === NEAR ? 'near me' : area);
+
+/** Roughly inside Prague: where "near me" makes sense. */
+export const inPrague = (p: LatLng) => p.latitude > 49.94 && p.latitude < 50.18 && p.longitude > 14.22 && p.longitude < 14.71;
+
+export type Filters = {
+  activities: ActivityId[];
+  area: Area;
+  query?: string;
+  /** For `NEAR`: where the person is, and how far to look. */
+  near?: LatLng | null;
+  radius?: number;
+};
 
 /**
  * Places that fit: any of the chosen activities (none chosen means anything), in the chosen area,
  * whose name or neighbourhood matches the search. Map pins and cards both come from this list.
  */
-export function filterPlaces(places: ExplorePlace[], { activities: wanted, area, query }: Filters): ExplorePlace[] {
+export function filterPlaces(places: ExplorePlace[], { activities: wanted, area, query, near, radius = NEAR_RADII[0] }: Filters): ExplorePlace[] {
   const q = fold(query ?? '');
+  const inArea = (p: ExplorePlace) =>
+    area === 'prague' || (area === NEAR ? !near || distanceM(near, p) <= radius : p.district === area);
   return places.filter(
     (p) =>
       (wanted.length === 0 || p.activities.some((a) => wanted.includes(a))) &&
-      (area === 'prague' || p.district === area) &&
+      inArea(p) &&
       (!q || [p.name, p.nameCs, p.quarter, p.district].some((s) => s && fold(s).includes(q))),
   );
+}
+
+/**
+ * Near me: the shortest walk (1.5, 3 or 6 km) that finds at least `enough` places for these
+ * choices, or everything within the longest one.
+ */
+export function nearbyPlaces(places: ExplorePlace[], filters: Omit<Filters, 'area' | 'near' | 'radius'>, here: LatLng, enough = 8) {
+  let found = { radius: NEAR_RADII[0], list: [] as ExplorePlace[] };
+  for (const radius of NEAR_RADII) {
+    found = { radius, list: filterPlaces(places, { ...filters, area: NEAR, near: here, radius }) };
+    if (found.list.length >= enough) break;
+  }
+  return found;
 }
 
 /** Adds or removes one activity, keeping the picker's order so the sentence reads the same way each time. */

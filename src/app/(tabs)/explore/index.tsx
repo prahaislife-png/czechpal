@@ -17,7 +17,21 @@ import { BrandMark } from '@/components/ui/brand-mark';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { announce } from '@/lib/a11y';
-import { activities, activityPhrase, areaLabel, areasOf, filterPlaces, placesInView, preferredFor, toggleActivity, type Bounds } from '@/lib/explore/filter';
+import {
+  activities,
+  activityPhrase,
+  areaLabel,
+  areasOf,
+  filterPlaces,
+  formatDistance,
+  inPrague,
+  NEAR,
+  nearbyPlaces,
+  placesInView,
+  preferredFor,
+  toggleActivity,
+  type Bounds,
+} from '@/lib/explore/filter';
 import { useExplorePlaces } from '@/lib/explore/source';
 import type { ActivityId, Area, ExplorePlace, LatLng } from '@/lib/explore/types';
 import { useExplore } from '@/store/explore';
@@ -59,7 +73,6 @@ export default function ExploreScreen() {
   const [area, setArea] = useState<Area>('prague');
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
-  const filtered = useMemo(() => filterPlaces(places, { activities: wanted, area, query }), [places, wanted, area, query]);
   const areas = useMemo(() => areasOf(places), [places]);
 
   const [tab, setTab] = useState<Tab>('explore');
@@ -72,6 +85,16 @@ export default function ExploreScreen() {
   const [layersOpen, setLayersOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<LatLng | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  // Near me: the shortest walk (1.5, 3 or 6 km) that finds a handful of places, nearest first.
+  const near = useMemo(
+    () => (area === NEAR && userLocation ? nearbyPlaces(places, { activities: wanted, query }, userLocation) : null),
+    [places, wanted, area, query, userLocation],
+  );
+  const filtered = useMemo(
+    () => near?.list ?? filterPlaces(places, { activities: wanted, area: area === NEAR ? 'prague' : area, query }),
+    [near, places, wanted, area, query],
+  );
 
   // Saved shows the saved places on the map; every other tab shows what the sentence asks for.
   const shown = tab === 'saved' ? savedPlaces : filtered;
@@ -131,8 +154,10 @@ export default function ExploreScreen() {
       firstFit.current = false;
       return;
     }
-    if (shown.length) map.current?.fit(shown, covered(stop));
-  }, [filterKey]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Near me frames the person as well as what's around them.
+    const points = area === NEAR && userLocation && tab !== 'saved' ? [...shown, userLocation] : shown;
+    if (points.length) map.current?.fit(points, covered(stop));
+  }, [filterKey, near?.radius]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The first time the full list arrives (instead of the hand-picked fallback), frame all of it.
   const loaded = useRef(status === 'ready');
@@ -193,20 +218,56 @@ export default function ExploreScreen() {
       .then((p) => setCanLocate(p.granted || p.canAskAgain))
       .catch(() => setCanLocate(false));
   }, []);
-  const locate = async () => {
+  const locate = async (): Promise<LatLng | null> => {
     try {
       const p = await Location.requestForegroundPermissionsAsync();
       if (!p.granted) {
         setCanLocate(p.canAskAgain);
         say('Location is off for CzechPal. You can still explore the whole city.');
-        return;
+        return null;
       }
       const here = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      setUserLocation({ latitude: here.coords.latitude, longitude: here.coords.longitude });
+      const at = { latitude: here.coords.latitude, longitude: here.coords.longitude };
+      setUserLocation(at);
+      return at;
     } catch {
       say('Couldn’t find where you are just now.');
+      return null;
     }
   };
+
+  // Choosing "near me" asks for the location first; outside Prague there's nothing near to show.
+  const chooseNear = async (apply: (a: typeof NEAR) => void) => {
+    const here = userLocation ?? (await locate());
+    if (!here) return;
+    if (!inPrague(here)) {
+      say('You seem to be outside Prague, so here’s the whole city.');
+      return;
+    }
+    apply(NEAR);
+  };
+
+  // Already allowed to know where they are, in Prague: start with what's around them.
+  const choseArea = useRef(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const p = await Location.getForegroundPermissionsAsync();
+        if (!p.granted) return;
+        const last = (await Location.getLastKnownPositionAsync()) ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
+        const at = { latitude: last.coords.latitude, longitude: last.coords.longitude };
+        if (cancelled || choseArea.current || !inPrague(at)) return;
+        setUserLocation(at);
+        setArea(NEAR);
+      } catch {
+        // No location: Prague as a whole, as before.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const startSearch = () => {
     setTab('explore');
@@ -289,7 +350,9 @@ export default function ExploreScreen() {
           <Text variant="footnote" weight="600" style={{ color: ex.ink2 }} accessibilityLiveRegion="polite">
             {status === 'loading'
               ? 'Loading every place in Prague…'
-              : inView.total === filtered.length
+              : near
+                ? `${count(near.list.length)} within ${formatDistance(near.radius)}`
+                : inView.total === filtered.length
                 ? count(filtered.length)
                 : `${count(inView.total)} here · ${filtered.length.toLocaleString('en-GB')} in Prague`}
           </Text>
@@ -354,16 +417,25 @@ export default function ExploreScreen() {
           <Chooser
             title="Where?"
             multiple={false}
-            options={areas.map((a) => ({
-              id: a,
-              label: areaLabel(a),
-              note: `${places.filter((p) => a === 'prague' || p.district === a).length} places`,
-            }))}
+            options={[
+              { id: NEAR, label: 'Near me', icon: 'locate' as const, note: userLocation ? 'Within walking distance' : 'Uses your location' },
+              ...areas.map((a) => ({
+                id: a,
+                label: areaLabel(a),
+                note: `${places.filter((p) => a === 'prague' || p.district === a).length} places`,
+              })),
+            ]}
             selected={[current]}
             onToggle={(id) => {
-              if (picking === 'area') setArea(id);
-              else setPlan((p) => ({ ...p, area: id }));
+              const apply = (a: string) => {
+                if (picking === 'area') {
+                  choseArea.current = true;
+                  setArea(a);
+                } else setPlan((p) => ({ ...p, area: a }));
+              };
               setPicking(null);
+              if (id === NEAR) chooseNear(apply);
+              else apply(id);
             }}
             onDone={() => setPicking(null)}
           />
@@ -574,7 +646,7 @@ export default function ExploreScreen() {
           ) : tab === 'plan' ? (
             <PlanPanel
               plan={plan}
-              matches={filterPlaces(places, { activities: [plan.activity], area: plan.area }).length}
+              matches={filterPlaces(places, { activities: [plan.activity], area: plan.area, near: userLocation }).length}
               onShow={() => {
                 setWanted([plan.activity]);
                 setArea(plan.area);

@@ -91,6 +91,8 @@ export default function RootLayout() {
                 <Stack.Screen name="listen" options={{ presentation: 'fullScreenModal', title: 'Listening' }} />
                 <Stack.Screen name="learn-plan" options={{ presentation: 'modal', title: 'Your plan' }} />
                 <Stack.Screen name="mission/[id]" options={{ title: '' }} />
+                <Stack.Screen name="session" options={{ presentation: 'fullScreenModal', title: '' }} />
+                <Stack.Screen name="prepare/[id]" options={{ title: '' }} />
                 <Stack.Screen name="practice-report/[id]" options={{ presentation: 'modal', title: 'What did you find out?' }} />
                 <Stack.Screen name="office-report/[id]" options={{ presentation: 'modal', title: 'Waiting time today' }} />
                 <Stack.Screen name="handle-share" options={{ headerShown: false, animation: 'none' }} />
