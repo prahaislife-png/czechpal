@@ -14,6 +14,7 @@ import { confirm } from '@/lib/dialogs';
 import { PRIVACY_URL, SUPPORT_URL } from '@/lib/links';
 import { testReminder } from '@/lib/reminders';
 import { allowanceRenewsOn, useFreeLimit, useRemainingAnalyses, useStore } from '@/store/cases';
+import { useLearn } from '@/store/learn';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
@@ -43,7 +44,7 @@ export default function SettingsScreen() {
     if (deleting) return;
     const ok = await confirm({
       title: 'Delete everything?',
-      message: `This deletes ${caseCount === 1 ? '1 item' : `${caseCount} items`} and their replies, your reminders, About you, your saved name and address, and your anonymous account on CzechPal’s server with any doctor or office reports you sent. It can’t be undone.`,
+      message: `This deletes ${caseCount === 1 ? '1 item' : `${caseCount} items`} and their replies, your reminders, About you, your Learn progress and words, your saved name and address, and your anonymous account on CzechPal’s server with any doctor or office reports you sent. It can’t be undone.`,
       confirmLabel: 'Delete everything',
       destructive: true,
     });
@@ -53,6 +54,7 @@ export default function SettingsScreen() {
     try {
       await deleteServerData();
       clearAll();
+      useLearn.getState().clear();
       useStore.getState().setAiConsent(false);
     } catch (e) {
       setDeleteError(e instanceof Error ? e.message : 'Something went wrong. Please try again.');

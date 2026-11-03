@@ -1,24 +1,21 @@
-import { DateTimePicker } from '@expo/ui/community/datetime-picker';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { SectionHeader } from '@/components/ui/card';
 import { ChipGroup } from '@/components/ui/chip';
+import { DateField } from '@/components/ui/date-field';
 import { HeaderCloseButton } from '@/components/ui/header-button';
 import { Icon } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
-import { daysUntil, districts, hasExpiry, isIsoDate, longDate, stayById, stays } from '@/lib/about';
+import { daysUntil, districts, hasExpiry, longDate, stayById, stays } from '@/lib/about';
 import { PERMIT_DAYS, scheduleReminder } from '@/lib/reminders';
 import { useStore } from '@/store/cases';
-import { layout, radius, space, type as ramp } from '@/theme/tokens';
+import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
 const PERMIT_REMINDER = 'permit';
-
-const toIso = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 /**
  * About you: three optional answers, each saved as it's chosen (no Save button). The permit's
@@ -90,7 +87,7 @@ export default function AboutScreen() {
               <Text variant="callout" weight="500" style={styles.dateLabel}>
                 Valid until
               </Text>
-              <ExpiryPicker value={about.expires} onChange={setExpires} />
+              <DateField value={about.expires} onChange={setExpires} label="Valid until" />
             </View>
             {about.expires ? (
               <View style={[styles.dateRow, styles.divided, { borderTopColor: colors.separator }]}>
@@ -153,66 +150,6 @@ export default function AboutScreen() {
   );
 }
 
-/** The phone's own date picker; a typed date on the web, which has none. */
-function ExpiryPicker({ value, onChange }: { value?: string; onChange: (date: string | undefined) => void }) {
-  const { colors } = useTheme();
-  const [text, setText] = useState(value ?? '');
-  const [showAndroid, setShowAndroid] = useState(false);
-  const date = value ? new Date(`${value}T12:00:00`) : new Date();
-
-  if (process.env.EXPO_OS === 'web') {
-    return (
-      <TextInput
-        value={text}
-        onChangeText={(t) => {
-          setText(t);
-          if (isIsoDate(t)) onChange(t);
-          else if (!t) onChange(undefined);
-        }}
-        placeholder="YYYY-MM-DD"
-        placeholderTextColor={colors.label3}
-        inputMode="numeric"
-        accessibilityLabel="Valid until, as year, month and day"
-        style={[styles.webDate, ramp.body, { color: colors.label, backgroundColor: colors.fill }]}
-      />
-    );
-  }
-
-  if (process.env.EXPO_OS === 'android') {
-    return (
-      <>
-        <Pressable onPress={() => setShowAndroid(true)} accessibilityRole="button" hitSlop={8}>
-          <Text variant="callout" color="accent" weight="600">
-            {value ? longDate(value) : 'Choose a date'}
-          </Text>
-        </Pressable>
-        {showAndroid && (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            presentation="dialog"
-            onValueChange={(_, d) => {
-              setShowAndroid(false);
-              onChange(toIso(d));
-            }}
-            onDismiss={() => setShowAndroid(false)}
-          />
-        )}
-      </>
-    );
-  }
-
-  return (
-    <DateTimePicker
-      value={date}
-      mode="date"
-      display="compact"
-      accentColor={colors.accent}
-      onValueChange={(_, d) => onChange(toIso(d))}
-    />
-  );
-}
-
 const styles = StyleSheet.create({
   content: { padding: layout.gutter, paddingBottom: space.huge, gap: space.xxl },
   intro: { paddingHorizontal: space.xs },
@@ -220,7 +157,6 @@ const styles = StyleSheet.create({
   divided: { borderTopWidth: StyleSheet.hairlineWidth },
   dateLabel: { flex: 1, gap: 2 },
   note: { paddingHorizontal: space.xs, marginTop: space.sm },
-  webDate: { minWidth: 140, minHeight: 40, paddingHorizontal: space.md, borderRadius: radius.tile, outlineWidth: 0 },
   privacy: { flexDirection: 'row', gap: space.sm, padding: space.lg },
   privacyText: { flex: 1 },
 });

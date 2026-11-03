@@ -9,6 +9,13 @@ import { icon as iconSize } from '@/theme/tokens';
  */
 const glyphs = {
   camera: ['camera.fill', 'photo_camera'],
+  book: ['book.fill', 'menu_book'],
+  cards: ['rectangle.on.rectangle.angled', 'style'],
+  play: ['play.fill', 'play_arrow'],
+  pause: ['pause.fill', 'pause'],
+  bookmark: ['bookmark', 'bookmark_border'],
+  bookmarkFill: ['bookmark.fill', 'bookmark'],
+  swap: ['arrow.left.arrow.right', 'swap_horiz'],
   photo: ['photo.on.rectangle', 'photo_library'],
   pdf: ['doc.richtext', 'picture_as_pdf'],
   paste: ['doc.on.clipboard', 'content_paste'],
@@ -81,6 +88,10 @@ const glyphs = {
   legal: ['building.columns', 'gavel'],
   speaker: ['speaker.wave.2', 'volume_up'],
   verified: ['checkmark.seal.fill', 'verified'],
+  flame: ['flame.fill', 'local_fire_department'],
+  flag: ['flag', 'flag'],
+  chart: ['chart.bar', 'bar_chart'],
+  ear: ['ear', 'hearing'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 export type IconName = keyof typeof glyphs;
