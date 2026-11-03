@@ -101,6 +101,8 @@ export type LearningContent = {
     license: 'original' | 'licensed';
     /** Only a native-speaking Czech teacher's review sets this, and only then can a text be published. */
     reviewedByNativeSpeaker: boolean;
+    /** When that review was done (YYYY-MM-DD). */
+    reviewedOn?: string;
     /** When an AI check of grammar, naturalness and translation was last done (YYYY-MM-DD). Not a substitute for the review above. */
     aiCheckedOn?: string;
     note?: string;

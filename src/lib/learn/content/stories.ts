@@ -2,15 +2,16 @@ import type { LearningContent } from '../types';
 
 /**
  * The first library: original short texts written for CzechPal at A1 and A2.
- * DRAFT: written with AI assistance and not yet reviewed by a native-speaking Czech teacher.
- * `source.reviewedByNativeSpeaker` must be true before a text is published to the store build.
+ * Written with AI assistance, checked by AI, then reviewed by a native-speaking Czech teacher
+ * (2026-11-03). A changed or new text goes back to 'draft' until it is reviewed again.
  */
-const draft = {
+const reviewed = {
   author: 'CzechPal',
   license: 'original',
-  reviewedByNativeSpeaker: false,
+  reviewedByNativeSpeaker: true,
+  reviewedOn: '2026-11-03',
   aiCheckedOn: '2026-11-03',
-  note: 'Draft. Grammar, naturalness and translations checked by AI on 2026-11-03; still needs review by a native-speaking Czech teacher.',
+  note: 'Reviewed by a native-speaking Czech teacher.',
 } as const;
 
 export const stories: LearningContent[] = [
@@ -45,8 +46,8 @@ export const stories: LearningContent[] = [
     vocabulary: ['bydlet', 'hledat', 'prohlídka', 'byt', 'pokoj', 'kuchyň', 'koupelna', 'nájem', 'majitel', 'smlouva', 'podepsat'],
     senses: { nevadí: { meaning: 'kočka nevadí: a cat is no problem (literally “a cat doesn’t bother”)' } },
     version: 2,
-    status: 'draft',
-    source: draft,
+    status: 'published',
+    source: reviewed,
   },
   {
     id: 'u-lekare',
@@ -82,8 +83,8 @@ export const stories: LearningContent[] = [
       krku: { meaning: 'v krku: in the throat (bolí mě v krku: I have a sore throat)' },
     },
     version: 2,
-    status: 'draft',
-    source: draft,
+    status: 'published',
+    source: reviewed,
   },
   {
     id: 'v-obchode',
@@ -118,8 +119,8 @@ export const stories: LearningContent[] = [
       prosím: { meaning: 'prosím vás: excuse me, please (a polite way to start a question)' },
     },
     version: 1,
-    status: 'draft',
-    source: draft,
+    status: 'published',
+    source: reviewed,
   },
   {
     id: 'vlakem-do-brna',
@@ -154,8 +155,8 @@ export const stories: LearningContent[] = [
       měl: { meaning: 'měl zpoždění: was late (literally “had a delay”)' },
     },
     version: 1,
-    status: 'draft',
-    source: draft,
+    status: 'published',
+    source: reviewed,
   },
   {
     id: 'prvni-den-v-praci',
@@ -191,8 +192,8 @@ export const stories: LearningContent[] = [
       jedné: { meaning: 'půl jedné: half past twelve' },
     },
     version: 1,
-    status: 'draft',
-    source: draft,
+    status: 'published',
+    source: reviewed,
   },
   {
     id: 'zmena-terminu',
@@ -228,8 +229,8 @@ export const stories: LearningContent[] = [
       sestra: { meaning: 'nurse' },
     },
     version: 1,
-    status: 'draft',
-    source: draft,
+    status: 'published',
+    source: reviewed,
   },
   {
     id: 'v-kavarne',
@@ -266,8 +267,8 @@ export const stories: LearningContent[] = [
     vocabulary: ['dát si', 'kafe', 'mléko', 'malý', 'velký', 'sladký', 'koláč', 'dort', 'platit', 'karta', 'samozřejmě'],
     senses: { dáte: { meaning: 'co si dáte?: what will you have? (in a café or restaurant)' }, něco: { meaning: 'něco sladkého: something sweet' } },
     version: 2,
-    status: 'draft',
-    source: draft,
+    status: 'published',
+    source: reviewed,
   },
   {
     id: 'na-poste',
@@ -304,8 +305,8 @@ export const stories: LearningContent[] = [
     vocabulary: ['poslat', 'dopis', 'doporučeně', 'obyčejně', 'vyplnit', 'formulář', 'půjčit si', 'pero', 'adresa', 'příjemce', 'svůj', 'hotovo'],
     senses: { chtěl: { meaning: 'chtěl bych: I would like (a man speaking; a woman says chtěla bych)' }, máte: { meaning: 'tady máte: here you are' } },
     version: 2,
-    status: 'draft',
-    source: draft,
+    status: 'published',
+    source: reviewed,
   },
   {
     id: 'soused',
@@ -362,7 +363,7 @@ export const stories: LearningContent[] = [
       doby: { meaning: 'od té doby: since then' },
     },
     version: 1,
-    status: 'draft',
-    source: draft,
+    status: 'published',
+    source: reviewed,
   },
 ];

@@ -4,7 +4,7 @@ import type { Aspect, Gender, Lexeme, PartOfSpeech } from './types';
  * The dictionary behind tap-to-translate: every lemma used in the library, with the inflected
  * forms that occur there. A word maps to its dictionary form through this list, so "podepíšu"
  * leads to "podepsat" and "lékárny" to "lékárna". Curated by hand, not guessed at runtime.
- * DRAFT: checked by AI on 2026-11-03; still needs review by a Czech teacher, like the texts.
+ * Checked by AI and reviewed by a native-speaking Czech teacher with the texts (2026-11-03).
  */
 
 type Extra = { gender?: Gender; aspect?: Aspect; partner?: string; notes?: Record<string, string>; id?: string };
