@@ -92,6 +92,22 @@ const glyphs = {
   flag: ['flag', 'flag'],
   chart: ['chart.bar', 'bar_chart'],
   ear: ['ear', 'hearing'],
+  tree: ['tree.fill', 'park'],
+  binoculars: ['binoculars.fill', 'landscape'],
+  run: ['figure.run', 'directions_run'],
+  bike: ['bicycle', 'directions_bike'],
+  ball: ['figure.tennis', 'sports_tennis'],
+  playground: ['figure.and.child.holdinghands', 'child_care'],
+  leaf: ['leaf.fill', 'spa'],
+  flower: ['camera.macro', 'local_florist'],
+  sun: ['sun.max.fill', 'wb_sunny'],
+  map: ['map', 'map'],
+  layers: ['square.3.layers.3d', 'layers'],
+  locate: ['location.fill', 'my_location'],
+  directions: ['arrow.triangle.turn.up.right.diamond.fill', 'directions'],
+  people: ['person.2', 'group'],
+  chevronDown: ['chevron.down', 'expand_more'],
+  chevronLeft: ['chevron.left', 'chevron_left'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 export type IconName = keyof typeof glyphs;

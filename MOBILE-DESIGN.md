@@ -38,7 +38,7 @@ and get what it says, what it means for you and, when it is a message, a reply i
 ```
 NAV READ
 platforms: iOS + Android (web: best-effort)
-tabs (3): Home · Learn · Find
+tabs (4): Home · Learn · Find · Explore (added last so the first three keep their places)
 src/app/
   welcome                      protected one-way door (Stack.Protected), replace into tabs
   (tabs)/
@@ -53,6 +53,14 @@ src/app/
                                help/[category] (doctors, trades, lawyers, accountants) → help/find/[kind] → help/practice/[id]
                                help/places/[kind] (town halls, notaries, embassies, offices) → help/place/[id]
                                help/offices, help/checklists, help/translators, help/urgent
+    explore/index   Explore    full-screen map (react-native-maps; MapLibre GL + OpenFreeMap on web) under a 3-height paper
+                               sheet (≈25 / 55 / 90 %) with folder tabs Explore · Plan · People · Saved; "I want to … in …"
+                               filters pins and cards together; pin → its card, card → its pin; the list shows the best
+                               40 of what's in the visible part of the map; Plan is a labelled preview (no AI yet);
+                               People lists nothing until events can be verified; Saved is on-device
+                               data: every public outdoor place from OpenStreetMap (~5,000) in `explore_places`, refreshed
+                               by `npm run import:explore`; cached on the phone for a week; hand-written places on top
+    explore/place/[id]  Place  push from a card's Details; Directions (Apple/Google Maps), Save, Show on map
   scan                         fullScreenModal, explicit Close; camera permission primed here
   paste                        modal, explicit Cancel
   compose                      modal, explicit Close; ?recipient&to&phone prefill from Find help

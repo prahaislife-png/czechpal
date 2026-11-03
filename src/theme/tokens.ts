@@ -72,6 +72,45 @@ const dark: typeof light = {
 };
 
 export const palettes = { light, dark };
+
+/**
+ * Explore only: warm ivory paper over the map, with soft blue chips for what is selected.
+ * Kept apart from the app palette so the rest of CzechPal stays cool grey.
+ */
+const exploreLight = {
+  sheet: '#FBF7EF',
+  sheetMuted: '#F0E9DB',
+  card: '#FFFDF8',
+  line: '#E3DACA',
+  ink: '#1F1B16',
+  ink2: '#5B5449',
+  ink3: '#6F675B', // 5.0:1 on sheet
+  chip: '#DCE7FA',
+  chipInk: '#1E3E8C',
+  chipLine: '#C2D3F2',
+  float: 'rgba(251, 247, 239, 0.94)',
+  shadow: '0px 1px 2px rgba(60, 45, 20, 0.06), 0px 8px 24px rgba(60, 45, 20, 0.10)',
+  sheetShadow: '0px -2px 6px rgba(60, 45, 20, 0.05), 0px -12px 32px rgba(60, 45, 20, 0.10)',
+};
+
+const exploreDark: typeof exploreLight = {
+  sheet: '#1C1A16',
+  sheetMuted: '#26231E',
+  card: '#23201B',
+  line: '#38332B',
+  ink: '#F3EEE4',
+  ink2: '#C2B9AA',
+  ink3: '#A1988A',
+  chip: '#23324D',
+  chipInk: '#C4D5FF',
+  chipLine: '#34476A',
+  float: 'rgba(28, 26, 22, 0.94)',
+  shadow: '0px 8px 24px rgba(0, 0, 0, 0.45)',
+  sheetShadow: '0px -12px 32px rgba(0, 0, 0, 0.5)',
+};
+
+export const explorePalettes = { light: exploreLight, dark: exploreDark };
+export type ExplorePalette = typeof exploreLight;
 export type Palette = typeof light;
 
 /**

@@ -7,7 +7,7 @@ import { Text } from '@/components/ui/text';
 import { space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
-/** Web stand-in for the native tab bar: the same three peers, iOS tab-bar proportions. */
+/** Web stand-in for the native tab bar: the same four peers, iOS tab-bar proportions. */
 export default function AppTabs() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -31,6 +31,9 @@ export default function AppTabs() {
         </TabTrigger>
         <TabTrigger name="help" href="/help" asChild>
           <TabButton icon="search" label="Find" />
+        </TabTrigger>
+        <TabTrigger name="explore" href="/explore" asChild>
+          <TabButton icon="map" label="Explore" />
         </TabTrigger>
       </TabList>
     </Tabs>

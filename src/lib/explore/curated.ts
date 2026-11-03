@@ -1,0 +1,110 @@
+import type { ActivityId, ExplorePlace, PlaceCategory } from './types';
+
+/**
+ * Places CzechPal has written up by hand. Coordinates and districts were checked against
+ * OpenStreetMap (Nominatim) on 2026-11-03. Descriptions keep to lasting facts: no opening hours,
+ * prices or anything else that changes; seasonal places say so and ask the reader to check.
+ *
+ * The importer (scripts/import-explore.ts) lays these over the OpenStreetMap places: a match keeps
+ * the OSM location and gets this description and these activities. The app also shows this list
+ * on its own when the full list can't load (first launch offline).
+ */
+const CHECKED = '2026-11-03';
+
+type Seed = [
+  id: string,
+  name: string,
+  nameCs: string | null,
+  category: PlaceCategory,
+  district: string,
+  latitude: number,
+  longitude: number,
+  activities: ActivityId[],
+  attributes: string[],
+  description: string,
+];
+
+const seeds: Seed[] = [
+  ['letna', 'Letná Park', 'Letenské sady', 'park', 'Praha 7', 50.09646, 14.42717, ['walk', 'viewpoint', 'cycling', 'workout'], ['Hilltop', 'River views', 'Wide paths'],
+    'A long hilltop park above the Vltava with broad paths and a classic view down the river over the Old Town bridges.'],
+  ['letna-metronome', 'Letná Metronome', 'Pražský metronom', 'viewpoint', 'Praha 7', 50.09474, 14.41594, ['viewpoint'], ['River views', 'Landmark'],
+    'A giant metronome on the plinth of the former Stalin monument. The terrace below looks straight down the river.'],
+  ['hanavsky', 'Hanavský Pavilion terrace', 'Hanavský pavilon', 'viewpoint', 'Praha 7', 50.09366, 14.41261, ['viewpoint', 'walk'], ['Bridge views', 'Landmark'],
+    'A cast-iron pavilion on the edge of Letná. The path in front of it has one of the best-known views of Prague’s bridges.'],
+  ['riegrovy', 'Riegrovy sady', null, 'park', 'Praha 2', 50.08018, 14.43929, ['walk', 'viewpoint'], ['Castle views', 'Lawns'],
+    'A sloping park in Vinohrady whose lawns face west towards Prague Castle. A favourite place to sit at sunset.'],
+  ['petrin', 'Petřín Hill', 'Petřín', 'park', 'Praha 1', 50.08166, 14.39493, ['walk', 'viewpoint', 'nature', 'garden'], ['Hilltop', 'Woodland paths', 'Lookout tower'],
+    'A wooded hill above Malá Strana with orchards, gardens and the Petřín lookout tower at the top.'],
+  ['vysehrad', 'Vyšehrad', null, 'park', 'Praha 2', 50.06421, 14.41945, ['walk', 'viewpoint', 'hidden'], ['Fortress walls', 'River views'],
+    'An old fortress on a rock above the Vltava, with ramparts to walk along, a basilica and the national cemetery.'],
+  ['stromovka', 'Stromovka', 'Královská obora', 'park', 'Praha 7', 50.1065, 14.4163, ['walk', 'cycling', 'workout', 'nature'], ['Ponds', 'Long flat paths', 'Old trees'],
+    'Prague’s largest central park, once a royal game reserve, with ponds, old trees and long flat paths for running and cycling.'],
+  ['divoka-sarka', 'Divoká Šárka', null, 'nature', 'Praha 6', 50.10149, 14.3106, ['nature', 'hidden', 'walk', 'workout'], ['Rocky valley', 'Woodland', 'Stream'],
+    'A wild nature reserve on the city’s edge with steep rocky valleys, woodland trails and a stream.'],
+  ['prokopske', 'Prokop Valley', 'Prokopské údolí', 'nature', 'Praha 5', 50.04107, 14.37053, ['nature', 'hidden', 'cycling', 'walk'], ['Limestone cliffs', 'Meadows', 'Trails'],
+    'A protected limestone valley with cliffs, meadows and trails, surprisingly wild for somewhere inside the city.'],
+  ['grebovka', 'Grébovka', 'Havlíčkovy sady', 'garden', 'Praha 2', 50.06892, 14.44762, ['garden', 'walk', 'hidden'], ['Vineyard', 'Grotto', 'Villa park'],
+    'A romantic villa park with a vineyard on the slope, a pavilion among the vines and an artificial grotto.'],
+  ['valdstejnska', 'Wallenstein Garden', 'Valdštejnská zahrada', 'garden', 'Praha 1', 50.09016, 14.40643, ['garden', 'hidden'], ['Baroque garden', 'Seasonal'],
+    'A walled early-Baroque garden beside the Senate, with a pond, bronze statues and peacocks. Usually open from spring to autumn: check before you go.'],
+  ['vojanovy', 'Vojanovy sady', null, 'garden', 'Praha 1', 50.08876, 14.40846, ['garden', 'hidden', 'nature'], ['Walled garden', 'Quiet', 'Orchard'],
+    'One of Prague’s oldest gardens: a quiet walled orchard in Malá Strana a few steps from the crowds.'],
+  ['kampa', 'Kampa Park', 'Kampa', 'park', 'Praha 1', 50.08388, 14.40766, ['walk', 'nature'], ['Riverside', 'Lawns', 'Old trees'],
+    'A riverside park on Kampa island, with old trees and lawns right beside Charles Bridge.'],
+  ['botanicka', 'Prague Botanical Garden', 'Botanická zahrada Praha', 'garden', 'Praha 7', 50.12272, 14.41595, ['garden', 'nature'], ['Greenhouse', 'Vineyard', 'Ticketed'],
+    'Gardens on the slopes of Troja with the Fata Morgana greenhouse and the St Clare vineyard.'],
+  ['naplavka', 'Náplavka riverbank', 'Náplavka', 'leisure', 'Praha 2', 50.07358, 14.41387, ['walk', 'cycling'], ['Riverside', 'Cycle route', 'Boats'],
+    'A low embankment along the Vltava, busy at weekends with walkers, cyclists and moored boats.'],
+  ['ladronka', 'Ladronka', null, 'park', 'Praha 6', 50.07854, 14.35628, ['workout', 'sport', 'cycling', 'walk'], ['Skating loop', 'Lawns', 'Open space'],
+    'An open park in Břevnov known for its long paved loop, used for inline skating, running and cycling.'],
+  ['hvezda', 'Hvězda Game Reserve', 'Obora Hvězda', 'nature', 'Praha 6', 50.08339, 14.32621, ['walk', 'nature', 'workout', 'cycling'], ['Woodland', 'Long alleys', 'Summer palace'],
+    'A walled woodland whose long straight alleys lead to a star-shaped Renaissance summer palace.'],
+  ['vitkov', 'Vítkov Hill', 'Vítkov', 'park', 'Praha 3', 50.08853, 14.44995, ['viewpoint', 'walk', 'cycling'], ['Hilltop', 'Landmark', 'City views'],
+    'A long ridge between Žižkov and Karlín, topped by the National Memorial and a huge equestrian statue.'],
+  ['parukarka', 'Parukářka', null, 'park', 'Praha 3', 50.08519, 14.46068, ['walk', 'viewpoint', 'workout'], ['Hilltop', 'Lawns'],
+    'A grassy hill park in Žižkov with open views over the east of the city.'],
+  ['folimanka', 'Folimanka', null, 'park', 'Praha 2', 50.06792, 14.43006, ['sport', 'workout', 'walk', 'kids'], ['Sports grounds', 'Playgrounds', 'Under the Nusle Bridge'],
+    'A long park in the valley under the Nusle Bridge with sports grounds, playgrounds and paths.'],
+  ['klamovka', 'Klamovka', null, 'park', 'Praha 5', 50.07152, 14.37925, ['walk', 'hidden'], ['Historic park', 'Pavilions', 'Pond'],
+    'A landscaped park in Košíře with small historic pavilions and a pond.'],
+  ['kinskeho', 'Kinsky Garden', 'Kinského zahrada', 'park', 'Praha 5', 50.07847, 14.39458, ['walk', 'garden', 'nature'], ['Hillside', 'Ponds', 'Summer palace'],
+    'A hillside park on the Smíchov side of Petřín, with ponds, a summer palace and paths up the hill.'],
+  ['hostivar', 'Hostivař Reservoir', 'Hostivařská přehrada', 'leisure', 'Praha 15', 50.03901, 14.54192, ['nature', 'cycling', 'walk'], ['Lakeside', 'Woodland', 'Cycle paths'],
+    'A reservoir in the south-east surrounded by forest park, with lakeside paths popular for cycling.'],
+  ['strahov', 'Strahov Garden', 'Strahovská zahrada', 'garden', 'Praha 1', 50.08571, 14.39213, ['viewpoint', 'garden', 'walk'], ['Orchard', 'City views'],
+    'Orchard slopes below Strahov Monastery with one of the widest views across the city.'],
+  ['kralovska', 'Royal Garden', 'Královská zahrada', 'garden', 'Praha 1', 50.09305, 14.40217, ['garden'], ['Renaissance', 'Seasonal'],
+    'The Renaissance garden on the north side of Prague Castle, with the Belvedere summer palace. Usually open from spring to autumn: check before you go.'],
+  ['cibulka', 'Cibulka', null, 'hidden', 'Praha 5', 50.06683, 14.35692, ['hidden', 'nature', 'walk'], ['Woodland', 'Follies', 'Lookout'],
+    'An overgrown romantic park in Košíře with a small lookout tower and follies hidden in the woods.'],
+  ['stvanice', 'Štvanice Island', 'Štvanice', 'leisure', 'Praha 7', 50.09566, 14.43927, ['sport', 'hidden', 'walk'], ['Island', 'Sports grounds'],
+    'A long island in the Vltava between Karlín and Holešovice, with sports grounds and a path by the water.'],
+  ['detsky-ostrov', 'Children’s Island', 'Dětský ostrov', 'playground', 'Praha 5', 50.07838, 14.40908, ['kids', 'walk', 'sport'], ['Island', 'Playground', 'Sports courts'],
+    'A small island off Smíchov set up for families, with playgrounds and sports courts by the water.'],
+  ['strelecky', 'Shooters’ Island', 'Střelecký ostrov', 'leisure', 'Praha 1', 50.08128, 14.41003, ['walk', 'nature'], ['Island', 'Lawns'],
+    'A leafy island under the Legion Bridge, with lawns at the water’s edge and views of the National Theatre.'],
+  ['kunraticky', 'Kunratice Forest', 'Kunratický les', 'nature', 'Praha 4', 50.0274, 14.47392, ['nature', 'workout', 'cycling', 'walk'], ['Woodland', 'Running trails'],
+    'A large forest in the south of Prague with trails used for running, cycling and long quiet walks.'],
+  ['frantiskanska', 'Franciscan Garden', 'Františkánská zahrada', 'garden', 'Praha 1', 50.08215, 14.42393, ['garden', 'hidden'], ['Quiet', 'Rose beds'],
+    'A quiet garden tucked behind Wenceslas Square, with rose beds and benches away from the traffic.'],
+  ['novy-svet', 'Nový Svět', null, 'hidden', 'Praha 1', 50.09092, 14.39144, ['hidden', 'walk'], ['Cobbled lane', 'Historic houses'],
+    'A small cobbled lane of old houses behind Prague Castle that most visitors never find.'],
+];
+
+export const curatedPlaces: ExplorePlace[] = seeds.map(
+  ([id, name, nameCs, category, district, latitude, longitude, activities, attributes, description]) => ({
+    id: `cz:${id}`,
+    name,
+    ...(nameCs ? { nameCs } : {}),
+    named: true,
+    category,
+    district,
+    latitude,
+    longitude,
+    activities,
+    attributes,
+    description,
+    source: 'curated',
+    checkedOn: CHECKED,
+  }),
+);
