@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { logDay, type Days } from '@/lib/learn/activity';
+import { dayKey, logDay, type Days } from '@/lib/learn/activity';
 import { contentById } from '@/lib/learn/content';
 import { addOwnCard, answerCard, removeCard, saveWord, type Deck, type OwnCardError, type UserCard } from '@/lib/learn/deck';
 import {
@@ -15,6 +15,8 @@ import {
   type ReadingProgress,
 } from '@/lib/learn/progress';
 import { makeProfile, type LearnProfile } from '@/lib/learn/profile';
+import { rememberPhrase, type PhraseMemory } from '@/lib/learn/session';
+import type { Situation } from '@/lib/learn/situations';
 import type { Answer, ReviewEntry } from '@/lib/learn/srs';
 
 /**
@@ -42,6 +44,8 @@ type State = {
   days: Days;
   /** Best listening score per mission, 0 to 1. */
   missionListening: Record<string, number>;
+  /** How each situation phrase went in practice. */
+  phrases: PhraseMemory;
 };
 
 type Actions = {
@@ -61,13 +65,30 @@ type Actions = {
   setProfile: (profile: Omit<LearnProfile, 'updatedAt'>) => void;
   /** A listening session finished: `right` of `total`, for a mission when it was one. */
   finishListening: (right: number, total: number, missionId?: string) => void;
+  /** A situation phrase was practised: whether the learner knew it. */
+  practisePhrase: (id: string, knew: boolean) => void;
+  /** Adds a situation's phrases to Your words; returns how many were new. */
+  savePhrases: (situation: Situation) => number;
+  /** The daily session reached its end. */
+  finishSession: () => void;
   /** Settings → Delete everything. */
   clear: () => void;
 };
 
 const MAX_REVIEWS = 2000;
 
-const initial: State = { progress: {}, deck: {}, reviews: [], direction: 'cs-en', showTranslation: false, rate: 0.85, profile: undefined, days: {}, missionListening: {} };
+const initial: State = {
+  progress: {},
+  deck: {},
+  reviews: [],
+  direction: 'cs-en',
+  showTranslation: false,
+  rate: 0.85,
+  profile: undefined,
+  days: {},
+  missionListening: {},
+  phrases: {},
+};
 
 export const useLearn = create<State & Actions>()(
   persist(
@@ -118,6 +139,23 @@ export const useLearn = create<State & Actions>()(
             missionListening: missionId ? { ...s.missionListening, [missionId]: Math.max(s.missionListening[missionId] ?? 0, right / total) } : s.missionListening,
           }));
         },
+        practisePhrase: (id, knew) =>
+          set((s) => ({ phrases: rememberPhrase(s.phrases, id, knew, dayKey()), days: logDay(s.days, { phrases: 1 }) })),
+        savePhrases: (situation) => {
+          let deck = get().deck;
+          let added = 0;
+          const stamp = Date.now().toString(36);
+          for (const [i, p] of situation.phrases.entries()) {
+            // Own ids are made from the time; several in one go need telling apart.
+            const next = addOwnCard(deck, p.cs, p.en, new Date(), `own:${stamp}-${i}`);
+            if (typeof next === 'string') continue;
+            deck = next;
+            added++;
+          }
+          set({ deck });
+          return added;
+        },
+        finishSession: () => set((s) => ({ days: logDay(s.days, { sessions: 1 }) })),
         clear: () => set({ ...initial }),
       };
     },
@@ -125,7 +163,7 @@ export const useLearn = create<State & Actions>()(
       name: 'czechpal-learn',
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
-      partialize: ({ progress, lastContentId, deck, reviews, direction, showTranslation, rate, profile, days, missionListening }) => ({
+      partialize: ({ progress, lastContentId, deck, reviews, direction, showTranslation, rate, profile, days, missionListening, phrases }) => ({
         progress,
         lastContentId,
         deck,
@@ -136,6 +174,7 @@ export const useLearn = create<State & Actions>()(
         profile,
         days,
         missionListening,
+        phrases,
       }),
     },
   ),

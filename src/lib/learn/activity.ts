@@ -10,6 +10,10 @@ export type DayLog = {
   listening: number;
   heard: number;
   heardRight: number;
+  /** Phrases practised for a situation. */
+  phrases: number;
+  /** Daily sessions finished. */
+  sessions: number;
 };
 
 export type Days = Record<string, DayLog>;
@@ -23,12 +27,13 @@ export const dayKey = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth()
 
 const daysBefore = (now: Date, n: number) => new Date(now.getFullYear(), now.getMonth(), now.getDate() - n, 12);
 
-export const emptyDay = (): DayLog => ({ reviews: 0, chapters: 0, listening: 0, heard: 0, heardRight: 0 });
+export const emptyDay = (): DayLog => ({ reviews: 0, chapters: 0, listening: 0, heard: 0, heardRight: 0, phrases: 0, sessions: 0 });
 
 /** Adds to today's counts. Old days beyond about a year are dropped. */
 export function logDay(days: Days, add: Partial<DayLog>, now = new Date()): Days {
   const key = dayKey(now);
-  const day = days[key] ?? emptyDay();
+  // Days saved before a count existed simply start it at 0.
+  const day = { ...emptyDay(), ...days[key] };
   const next: DayLog = { ...day };
   for (const k of Object.keys(add) as (keyof DayLog)[]) next[k] = day[k] + Math.max(0, add[k] ?? 0);
   const all = { ...days, [key]: next };
@@ -37,9 +42,9 @@ export function logDay(days: Days, add: Partial<DayLog>, now = new Date()): Days
   return Object.fromEntries(keys.slice(-KEEP_DAYS).map((k) => [k, all[k]]));
 }
 
-export const isActive = (d: DayLog | undefined) => !!d && d.reviews + d.chapters + d.listening > 0;
+export const isActive = (d: DayLog | undefined) => !!d && d.reviews + d.chapters + d.listening + (d.phrases ?? 0) + (d.sessions ?? 0) > 0;
 
-export const today = (days: Days, now = new Date()) => days[dayKey(now)] ?? emptyDay();
+export const today = (days: Days, now = new Date()): DayLog => ({ ...emptyDay(), ...days[dayKey(now)] });
 
 /**
  * Days in a row with some practice. Today counts once something is done; until then the streak

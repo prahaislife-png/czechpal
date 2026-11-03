@@ -12,8 +12,12 @@ import { List, Row } from '@/components/ui/list';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { streak, today } from '@/lib/learn/activity';
+import { buildSession, sessionSummary, situationProgress, type DailyMinutes } from '@/lib/learn/session';
+import { situations, type Situation } from '@/lib/learn/situations';
+import type { Upcoming } from '@/lib/learn/upcoming';
+import { useFocus, useUpcoming } from '@/lib/learn/use-upcoming';
+import { useStore } from '@/store/cases';
 import { contentById, filterLibrary, levelsInLibrary, topicsInLibrary } from '@/lib/learn/content';
-import { dailyPlan, planDone, type PlanStep } from '@/lib/learn/daily';
 import { dueCards, nextDue } from '@/lib/learn/deck';
 import { recommendMissions } from '@/lib/learn/missions';
 import { isFinished, quizScore, readShare } from '@/lib/learn/progress';
@@ -27,7 +31,8 @@ import { useTheme } from '@/theme/use-theme';
 const kindLabels: Record<LearningContent['kind'], string> = { story: 'Story', dialogue: 'Dialogue', serial: 'Series' };
 
 /**
- * Learn: today's plan (or making one), missions, your words, progress, and the library.
+ * Learn: today's few minutes, made from what's coming up in the learner's life; getting ready for
+ * those situations; then missions, their words, progress and the library.
  */
 export default function LearnScreen() {
   const { colors } = useTheme();
@@ -43,32 +48,29 @@ export default function LearnScreen() {
 
   const last = contentById(lastId);
   const lastProgress = last ? progress[last.id] : undefined;
-  // With a plan, Today already offers to carry on reading.
-  const showContinue = !profile && last && !isFinished(lastProgress, last);
+  const showContinue = last && !isFinished(lastProgress, last);
   const due = useMemo(() => dueCards(deck, new Date(), 999).length, [deck]);
   const saved = Object.keys(deck).length;
   const next = useMemo(() => (due ? null : nextDue(deck)), [deck, due]);
   const items = filterLibrary(level, topic);
   const missionState = useMemo(() => ({ progress, deck, listened }), [progress, deck, listened]);
   const missions = useMemo(() => recommendMissions(profile, missionState).slice(0, 2), [profile, missionState]);
-  const plan = useMemo(
-    () => (profile ? dailyPlan({ profile, progress, lastContentId: lastId, deck, today: today(days), canListen: voice.state === 'available' }) : null),
-    [profile, progress, lastId, deck, days, voice.state],
+  const focus = useFocus();
+  const coming = useUpcoming();
+  const memory = useLearn((s) => s.phrases);
+  const minutes = (profile?.minutes ?? 5) as DailyMinutes;
+  // What today's session will hold, to say so before it starts.
+  const preview = useMemo(
+    () => sessionSummary(buildSession({ deck, focus: focus.situation, memory, minutes, canListen: voice.state === 'available', seed: 1 })),
+    [deck, focus.situation, memory, minutes, voice.state],
   );
+  const doneToday = today(days).sessions > 0;
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
-      {plan ? (
-        <TodayCard steps={plan} streakDays={streak(days)} />
-      ) : (
-        <Card style={styles.setup}>
-          <Text variant="title3">Make a plan</Text>
-          <Text variant="callout" color="label2">
-            Tell Learn why you’re learning and how long you have each day. It then picks what to review, read and listen to.
-          </Text>
-          <Button label="Make my plan" size="medium" onPress={() => router.push('/learn-plan')} style={styles.setupButton} />
-        </Card>
-      )}
+      <DailyCard focus={focus} minutes={minutes} preview={preview} doneToday={doneToday} streakDays={streak(days)} />
+
+      <GetReady coming={coming} />
 
       {showContinue && last && (
         <PressableScale
@@ -128,7 +130,7 @@ export default function LearnScreen() {
         </View>
         {saved > 0 && (
           <View style={styles.wordsActions}>
-            {due > 0 && <Button label={`Review ${Math.min(due, 20)}`} size="medium" variant={plan ? 'secondary' : 'primary'} onPress={() => router.push('/flashcards')} />}
+            {due > 0 && <Button label={`Review ${Math.min(due, 20)}`} size="medium" variant="secondary" onPress={() => router.push('/flashcards')} />}
             <Button label="See all" variant="secondary" size="medium" onPress={() => router.push('/learn/words')} />
           </View>
         )}
@@ -136,7 +138,13 @@ export default function LearnScreen() {
 
       <List>
         <Row icon="chart" title="Progress" subtitle="Your streak, words known and the A2 exam parts" chevron onPress={() => router.push('/learn/progress')} />
-        {profile && <Row icon="settings" title="Your plan" subtitle={planSummary(profile)} chevron onPress={() => router.push('/learn-plan')} />}
+        <Row
+          icon="settings"
+          title="Your plan"
+          subtitle={profile ? planSummary(profile) : 'How long each day, and why you’re learning'}
+          chevron
+          onPress={() => router.push('/learn-plan')}
+        />
       </List>
 
       <View>
@@ -176,42 +184,26 @@ function planSummary(p: NonNullable<ReturnType<typeof useLearn.getState>['profil
   return `${goalNames[p.goal]} · ${p.minutes} min a day`;
 }
 
-function stepCopy(step: PlanStep): { title: string; detail: string; action: string; go: () => void } {
-  switch (step.kind) {
-    case 'review':
-      return {
-        title: step.done ? 'Review your words' : `Review ${step.count} ${step.count === 1 ? 'card' : 'cards'}`,
-        detail: 'Words you saved, at the right moment',
-        action: 'Review',
-        go: () => router.push('/flashcards'),
-      };
-    case 'read':
-      return {
-        title: `${step.resume ? 'Carry on with' : 'Read'} “${step.content.title}”`,
-        detail: `${step.content.level} · ${kindLabels[step.content.kind]} · ${step.content.minutes} min`,
-        action: step.resume ? 'Continue' : 'Read',
-        go: () => router.push({ pathname: '/lesson/[id]', params: { id: step.content.id } }),
-      };
-    case 'listen':
-      return {
-        title: 'Listen',
-        detail: `${step.count} quick questions with your phone’s Czech voice`,
-        action: 'Listen',
-        go: () => router.push('/listen'),
-      };
-  }
-}
-
-function TodayCard({ steps, streakDays }: { steps: PlanStep[]; streakDays: number }) {
+function DailyCard({
+  focus,
+  minutes,
+  preview,
+  doneToday,
+  streakDays,
+}: {
+  focus: Upcoming;
+  minutes: DailyMinutes;
+  preview: string;
+  doneToday: boolean;
+  streakDays: number;
+}) {
   const { colors } = useTheme();
-  const allDone = planDone(steps);
-  const next = steps.find((s) => !s.done);
-  const nextCopy = next ? stepCopy(next) : null;
+  const start = () => router.push('/session');
   return (
     <Card style={styles.today}>
       <View style={styles.todayHead}>
-        <Text variant="title3" accessibilityRole="header" style={styles.flex}>
-          Today
+        <Text variant="title2" accessibilityRole="header" style={styles.flex}>
+          {doneToday ? 'Done for today' : `Your ${minutes} minutes`}
         </Text>
         {streakDays > 0 && (
           <View style={[styles.streak, { backgroundColor: colors.warningSoft }]} accessible accessibilityLabel={`${streakDays} ${streakDays === 1 ? 'day' : 'days'} in a row`}>
@@ -222,37 +214,93 @@ function TodayCard({ steps, streakDays }: { steps: PlanStep[]; streakDays: numbe
           </View>
         )}
       </View>
-      <View>
-        {steps.map((s, i) => {
-          const c = stepCopy(s);
+      <View style={[styles.focus, { backgroundColor: colors.accentSoft }]}>
+        <Icon name={focus.situation.icon} size={22} color={colors.accent} />
+        <View style={styles.flex}>
+          <Text variant="callout" weight="600" numberOfLines={2}>
+            {focus.situation.title}
+          </Text>
+          <Text variant="footnote" color="label2" numberOfLines={2}>
+            {focus.reason}
+          </Text>
+        </View>
+      </View>
+      <Text variant="footnote" color="label2">
+        {doneToday ? 'Come back tomorrow, or go round again.' : preview}
+      </Text>
+      <Button
+        label={doneToday ? 'Another round' : 'Start'}
+        icon={doneToday ? 'refresh' : 'play'}
+        variant={doneToday ? 'secondary' : 'primary'}
+        onPress={start}
+      />
+    </Card>
+  );
+}
+
+/** Situations coming up, soonest first, then the rest to pick from. */
+function GetReady({ coming }: { coming: Upcoming[] }) {
+  const { colors } = useTheme();
+  const memory = useLearn((s) => s.phrases);
+  const hasPermitDate = !!useStore((s) => s.about.expires);
+  const others = situations.filter((s) => !coming.some((c) => c.situation.id === s.id));
+  const open = (s: Situation) => router.push({ pathname: '/prepare/[id]', params: { id: s.id } });
+  return (
+    <View>
+      <SectionHeader title="Get ready" />
+      {coming.length > 0 ? (
+        <List>
+          {coming.slice(0, 3).map((c) => {
+            const { known, total } = situationProgress(c.situation, memory);
+            return (
+              <Row
+                key={c.situation.id}
+                icon={c.situation.icon}
+                title={c.situation.title}
+                subtitle={`${c.reason} · ${known}/${total} phrases`}
+                chevron
+                onPress={() => open(c.situation)}
+              />
+            );
+          })}
+        </List>
+      ) : (
+        <Text variant="footnote" color="label2" style={styles.readyHint}>
+          Nothing coming up yet. Scan a letter, or add your permit date, and Learn gets you ready for it.
+        </Text>
+      )}
+      {!hasPermitDate ? (
+        <Pressable onPress={() => router.push('/about')} accessibilityRole="button" style={styles.readyLink} hitSlop={6}>
+          <Icon name="calendar" size={16} color={colors.accent} />
+          <Text variant="subhead" weight="600" color="accent" chrome>
+            Add when your permit ends
+          </Text>
+        </Pressable>
+      ) : null}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsBleed} contentContainerStyle={styles.tiles}>
+        {others.map((s) => {
+          const { known, total } = situationProgress(s, memory);
           return (
-            <Pressable
-              key={s.kind}
-              onPress={c.go}
+            <PressableScale
+              key={s.id}
+              onPress={() => open(s)}
               accessibilityRole="button"
-              accessibilityLabel={`${c.title}. ${c.detail}. ${s.done ? 'Done' : 'To do'}`}
-              style={({ pressed }) => [styles.step, i > 0 && { borderTopColor: colors.separator, borderTopWidth: StyleSheet.hairlineWidth }, pressed && { opacity: 0.6 }]}>
-              <Icon name={s.done ? 'checkCircle' : 'circle'} size={22} color={s.done ? colors.success : s === next ? colors.accent : colors.label3} />
-              <View style={styles.stepText}>
-                <Text variant="callout" weight="600" color={s.done ? 'label2' : 'label'} numberOfLines={2}>
-                  {c.title}
-                </Text>
-                <Text variant="footnote" color="label2" numberOfLines={1}>
-                  {c.detail}
-                </Text>
+              accessibilityLabel={`${s.title}. ${known} of ${total} phrases`}
+              style={[styles.tile, { backgroundColor: colors.surface, boxShadow: colors.shadow }]}>
+              <View style={[styles.tileIcon, { backgroundColor: colors.accentSoft }]}>
+                <Icon name={s.icon} size={20} color={colors.accent} />
               </View>
-            </Pressable>
+              <Text variant="subhead" weight="600" numberOfLines={2}>
+                {s.title}
+              </Text>
+              <Text variant="caption" color="label3">
+                {known}/{total} phrases
+              </Text>
+            </PressableScale>
           );
         })}
-      </View>
-      {allDone ? (
-        <Text variant="callout" color="success" weight="600">
-          Done for today. See you tomorrow.
-        </Text>
-      ) : nextCopy ? (
-        <Button label={nextCopy.action} icon="arrowRight" size="medium" onPress={nextCopy.go} style={styles.todayButton} />
-      ) : null}
-    </Card>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -317,14 +365,15 @@ function ProgressBar({ value }: { value: number }) {
 const styles = StyleSheet.create({
   content: { padding: layout.gutter, paddingBottom: space.huge, gap: space.xxl },
   flex: { flex: 1 },
-  setup: { gap: space.sm },
-  setupButton: { alignSelf: 'flex-start', marginTop: space.sm },
   today: { gap: space.md },
   todayHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   streak: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: space.sm, paddingVertical: 4, borderRadius: radius.pill },
-  step: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 60, paddingVertical: space.sm },
-  stepText: { flex: 1, gap: 2 },
-  todayButton: { alignSelf: 'flex-start' },
+  focus: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderRadius: radius.tile, padding: space.md },
+  readyHint: { paddingHorizontal: space.xs, marginBottom: space.sm },
+  readyLink: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.xs, paddingVertical: space.sm, alignSelf: 'flex-start' },
+  tiles: { paddingHorizontal: layout.gutter, gap: space.md, paddingVertical: space.md },
+  tile: { width: 132, borderRadius: radius.card, borderCurve: 'continuous', padding: space.md, gap: space.sm },
+  tileIcon: { width: 36, height: 36, borderRadius: radius.well, alignItems: 'center', justifyContent: 'center' },
   continue: { flexDirection: 'row', gap: space.lg, padding: space.lg, borderRadius: radius.card, borderCurve: 'continuous' },
   continueText: { flex: 1, gap: space.xs, justifyContent: 'center' },
   track: { height: 6, borderRadius: 3, overflow: 'hidden', marginTop: space.xs },

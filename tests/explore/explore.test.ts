@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import { curatedPlaces } from '../../src/lib/explore/curated';
 import {
   activities,
+  areaLabel,
   areasOf,
   boundsOf,
   categories,
@@ -12,6 +13,9 @@ import {
   distanceM,
   filterPlaces,
   formatDistance,
+  inPrague,
+  NEAR,
+  nearbyPlaces,
   pinsInView,
   placesInView,
   preferredFor,
@@ -174,6 +178,34 @@ describe('pins worth drawing', () => {
   it('stops at the budget', () => {
     const many = Array.from({ length: 500 }, (_, i) => ({ ...p, id: `p${i}`, latitude: 50 + (i % 25) * 0.01, longitude: 14.2 + Math.floor(i / 25) * 0.02 }));
     assert.equal(pinsInView(many, null, (390 * 360) / 0.02, null, 45).length, 45);
+  });
+});
+
+describe('near me', () => {
+  // Standing on Old Town Square.
+  const here = { latitude: 50.0875, longitude: 14.4213 };
+
+  it('keeps only places within the walk, whatever their district', () => {
+    const within = filterPlaces(curatedPlaces, { activities: [], area: NEAR, near: here, radius: 1500 });
+    assert.ok(within.length > 0);
+    for (const p of within) assert.ok(distanceM(here, p) <= 1500, p.id);
+    assert.ok(!within.some((p) => p.id === 'cz:hostivar'));
+  });
+
+  it('walks further when too little is close by', () => {
+    const { radius, list } = nearbyPlaces(curatedPlaces, { activities: ['nature'] }, here);
+    assert.ok(radius > 1500);
+    for (const p of list) assert.ok(distanceM(here, p) <= radius, p.id);
+  });
+
+  it('stops at the first walk that finds enough', () => {
+    assert.equal(nearbyPlaces(curatedPlaces, { activities: [] }, here, 1).radius, 1500);
+  });
+
+  it('knows when someone is in Prague', () => {
+    assert.ok(inPrague(here));
+    assert.ok(!inPrague({ latitude: 49.19, longitude: 16.61 })); // Brno
+    assert.equal(areaLabel(NEAR), 'near me');
   });
 });
 
