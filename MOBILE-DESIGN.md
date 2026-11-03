@@ -38,13 +38,17 @@ and get what it says, what it means for you and, when it is a message, a reply i
 ```
 NAV READ
 platforms: iOS + Android (web: best-effort)
-tabs (2): Home · Find
+tabs (3): Home · Learn · Find
 src/app/
   welcome                      protected one-way door (Stack.Protected), replace into tabs
   (tabs)/
     (home)/index    Home       → scan (fullscreen) · paste, compose (modals) · review/[id] (push)
     (home)/history  History    push from Home's "See all" → push case/[id]
     (home)/settings Settings   push from Home's header
+    learn/index     Learn      today's plan (or make one → learn-plan modal) · missions → mission/[id] (push) · your words → flashcards (fullScreenModal) · library → lesson/[id] (push, over the tabs)
+    learn/words     Your words push from Learn; own cards, delete
+    learn/missions  Missions   push from Learn; all missions, plan's topics first
+    learn/progress  Progress   push from Learn; streak, totals, the four A2 exam parts, checked exam facts
     help/index      Find       search · area tiles → push help/area/[area] → its lists:
                                help/[category] (doctors, trades, lawyers, accountants) → help/find/[kind] → help/practice/[id]
                                help/places/[kind] (town halls, notaries, embassies, offices) → help/place/[id]
@@ -56,9 +60,15 @@ src/app/
   review/[id]                  push; leaving discards the draft
   case/[id]                    push via replace from review (a stale review is never re-entered)
   reply/[id]                   modal, explicit Close
-anchors: root (tabs) · home stack index · help stack index   deep links always land with a back stack
+  about                        modal, explicit Close (About you)
+  lesson/[id]                  push; reader with word lookup, chapters, questions
+  flashcards                   fullScreenModal, explicit Close; review session (?cards= limits it to some cards)
+  listen                       fullScreenModal, explicit Close; listening quiz (?mission= for one mission's words)
+  learn-plan                   modal; goal, level, minutes, topics, exam date; Save
+  mission/[id]                 push; steps that tick themselves, its words
+anchors: root (tabs) · home stack index · learn stack index · help stack index   deep links always land with a back stack
 sheets: none
-deep links: /case/:id, /reply/:id, /help/:category, /help/area/:area, /help/places/:kind, /help/place/:id, /compose
+deep links: /case/:id, /reply/:id, /lesson/:id, /learn/words, /learn/missions, /learn/progress, /mission/:id, /flashcards, /listen, /help/:category, /help/area/:area, /help/places/:kind, /help/place/:id, /compose
 android back: default pop everywhere
 max taps to any core screen: 2
 ```
