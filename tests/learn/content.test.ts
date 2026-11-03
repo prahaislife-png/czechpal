@@ -73,6 +73,13 @@ describe('library content', () => {
       if (!c.source.reviewedByNativeSpeaker) assert.equal(c.status, 'draft', `${c.id} is published without review`);
     }
   });
+
+  it('publishes reviewed texts with the date of the review', () => {
+    for (const c of library.filter((x) => x.status === 'published')) {
+      assert.ok(c.source.reviewedByNativeSpeaker, `${c.id}: reviewed`);
+      assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(c.source.reviewedOn ?? ''), `${c.id}: review date`);
+    }
+  });
 });
 
 describe('dictionary', () => {

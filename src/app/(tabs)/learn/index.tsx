@@ -164,7 +164,7 @@ export default function LearnScreen() {
       </View>
 
       <Text variant="footnote" color="label3" style={styles.note}>
-        These texts were written for CzechPal and are still being checked by a Czech teacher. Audio uses your phone’s own Czech voice.
+        These texts were written for CzechPal and reviewed by a native Czech teacher. Audio uses your phone’s own Czech voice.
       </Text>
     </ScrollView>
   );

@@ -252,9 +252,6 @@ function Reader({ content }: { content: LearningContent }) {
             />
           </>
         )}
-        <Text variant="caption" color="label3" style={styles.draft}>
-          Draft text: still being checked by a Czech teacher.
-        </Text>
       </ScrollView>
 
       {picked && (
@@ -444,5 +441,4 @@ const styles = StyleSheet.create({
   wordRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 56, paddingVertical: space.sm },
   wordText: { flex: 1, gap: 2 },
   saveWord: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  draft: { textAlign: 'center' },
 });
