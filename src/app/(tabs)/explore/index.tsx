@@ -294,7 +294,7 @@ export default function ExploreScreen() {
   }));
 
   const counts: Record<Tab, number | undefined> = { explore: undefined, plan: undefined, people: undefined, saved: savedPlaces.length || undefined };
-  const tabs = (['explore', 'plan', 'people', 'saved'] as const).map((id) => ({ id, label: tabLabels[id], count: counts[id] }));
+  const tabs = SHOWN_TABS.map((id) => ({ id, label: tabLabels[id], count: counts[id] }));
 
   const header =
     tab === 'explore' ? (
@@ -681,6 +681,12 @@ export default function ExploreScreen() {
 }
 
 const tabLabels: Record<Tab, string> = { explore: 'Explore', plan: 'Plan', people: 'People', saved: 'Saved' };
+
+/**
+ * Plan (AI planning) and People (events) stay out until they work for real: a tab that only says
+ * "not live yet" is a placeholder, and App Review rejects those. Their panels are kept for then.
+ */
+const SHOWN_TABS: Tab[] = ['explore', 'saved'];
 
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 
