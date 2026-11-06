@@ -62,7 +62,8 @@
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -106,7 +107,7 @@
         {
           "photosPermission": "CzechPal opens your photos so you can explain a picture of Czech text you took earlier.",
           "cameraPermission": "CzechPal uses the camera to read Czech text you point it at.",
-          "microphonePermission": false
+          "microphonePermission": "CzechPal records you speaking Czech so you can play it back when you practise for the A2 exam. Recordings stay on your phone."
         }
       ],
       [
@@ -114,7 +115,8 @@
         {
           "cameraPermission": "CzechPal uses the camera to read Czech text you point it at.",
           "recordAudioAndroid": false,
-          "barcodeScannerEnabled": false
+          "barcodeScannerEnabled": false,
+          "microphonePermission": "CzechPal records you speaking Czech so you can play it back when you practise for the A2 exam. Recordings stay on your phone."
         }
       ],
       [
@@ -137,6 +139,15 @@
               "application/pdf"
             ]
           }
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "CzechPal records you speaking Czech so you can play it back when you practise for the A2 exam. Recordings stay on your phone.",
+          "recordAudioAndroid": true,
+          "enableBackgroundPlayback": false,
+          "enableBackgroundRecording": false
         }
       ]
     ],

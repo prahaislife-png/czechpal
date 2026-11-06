@@ -1,6 +1,7 @@
 import { dueCards, type Deck, type UserCard } from './deck';
 import { buildListening, type ListenItem } from './listening';
 import { phraseId, type Phrase, type Situation, type SituationId } from './situations';
+import type { DailyMinutes } from './profile';
 
 /**
  * The daily session: about five minutes, made for this learner today. A warm-up with the words
@@ -16,13 +17,15 @@ export type SessionStep =
 /** How each practised phrase went: shown and known counts, and the last day it was practised. */
 export type PhraseMemory = Record<string, { seen: number; known: number; last: string }>;
 
-export type DailyMinutes = 5 | 10 | 15;
+export type { DailyMinutes };
 
 /** Sizes for a session of each length: about 20 s a card, 40 s a phrase, 30 s a listen. */
 export const sessionSize: Record<DailyMinutes, { cards: number; phrases: number; listen: number }> = {
   5: { cards: 4, phrases: 3, listen: 2 },
   10: { cards: 8, phrases: 5, listen: 3 },
   15: { cards: 12, phrases: 6, listen: 4 },
+  20: { cards: 16, phrases: 7, listen: 5 },
+  30: { cards: 24, phrases: 9, listen: 6 },
 };
 
 /** Phrases to practise next: never shown first, then the ones not known yet, then the least known; in the pack's order. */

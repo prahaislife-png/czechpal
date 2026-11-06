@@ -6,8 +6,10 @@ import type { Level, Topic } from './types';
  */
 
 export type Goal = 'exam' | 'everyday' | 'work';
-export type StartLevel = 'new' | 'A1' | 'A2';
-export type DailyMinutes = 5 | 10 | 15;
+export type StartLevel = 'new' | 'A1' | 'A2' | 'unsure';
+export type DailyMinutes = 5 | 10 | 15 | 20 | 30;
+/** What the learner finds hardest, from the A2 setup. */
+export type Difficulty = 'reading' | 'listening' | 'writing' | 'speaking' | 'unsure';
 
 export type LearnProfile = {
   goal: Goal;
@@ -17,6 +19,8 @@ export type LearnProfile = {
   topics: Topic[];
   /** The exam date when there is one, YYYY-MM-DD. Only asked when the goal is the exam. */
   examDate?: string;
+  /** Optional: what they find hardest. Plans start there. */
+  difficulty?: Difficulty;
   updatedAt: string;
 };
 
@@ -30,9 +34,22 @@ export const startLevels: { id: StartLevel; label: string; detail: string }[] = 
   { id: 'new', label: 'Just starting', detail: 'A few words, or none yet' },
   { id: 'A1', label: 'I know the basics', detail: 'Greetings, numbers, simple sentences' },
   { id: 'A2', label: 'I can get by', detail: 'Short conversations about everyday things' },
+  { id: 'unsure', label: 'I’m not sure', detail: 'The short check will tell' },
 ];
 
-export const minuteOptions: DailyMinutes[] = [5, 10, 15];
+export const minuteOptions: DailyMinutes[] = [5, 10, 15, 20, 30];
+
+export const difficulties: { id: Difficulty; label: string }[] = [
+  { id: 'reading', label: 'Reading' },
+  { id: 'listening', label: 'Listening' },
+  { id: 'writing', label: 'Writing' },
+  { id: 'speaking', label: 'Speaking' },
+  { id: 'unsure', label: 'Not sure yet' },
+];
+
+/** Minutes saved by an older version, or anything unexpected, read as 5. */
+export const minutesOf = (p: { minutes?: number } | undefined): DailyMinutes =>
+  minuteOptions.includes(p?.minutes as DailyMinutes) ? (p!.minutes as DailyMinutes) : 5;
 
 /** Topics a goal starts with; the learner can change them. */
 export const goalTopics: Record<Goal, Topic[]> = {
@@ -50,7 +67,7 @@ export function makeProfile(input: Omit<LearnProfile, 'updatedAt'>, now = new Da
 export const readingLevel = (l: StartLevel): Level => (l === 'A2' ? 'A2' : 'A1');
 
 /** How many cards a day's review covers, by the minutes chosen. */
-export const reviewTarget: Record<DailyMinutes, number> = { 5: 10, 10: 20, 15: 30 };
+export const reviewTarget: Record<DailyMinutes, number> = { 5: 10, 10: 20, 15: 30, 20: 40, 30: 60 };
 
 /** How many listening items a day's practice has. */
-export const listenTarget: Record<DailyMinutes, number> = { 5: 5, 10: 8, 15: 10 };
+export const listenTarget: Record<DailyMinutes, number> = { 5: 5, 10: 8, 15: 10, 20: 12, 30: 15 };
