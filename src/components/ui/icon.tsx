@@ -108,6 +108,13 @@ const glyphs = {
   people: ['person.2', 'group'],
   chevronDown: ['chevron.down', 'expand_more'],
   chevronLeft: ['chevron.left', 'chevron_left'],
+  mic: ['mic.fill', 'mic'],
+  stop: ['stop.fill', 'stop'],
+  cart: ['cart', 'shopping_cart'],
+  film: ['film', 'movie'],
+  swim: ['figure.pool.swim', 'pool'],
+  cup: ['cup.and.saucer', 'local_cafe'],
+  tram: ['tram', 'tram'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 export type IconName = keyof typeof glyphs;

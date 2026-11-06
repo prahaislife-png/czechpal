@@ -11,6 +11,7 @@ import { lastWeek, streak } from '@/lib/learn/activity';
 import { daysToExam, EXAM_CHECKED_ON, EXAM_SOURCES, examParts, NEW_FORMAT_FROM, passMarks } from '@/lib/learn/exam';
 import { learnStats } from '@/lib/learn/stats';
 import { topicLabels } from '@/lib/learn/types';
+import { useAcademy } from '@/store/academy';
 import { useLearn } from '@/store/learn';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -22,12 +23,14 @@ const pct = (right: number, of: number) => (of ? `${Math.round((right / of) * 10
 
 /**
  * Progress: the streak, what's been read, heard and learnt, mapped onto the four parts of the A2
- * exam, and (for exam learners) the exam's checked facts. Writing and speaking aren't practised
- * in CzechPal yet, and the screen says so rather than showing a score.
+ * exam, and (for exam learners) the exam's checked facts. Writing and speaking are practised in
+ * A2 Academy but not scored, so the screen counts them rather than showing a score.
  */
 export default function ProgressScreen() {
   const { colors } = useTheme();
   const progress = useLearn((s) => s.progress);
+  const written = useAcademy((s) => Object.values(s.writing).reduce((n, runs) => n + runs.length, 0));
+  const spokenTasks = useAcademy((s) => Object.values(s.speaking).reduce((n, runs) => n + runs.length, 0));
   const deck = useLearn((s) => s.deck);
   const days = useLearn((s) => s.days);
   const profile = useLearn((s) => s.profile);
@@ -92,8 +95,8 @@ export default function ProgressScreen() {
             title="Listening"
             subtitle={stats.listening.heard ? `${pct(stats.listening.right, stats.listening.heard)} right in the last 30 days` : 'Do a listening session to start'}
           />
-          <Row icon="compose" title="Writing" subtitle="Not practised in CzechPal yet" />
-          <Row icon="message" title="Speaking" subtitle="Not practised in CzechPal yet" />
+          <Row icon="compose" title="Writing" subtitle={written ? `${written} ${written === 1 ? 'piece' : 'pieces'} written in A2 Academy · not scored` : 'Try the writing coach in A2 Academy'} />
+          <Row icon="message" title="Speaking" subtitle={spokenTasks ? `${spokenTasks} speaking ${spokenTasks === 1 ? 'task' : 'tasks'} recorded · not scored` : 'Record yourself in A2 Academy'} />
         </List>
         <Text variant="footnote" color="label2" style={styles.note}>
           Words help with all four: {stats.words.known} known, {stats.words.learning} still being learnt. A word counts as known once its next review is three weeks away.

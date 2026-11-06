@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { AcademyCard } from '@/components/academy/academy-card';
 import { Cover } from '@/components/learn/cover';
 import { MissionRow } from '@/components/learn/mission-row';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,7 @@ import { useTheme } from '@/theme/use-theme';
 const kindLabels: Record<LearningContent['kind'], string> = { story: 'Story', dialogue: 'Dialogue', serial: 'Series' };
 
 /**
- * Learn: today's few minutes, made from what's coming up in the learner's life; getting ready for
+ * Learn: the A2 Academy's next step; today's few minutes, made from what's coming up in the learner's life; getting ready for
  * those situations; then missions, their words, progress and the library.
  */
 export default function LearnScreen() {
@@ -68,6 +69,8 @@ export default function LearnScreen() {
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+      <AcademyCard />
+
       <DailyCard focus={focus} minutes={minutes} preview={preview} doneToday={doneToday} streakDays={streak(days)} />
 
       <GetReady coming={coming} />
