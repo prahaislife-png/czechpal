@@ -6,6 +6,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AnswerReview, ItemAnswer, Passage, Recording } from '@/components/academy/task-parts';
+import { WritingFeedbackCard } from '@/components/academy/writing-feedback';
 import { Button } from '@/components/ui/button';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { HeaderCloseButton } from '@/components/ui/header-button';
@@ -483,7 +484,7 @@ function WritingResult({ form, email, seconds, bottom, variant }: { form: string
         Writing handed in
       </Text>
       <Text variant="callout" color="label2" align="center">
-        Handed in after {clock(seconds)} of {sectionInfo.writing.minutes}:00. CzechPal doesn’t score writing; here is how it does against the exam’s own rules.
+        Handed in after {clock(seconds)} of {sectionInfo.writing.minutes}:00. Here is how it does against the exam’s own rules. For an estimate and corrections, ask for AI feedback below.
       </Text>
       <View>
         <SectionHeader title="Task 1 · form (8 points in the exam)" />
@@ -513,6 +514,13 @@ function WritingResult({ form, email, seconds, bottom, variant }: { form: string
         <Text variant="footnote" color="label3" style={styles.noteTop}>
           Also check yourself: one sentence answers each picture’s question, and you wrote vy all the way through.
         </Text>
+      </View>
+      <View>
+        <SectionHeader title="AI feedback" />
+        <View style={styles.feedback}>
+          <WritingFeedbackCard task={mockForm} texts={form} />
+          <WritingFeedbackCard task={mockEmail} texts={[email]} />
+        </View>
       </View>
       <View style={[styles.sample, { backgroundColor: colors.accentSoft }]}>
         <Text variant="footnote" weight="700" color="accent">
@@ -558,4 +566,5 @@ const styles = StyleSheet.create({
   check: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
   noteTop: { paddingHorizontal: space.xs, marginTop: space.sm },
   sample: { borderRadius: radius.tile, padding: space.lg, gap: space.xs },
+  feedback: { gap: space.lg },
 });

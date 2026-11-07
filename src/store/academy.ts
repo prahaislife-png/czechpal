@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { addAttempts, makeAttempt, type Attempt, type AttemptSource } from '@/lib/academy/evidence';
+import type { WritingFeedback } from '@/lib/ai/types';
 import type { MarkedSection, MockRun, WritingSection } from '@/lib/academy/mock';
 import type { LessonLog, LessonRun } from '@/lib/academy/roadmap';
 import type { ContentMeta } from '@/lib/academy/types';
@@ -17,7 +18,7 @@ export type DiagnosticResult = { at: string; right: number; total: number };
 /** A finished exam-task set. */
 export type TaskRun = { at: string; right: number; total: number; mode: 'learn' | 'exam' };
 /** A saved piece of writing: the answers (form) or the e-mail, as written. */
-export type WritingAttempt = { at: string; texts: string[] };
+export type WritingAttempt = { at: string; texts: string[]; feedback?: WritingFeedback };
 /** A finished speaking task: how many of its answers were recorded. Not a score. */
 export type SpeakingRun = { at: string; recorded: number; prompts: number };
 /** What the learner said about the real exam, once its date has passed. */
@@ -53,6 +54,8 @@ type Actions = {
   seeGrammar: (id: string) => void;
   finishTask: (id: string, right: number, total: number, mode: TaskRun['mode']) => void;
   saveWriting: (id: string, texts: string[]) => void;
+  /** AI feedback on the latest attempt at a writing task. */
+  setWritingFeedback: (id: string, feedback: WritingFeedback) => void;
   finishSpeaking: (id: string, run: Omit<SpeakingRun, 'at'>) => void;
   /** Starts a mock exam and returns its id. */
   startMock: (speakingTasks: string[], variant: number) => string;
@@ -85,6 +88,12 @@ export const useAcademy = create<State & Actions>()(
         set((s) => ({ tasks: { ...s.tasks, [id]: [...(s.tasks[id] ?? []), { at: new Date().toISOString(), right, total, mode }].slice(-20) } })),
       saveWriting: (id, texts) =>
         set((s) => ({ writing: { ...s.writing, [id]: [...(s.writing[id] ?? []), { at: new Date().toISOString(), texts }].slice(-10) } })),
+      setWritingFeedback: (id, feedback) =>
+        set((s) => {
+          const runs = s.writing[id];
+          if (!runs?.length) return {};
+          return { writing: { ...s.writing, [id]: [...runs.slice(0, -1), { ...runs[runs.length - 1], feedback }] } };
+        }),
       finishSpeaking: (id, run) =>
         set((s) => ({ speaking: { ...s.speaking, [id]: [...(s.speaking[id] ?? []), { at: new Date().toISOString(), ...run }].slice(-20) } })),
       startMock: (speakingTasks, variant) => {
