@@ -3,6 +3,9 @@ import { checkFormAnswer, countWords, EMAIL_MIN_WORDS, FORM_MIN_WORDS } from '@/
 import { tidy } from '../grade';
 import type { ChoiceExercise, ContentMeta, Exercise, TaskItem, TaskSet, TypeExercise, WritingTask } from '../types';
 import { listeningSets } from './listening';
+import { mockListeningSets, mockReadingSets } from './mock';
+import { mockListeningSets2, mockReadingSets2 } from './mock-2';
+import { listeningSetsB, readingSetsB } from './practice-b';
 import { readingSets } from './reading';
 
 /**
@@ -10,7 +13,10 @@ import { readingSets } from './reading';
  * as in the exam's reading and listening. Marking is by rules only; nothing is guessed.
  */
 
-export const taskSets: TaskSet[] = [...readingSets, ...listeningSets];
+/** Every set, the mock exam's included, so their items can come back as mistakes. */
+export const taskSets: TaskSet[] = [...readingSets, ...readingSetsB, ...listeningSets, ...listeningSetsB, ...mockReadingSets, ...mockListeningSets, ...mockReadingSets2, ...mockListeningSets2];
+/** The sets for everyday practice; the mock exam's are kept unseen. */
+export const practiceSets: TaskSet[] = taskSets.filter((s) => !s.pool).sort((a, b) => (a.part === b.part ? a.task - b.task || a.id.localeCompare(b.id) : a.part === 'reading' ? -1 : 1));
 export const taskSetById = (id: string | undefined) => taskSets.find((s) => s.id === id);
 
 export const LETTERS = 'ABCDEFGH';

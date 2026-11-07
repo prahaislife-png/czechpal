@@ -98,6 +98,7 @@ export default function RootLayout() {
                 <Stack.Screen name="a2-lesson/[id]" options={{ presentation: 'fullScreenModal', title: '' }} />
                 <Stack.Screen name="a2-task/[id]" options={{ presentation: 'fullScreenModal', title: '' }} />
                 <Stack.Screen name="a2-writing/[id]" options={{ presentation: 'fullScreenModal', title: '' }} />
+                <Stack.Screen name="a2-mock/[section]" options={{ presentation: 'fullScreenModal', title: '' }} />
                 <Stack.Screen name="a2-speaking/[id]" options={{ presentation: 'fullScreenModal', title: '' }} />
                 <Stack.Screen name="a2-mistakes" options={{ presentation: 'fullScreenModal', title: 'Your mistakes' }} />
                 <Stack.Screen name="practice-report/[id]" options={{ presentation: 'modal', title: 'What did you find out?' }} />

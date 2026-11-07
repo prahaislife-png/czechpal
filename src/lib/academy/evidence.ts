@@ -8,7 +8,7 @@ import type { ContentMeta, Skill, TopicId } from './types';
  */
 
 /** Where an answer came from. 'review' is going over a mistake again: never fresh evidence. */
-export type AttemptSource = 'diagnostic' | 'practise' | 'check' | 'task' | 'review';
+export type AttemptSource = 'diagnostic' | 'practise' | 'check' | 'task' | 'mock' | 'review';
 
 export type Attempt = {
   item: string;

@@ -6,7 +6,7 @@ import { SectionHeader } from '@/components/ui/card';
 import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
 import { mistakeIds } from '@/lib/academy/evidence';
-import { taskSets } from '@/lib/academy/tasks';
+import { practiceSets } from '@/lib/academy/tasks';
 import { speakingTasks } from '@/lib/academy/tasks/speaking';
 import { writingTasks } from '@/lib/academy/tasks/writing';
 import type { TaskSet } from '@/lib/academy/types';
@@ -48,6 +48,7 @@ export default function PracticeScreen() {
       </Text>
 
       <List>
+        <Row icon="clock" title="Mock exam" subtitle="All four parts, timed, on new questions" chevron onPress={() => router.push('/learn/mock')} />
         <Row
           icon="refresh"
           title="Your mistakes"
@@ -59,12 +60,12 @@ export default function PracticeScreen() {
 
       <View>
         <SectionHeader title="Reading" />
-        <List>{taskSets.filter((s) => s.part === 'reading').map(row)}</List>
+        <List>{practiceSets.filter((s) => s.part === 'reading').map(row)}</List>
       </View>
 
       <View>
         <SectionHeader title="Listening" />
-        <List>{taskSets.filter((s) => s.part === 'listening').map(row)}</List>
+        <List>{practiceSets.filter((s) => s.part === 'listening').map(row)}</List>
       </View>
 
       <View>

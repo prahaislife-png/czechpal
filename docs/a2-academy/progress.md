@@ -126,7 +126,65 @@ playback on an iPhone.
 Limits: nothing is scored, since CzechPal can't yet judge speech; the examiner's lines use one
 device voice; written questions show both forms ("bydlel/a") and the voice reads the first.
 
-## Next: Phase 3 – Exam preparation
+## Phase 3 – Exam preparation: done
 
-Timed section simulations, a full mock exam with separate written and oral results (speaking
-self-reviewed), and a guided run through all four speaking tasks.
+| Item | Where | State |
+|---|---|---|
+| Mock exam content kept unseen: one set for each reading and listening task (50 items) and a form and an e-mail, marked `pool: 'mock'` and left out of Exam practice and the daily plan | `src/lib/academy/tasks/mock.ts` | Done, AI-checked |
+| Mock model: the four parts in the exam's order and times; reading and listening marked one point an item, per task; writing checked by the exam's hard rules only (form answers under 10 words, the e-mail's 35-word zero rule); speaking runs all four tasks, one set each, the one practised least | `src/lib/academy/mock.ts` | Done, tested |
+| Written-part outlook without a writing score: reading + listening against 42 of 70 gives "reached", "writing needs at least N of M" or "out of reach"; an e-mail under 35 words leaves only the form's 8 points | `writtenOutlook` in `mock.ts` | Done, tested |
+| Mock hub: start, parts with status, results so far, the 3 weakest tasks linked to practice, earlier mocks, discard | `(tabs)/learn/mock.tsx` | Done |
+| Timed sections: reading 40:00 and writing 25:00 count down (wall clock, so leaving the app doesn't stop it), a 5-minute warning, answers locked when time is up; listening follows its recordings, two plays each; an answer sheet to jump between questions; answers change until hand-in; a handed-in part can't be redone by accident | `src/app/a2-mock/[section].tsx` | Done |
+| Speaking run: the four speaking tasks one after another, saved to the mock; earlier takes aren't counted | `src/app/a2-speaking/[id].tsx` (`mock` param) | Done |
+| Mock answers are evidence (source `mock`: fresh, independent) and wrong ones come back in mistake review | `evidence.ts`, `catalog.ts` | Done, tested |
+| After the exam: once the exam date has passed, Academy home asks how it went; passed (certificate within 30 days), waiting, or not this time (whole exam again, at the earliest 3 months later, at most 3 times a year; set a new date, take a mock) | `academy.tsx`, `afterExam` in `exam.ts` (handbook S3 p.10–11) | Done |
+| Shared task parts (passage, recording, answers, review) for practice and the mock | `src/components/academy/task-parts.tsx` | Done |
+
+Store: `mocks` (last 10) and `examResult` added within version 1, defaulting to empty.
+No new dependencies, no server changes.
+
+Quality gate: typecheck, lint and 189 tests pass (13 new: mock content against the exam, the pool kept
+out of practice and the plan, marking, the zero rule, the written outlook, weakest tasks, the speaking
+run, the clock). Web walkthrough at 375 × 812: start a mock, reading with changed answers, the answer
+sheet and a typed answer, hand in with unanswered questions, writing with the rule checks, listening
+without a voice (correct message), results with a simulated listening score, the speaking run from
+task 1 to task 2, the "already handed in" guard, and the after-exam card. No console errors.
+
+Not tested: listening heard aloud, recording on an iPhone, the timer running out in real time
+(40 minutes), or leaving the app mid-section (a section in progress isn't saved; leaving it loses
+the answers).
+
+Limits: there is one mock so far; a second run repeats the same questions, and the hub says so.
+Writing and speaking aren't scored. A mock shows one day's performance; it isn't a prediction.
+
+## Phase 4 – Content and polish: done (except AI writing feedback)
+
+| Item | Where | State |
+|---|---|---|
+| Lessons for topics 9–14, one each: at the station, courses and school, at the office, help and emergencies, the weather, neighbours and ty/vy (6 lessons, 54 exercises); every topic now has a lesson | `src/lib/academy/lessons-more.ts`, `topics.ts` | Done, AI-checked |
+| A second practice set for every reading and listening task (10 sets, 50 items), listed next to the first in Exam practice | `src/lib/academy/tasks/practice-b.ts` | Done, AI-checked |
+| A second unseen mock exam (10 sets, 50 items, a form and an e-mail), kept out of practice; a new mock takes the one done least, and the hub says when all have been taken | `src/lib/academy/tasks/mock-2.ts`, `mock.ts` (`variant`, `nextVariant`) | Done, tested |
+| "Practise next" after a mock opens the practice set for that task done fewest times | `(tabs)/learn/mock.tsx` | Done |
+| Accessibility: the mock's answer sheet is a bar ("N of 25 answered") that opens 44 pt cells showing the chosen letter (they were 24 pt); larger hit areas for the speaking review's play buttons and model answers; "Recording" is announced when a take starts | `a2-mock/[section].tsx`, `a2-speaking/[id].tsx` | Done |
+
+Store: mock runs record `variant`; runs saved before there were two count as mock 1. No new
+dependencies, no server changes.
+
+Content now: 17 lessons across 14 topics; 20 practice sets (100 items); 2 mocks (100 items, 2 forms,
+2 e-mails); 8 speaking tasks; 4 writing tasks for practice.
+
+Quality gate: typecheck, lint and 192 tests pass (3 new; the existing content checks now also cover
+the 150 new items and 54 lesson exercises: valid answers, varied answer positions, provenance,
+accepted model answers, form and e-mail samples meeting the exam's rules). Web walkthrough at
+375 × 812: the new travel lesson (intro, scene, shuffled options), Exam practice with two sets per
+task, starting mock 2 after mock 1, its reading questions and the new answer sheet (44 pt cells,
+jump and close), no overflow, no console errors.
+
+Performance: no changes were needed; plan, readiness and roadmap are memoised, catalogue lookups
+are maps built once, and the mock timer re-renders only its own section.
+
+Not done: AI writing feedback (needs the owner's approval to deploy the Edge Function and its
+cost). Not tested on an iPhone; listening not heard (no Czech voice in the browser).
+
+Limits: all content is AI-checked, not teacher-reviewed. Pictures are icons. One device voice reads
+every speaker.

@@ -47,7 +47,7 @@ const MAX_SECONDS = 120;
 type Mic = 'unknown' | 'granted' | 'denied' | 'blocked' | 'failed';
 
 export default function SpeakingScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, mock } = useLocalSearchParams<{ id: string; mock?: string }>();
   const task = speakingTaskById(id);
   const voice = useCzechVoice();
   if (!task)
@@ -61,8 +61,8 @@ export default function SpeakingScreen() {
     );
   return (
     <>
-      <Stack.Screen options={{ title: `Speaking ${task.task}`, headerLeft: () => <HeaderCloseButton /> }} />
-      {voice.state === 'checking' ? null : <Practice task={task} canListen={voice.state === 'available'} voice={voice.voice} />}
+      <Stack.Screen options={{ title: mock ? `Mock: speaking ${task.task} of 4` : `Speaking ${task.task}`, headerLeft: () => <HeaderCloseButton /> }} />
+      {voice.state === 'checking' ? null : <Practice task={task} canListen={voice.state === 'available'} voice={voice.voice} mock={mock} />}
     </>
   );
 }
@@ -132,6 +132,7 @@ function useTakes() {
       setRecordingId(id);
       recorder.record({ forDuration: MAX_SECONDS });
       haptic(Haptics.ImpactFeedbackStyle.Medium);
+      announce('Recording');
     } catch {
       target.current = null;
       setRecordingId(null);
@@ -184,7 +185,7 @@ function usePlayback() {
   return { playing, toggle, stop };
 }
 
-function Practice({ task, canListen, voice }: { task: SpeakingTask; canListen: boolean; voice?: string }) {
+function Practice({ task, canListen, voice, mock }: { task: SpeakingTask; canListen: boolean; voice?: string; mock?: string }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const rate = useLearn((s) => s.rate);
@@ -206,7 +207,9 @@ function Practice({ task, canListen, voice }: { task: SpeakingTask; canListen: b
 
   useEffect(() => {
     if (!done) return;
-    useAcademy.getState().finishSpeaking(task.id, { recorded: prompts.filter((p) => takes.takes[p.id]).length, prompts: prompts.length });
+    const recorded = prompts.filter((p) => takes.takes[p.id]).length;
+    useAcademy.getState().finishSpeaking(task.id, { recorded, prompts: prompts.length });
+    if (mock) useAcademy.getState().saveMockSpeaking(mock, task.id, recorded, prompts.length);
     if (process.env.EXPO_OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }, [done]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -216,12 +219,13 @@ function Practice({ task, canListen, voice }: { task: SpeakingTask; canListen: b
         task={task}
         canListen={canListen}
         onStart={() => {
-          takes.load(prompts.map((p) => p.id));
+          // In a mock only today's answers count, so earlier takes aren't loaded.
+          if (!mock) takes.load(prompts.map((p) => p.id));
           setIndex(0);
         }}
       />
     );
-  if (done) return <Review task={task} takes={takes} playback={playback} say={say} canListen={canListen} />;
+  if (done) return <Review task={task} takes={takes} playback={playback} say={say} canListen={canListen} mock={mock} />;
 
   const prompt = prompts[index];
   const part = task.parts.find((p) => p.prompts.includes(prompt))!;
@@ -496,18 +500,22 @@ function Review({
   playback,
   say,
   canListen,
+  mock,
 }: {
   task: SpeakingTask;
   takes: ReturnType<typeof useTakes>;
   playback: ReturnType<typeof usePlayback>;
   say: (t: string) => void;
   canListen: boolean;
+  mock?: string;
 }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const prompts = speakingPrompts(task);
   const [ticks, setTicks] = useState<boolean[]>(() => task.checklist.map(() => false));
   const recorded = prompts.filter((p) => takes.takes[p.id]);
+  const run = useAcademy((s) => (mock ? s.mocks.find((m) => m.id === mock) : undefined));
+  const nextTask = run?.speakingTasks.find((t) => t !== task.id && !run.speaking?.tasks[t]);
   const points = examTasks.find((t) => t.part === 'speaking' && t.n === task.task)?.points;
 
   return (
@@ -532,6 +540,7 @@ function Review({
                   disabled={!take}
                   accessibilityRole="button"
                   accessibilityLabel={take ? (playback.playing === p.id ? 'Pause your answer' : 'Play your answer') : 'Not recorded'}
+                  hitSlop={6}
                   style={[styles.smallPlay, { backgroundColor: take ? colors.accentFill : colors.fill }]}>
                   <Icon name={playback.playing === p.id ? 'pause' : 'play'} size={16} color={take ? colors.onAccent : colors.label3} />
                 </Pressable>
@@ -540,7 +549,7 @@ function Review({
                   <Text variant="subhead" weight="600" lang="cs">
                     {p.ask ?? (task.task === 3 ? `${i + 1}. ${p.en}` : p.cue)}
                   </Text>
-                  <Pressable onPress={() => say(p.model)} disabled={!canListen} accessibilityRole={canListen ? 'button' : 'text'} accessibilityLabel={canListen ? `Hear: ${p.model}` : p.model}>
+                  <Pressable onPress={() => say(p.model)} hitSlop={{ top: 10, bottom: 10 }} disabled={!canListen} accessibilityRole={canListen ? 'button' : 'text'} accessibilityLabel={canListen ? `Hear: ${p.model}` : p.model}>
                     <Text variant="footnote" color={canListen ? 'accent' : 'label2'} lang="cs">
                       {p.model}
                     </Text>
@@ -573,8 +582,17 @@ function Review({
         CzechPal doesn’t score speaking.{points ? ` In the exam this task gives ${points} points, and pronunciation is marked across the whole speaking part.` : ''}{' '}
         {recorded.length ? `Your ${recorded.length === 1 ? 'recording is' : `${recorded.length} recordings are`} saved on this phone only.` : ''}
       </Text>
-      <Button label="Done" onPress={() => router.back()} />
-      <Button label="Do it again" variant="secondary" onPress={() => router.replace({ pathname: '/a2-speaking/[id]', params: { id: task.id } })} />
+      {mock ? (
+        <Button
+          label={nextTask ? `Next: speaking ${speakingTaskById(nextTask)?.task}` : 'Back to the mock exam'}
+          onPress={() => (nextTask ? router.replace({ pathname: '/a2-speaking/[id]', params: { id: nextTask, mock } }) : router.back())}
+        />
+      ) : (
+        <>
+          <Button label="Done" onPress={() => router.back()} />
+          <Button label="Do it again" variant="secondary" onPress={() => router.replace({ pathname: '/a2-speaking/[id]', params: { id: task.id } })} />
+        </>
+      )}
       {recorded.length ? (
         <Button
           label="Delete these recordings"

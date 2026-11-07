@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { addAttempts, makeAttempt, type Attempt, type AttemptSource } from '@/lib/academy/evidence';
+import type { MarkedSection, MockRun, WritingSection } from '@/lib/academy/mock';
 import type { LessonLog, LessonRun } from '@/lib/academy/roadmap';
 import type { ContentMeta } from '@/lib/academy/types';
 
@@ -19,6 +20,8 @@ export type TaskRun = { at: string; right: number; total: number; mode: 'learn' 
 export type WritingAttempt = { at: string; texts: string[] };
 /** A finished speaking task: how many of its answers were recorded. Not a score. */
 export type SpeakingRun = { at: string; recorded: number; prompts: number };
+/** What the learner said about the real exam, once its date has passed. */
+export type ExamResult = { examDate: string; result: 'passed' | 'failed' | 'waiting'; at: string };
 
 type State = {
   /** When the A2 setup was finished. */
@@ -33,6 +36,8 @@ type State = {
   tasks: Record<string, TaskRun[]>;
   writing: Record<string, WritingAttempt[]>;
   speaking: Record<string, SpeakingRun[]>;
+  mocks: MockRun[];
+  examResult?: ExamResult;
 };
 
 type Item = Pick<ContentMeta, 'id' | 'version' | 'skill' | 'objectives' | 'topic'>;
@@ -49,11 +54,18 @@ type Actions = {
   finishTask: (id: string, right: number, total: number, mode: TaskRun['mode']) => void;
   saveWriting: (id: string, texts: string[]) => void;
   finishSpeaking: (id: string, run: Omit<SpeakingRun, 'at'>) => void;
+  /** Starts a mock exam and returns its id. */
+  startMock: (speakingTasks: string[], variant: number) => string;
+  saveMockSection: (id: string, section: 'reading' | 'listening', result: MarkedSection) => void;
+  saveMockWriting: (id: string, result: WritingSection) => void;
+  saveMockSpeaking: (id: string, task: string, recorded: number, prompts: number) => void;
+  discardMock: (id: string) => void;
+  setExamResult: (examDate: string, result: ExamResult['result']) => void;
   /** Settings → Delete everything. */
   clear: () => void;
 };
 
-const initial: State = { setupAt: undefined, diagnostic: undefined, attempts: [], lessons: {}, current: undefined, grammarSeen: {}, tasks: {}, writing: {}, speaking: {} };
+const initial: State = { setupAt: undefined, diagnostic: undefined, attempts: [], lessons: {}, current: undefined, grammarSeen: {}, tasks: {}, writing: {}, speaking: {}, mocks: [], examResult: undefined };
 
 export const useAcademy = create<State & Actions>()(
   persist(
@@ -75,6 +87,21 @@ export const useAcademy = create<State & Actions>()(
         set((s) => ({ writing: { ...s.writing, [id]: [...(s.writing[id] ?? []), { at: new Date().toISOString(), texts }].slice(-10) } })),
       finishSpeaking: (id, run) =>
         set((s) => ({ speaking: { ...s.speaking, [id]: [...(s.speaking[id] ?? []), { at: new Date().toISOString(), ...run }].slice(-20) } })),
+      startMock: (speakingTasks, variant) => {
+        const id = `mock-${Date.now().toString(36)}`;
+        set((s) => ({ mocks: [...s.mocks, { id, startedAt: new Date().toISOString(), variant, speakingTasks }].slice(-10) }));
+        return id;
+      },
+      saveMockSection: (id, section, result) => set((s) => ({ mocks: s.mocks.map((m) => (m.id === id ? { ...m, [section]: result } : m)) })),
+      saveMockWriting: (id, result) => set((s) => ({ mocks: s.mocks.map((m) => (m.id === id ? { ...m, writing: result } : m)) })),
+      saveMockSpeaking: (id, task, recorded, prompts) =>
+        set((s) => ({
+          mocks: s.mocks.map((m) =>
+            m.id === id ? { ...m, speaking: { at: new Date().toISOString(), tasks: { ...(m.speaking?.tasks ?? {}), [task]: { recorded, prompts } } } } : m,
+          ),
+        })),
+      discardMock: (id) => set((s) => ({ mocks: s.mocks.filter((m) => m.id !== id) })),
+      setExamResult: (examDate, result) => set({ examResult: { examDate, result, at: new Date().toISOString() } }),
       clear: () => set({ ...initial }),
     }),
     {
@@ -82,9 +109,9 @@ export const useAcademy = create<State & Actions>()(
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
       // Version 1 is the first; later versions add their steps here so no one's progress is lost.
-      // Fields added within version 1 (tasks, writing, speaking) are optional on load and default to empty.
+      // Fields added within version 1 (tasks, writing, speaking, mocks, examResult) are optional on load and default to empty.
       migrate: (persisted) => persisted as State,
-      partialize: ({ setupAt, diagnostic, attempts, lessons, current, grammarSeen, tasks, writing, speaking }) => ({
+      partialize: ({ setupAt, diagnostic, attempts, lessons, current, grammarSeen, tasks, writing, speaking, mocks, examResult }) => ({
         setupAt,
         diagnostic,
         attempts,
@@ -94,6 +121,8 @@ export const useAcademy = create<State & Actions>()(
         tasks,
         writing,
         speaking,
+        mocks,
+        examResult,
       }),
     },
   ),
