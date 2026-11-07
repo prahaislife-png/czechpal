@@ -184,6 +184,8 @@ export type TaskSet = {
   /** Shared options (reading 1 and 3, listening 3 and 4), some of them extra. */
   choices?: TaskChoice[];
   items: TaskItem[];
+  /** 'mock': kept for the mock exam, so it is unseen there; not listed in everyday practice. */
+  pool?: 'mock';
   review: Review;
   author: 'CzechPal';
   licence: 'original';
@@ -206,6 +208,8 @@ export type WritingTask = {
   /** E-mail: ty (a friend) or vy (formal). */
   register?: 'ty' | 'vy';
   sample: string[];
+  /** 'mock': kept for the mock exam; not listed in everyday practice. */
+  pool?: 'mock';
   review: Review;
   author: 'CzechPal';
   licence: 'original';

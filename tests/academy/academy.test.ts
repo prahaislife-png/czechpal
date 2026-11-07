@@ -267,7 +267,7 @@ describe('roadmap and mastery', () => {
     const both: LessonLog = { 'personal-1': [pass(3), pass(0)], 'personal-2': [pass(5), pass(1)] };
     assert.equal(topicProgress(personal, both, []).state, 'mastered');
     // A topic without written lessons never shows as practised or mastered.
-    assert.equal(topicProgress(topicById('weather')!, {}, []).available, false);
+    assert.equal(topicProgress({ ...topicById('weather')!, lessons: [] }, {}, []).available, false);
   });
 
   it('the next lesson follows the teaching order', () => {

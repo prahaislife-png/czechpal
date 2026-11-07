@@ -1,8 +1,9 @@
 import { CONTENT_CHECKED_ON, exercise as ex, type ExerciseBase as Base } from './make';
+import { moreLessons } from './lessons-more';
 import type { Lesson } from './types';
 
 /**
- * Lessons for topics 1–8. Written for CzechPal and checked by AI on 2026-11-06;
+ * Lessons for topics 1–8 (topics 9–14 are in lessons-more.ts). Written for CzechPal and checked by AI on 2026-11-06;
  * not reviewed by a teacher (review: 'ai-checked'). Each exercise is original.
  */
 
@@ -29,7 +30,7 @@ const w1: Base = { topic: 'work', level: 'A2', difficulty: 2 };
 const he1: Base = { topic: 'health', level: 'A2', difficulty: 2 };
 const s1: Base = { topic: 'shopping', level: 'A2', difficulty: 2 };
 
-export const lessons: Lesson[] = [
+const firstLessons: Lesson[] = [
   L({
     id: 'personal-1',
     topic: 'personal',
@@ -997,6 +998,9 @@ export const lessons: Lesson[] = [
     ],
   }),
 ];
+
+/** Every lesson, in the roadmap's order. */
+export const lessons: Lesson[] = [...firstLessons, ...moreLessons];
 
 export const lessonById = (id: string | undefined) => lessons.find((l) => l.id === id);
 

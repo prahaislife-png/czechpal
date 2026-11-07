@@ -141,6 +141,13 @@ export function examOutcome(scores: ExamScores): ExamOutcome {
   return { written, speaking, passed };
 }
 
+/**
+ * After the exam (handbook S3 p.10–11): failing either part means repeating the whole exam, at the
+ * earliest 3 months later and at most 3 times a year; the certificate is sent within 30 days and
+ * is valid without limit.
+ */
+export const afterExam = { retakeAfterMonths: 3, retakesPerYear: 3, certificateWithinDays: 30 } as const;
+
 /** Whole days from today until the exam date (YYYY-MM-DD), by the local calendar. */
 export function daysToExam(date: string, now = new Date()) {
   const [y, m, d] = date.split('-').map(Number);

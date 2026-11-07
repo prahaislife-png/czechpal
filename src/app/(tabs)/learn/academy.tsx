@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { SetupCard } from '@/components/academy/academy-card';
+import { Button } from '@/components/ui/button';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
@@ -12,12 +13,13 @@ import { longDate } from '@/lib/about';
 import { MIN_EVIDENCE, readinessLabels, skillReadiness, weakObjectives, type SkillReadiness } from '@/lib/academy/evidence';
 import { grammar } from '@/lib/academy/grammar';
 import { lessonById } from '@/lib/academy/lessons';
+import { mockFinished } from '@/lib/academy/mock';
 import { planMinutes } from '@/lib/academy/plan';
 import { roadmap } from '@/lib/academy/roadmap';
 import { topicById } from '@/lib/academy/topics';
 import { stepHref, stepIcon, useTodayPlan } from '@/lib/academy/use-plan';
 import type { Skill } from '@/lib/academy/types';
-import { daysToExam, EXAM_CHECKED_ON } from '@/lib/learn/exam';
+import { afterExam, daysToExam, EXAM_CHECKED_ON } from '@/lib/learn/exam';
 import { minutesOf } from '@/lib/learn/profile';
 import { useAcademy } from '@/store/academy';
 import { useLearn } from '@/store/learn';
@@ -44,6 +46,13 @@ export default function AcademyScreen() {
   const map = useMemo(() => roadmap(lessons, attempts), [lessons, attempts]);
   const started = map.filter((t) => t.state !== 'not-started').length;
   const left = profile?.examDate ? daysToExam(profile.examDate) : null;
+  const mocks = useAcademy((s) => s.mocks);
+  const lastMock = mocks[mocks.length - 1];
+  const mockSubtitle = !lastMock
+    ? 'All four parts, timed, on new questions'
+    : mockFinished(lastMock)
+      ? `Last: reading ${lastMock.reading?.right} · listening ${lastMock.listening?.right} of 25`
+      : 'In progress: carry on';
 
   if (!setupAt)
     return (
@@ -64,6 +73,8 @@ export default function AcademyScreen() {
             {left === 0 ? 'Your exam is today' : `${left} ${left === 1 ? 'day' : 'days'} to your exam · ${longDate(profile!.examDate!)}`}
           </Text>
         </View>
+      ) : left !== null && left < 0 ? (
+        <ExamCheckIn examDate={profile!.examDate!} />
       ) : null}
 
       {current ? (
@@ -114,8 +125,7 @@ export default function AcademyScreen() {
           ))}
         </Card>
         <Text variant="footnote" color="label3" style={styles.note}>
-          Built from your own answers in checks: first tries, no hints. It isn’t an exam score. “Ready” needs a full practice test, which comes in a later
-          update.
+          Built from your own answers in checks, practice and mocks: first tries, no hints. It isn’t an exam score; for the whole exam, take the mock exam.
         </Text>
       </View>
 
@@ -148,7 +158,8 @@ export default function AcademyScreen() {
       </View>
 
       <List>
-        <Row icon="flag" title="Exam practice" subtitle="Reading, listening and writing, as in the exam" chevron onPress={() => router.push('/learn/practice')} />
+        <Row icon="flag" title="Exam practice" subtitle="Every exam task, one at a time" chevron onPress={() => router.push('/learn/practice')} />
+        <Row icon="clock" title="Mock exam" subtitle={mockSubtitle} chevron onPress={() => router.push('/learn/mock')} />
         <Row icon="map" title="Topics" subtitle={`${started} of ${map.length} started`} chevron onPress={() => router.push('/learn/topics')} />
         <Row icon="book" title="Grammar" subtitle={`${grammar.length} short explanations`} chevron onPress={() => router.push('/learn/grammar')} />
         <Row icon="info" title="About the exam" subtitle={`Checked ${longDate(EXAM_CHECKED_ON)}`} chevron onPress={() => router.push('/learn/exam')} />
@@ -161,6 +172,64 @@ export default function AcademyScreen() {
         phone only.
       </Text>
     </ScrollView>
+  );
+}
+
+/** Once the exam date has passed: how did it go? The answer changes what the card says next. */
+function ExamCheckIn({ examDate }: { examDate: string }) {
+  const { colors } = useTheme();
+  const saved = useAcademy((s) => s.examResult);
+  const result = saved?.examDate === examDate ? saved.result : undefined;
+  const set = (r: 'passed' | 'failed' | 'waiting') => useAcademy.getState().setExamResult(examDate, r);
+  const change = (
+    <Button label="Change my answer" variant="plain" size="medium" onPress={() => useAcademy.getState().setExamResult(examDate, 'waiting')} />
+  );
+  return (
+    <Card style={styles.checkIn}>
+      {!result ? (
+        <>
+          <Text variant="headline">How did your exam go?</Text>
+          <Text variant="footnote" color="label2">
+            Your exam was on {longDate(examDate)}. Tell CzechPal, and your plan follows. Saved on this phone only.
+          </Text>
+          <Button label="I passed" size="medium" onPress={() => set('passed')} />
+          <Button label="Waiting for the result" variant="secondary" size="medium" onPress={() => set('waiting')} />
+          <Button label="Not this time" variant="secondary" size="medium" onPress={() => set('failed')} />
+        </>
+      ) : result === 'passed' ? (
+        <>
+          <View style={styles.checkInHead}>
+            <Icon name="checkCircle" size={22} color={colors.success} />
+            <Text variant="headline" style={styles.flex}>
+              Congratulations!
+            </Text>
+          </View>
+          <Text variant="callout" color="label2">
+            The certificate, Osvědčení o znalosti českého jazyka, is sent within {afterExam.certificateWithinDays} days and doesn’t expire. Keep your Czech going in Learn.
+          </Text>
+        </>
+      ) : result === 'waiting' ? (
+        <>
+          <Text variant="headline">Waiting for the result</Text>
+          <Text variant="callout" color="label2">
+            The certificate is sent within {afterExam.certificateWithinDays} days of the exam. Your plan carries on meanwhile.
+          </Text>
+          <Button label="I passed" size="medium" onPress={() => set('passed')} />
+          <Button label="Not this time" variant="secondary" size="medium" onPress={() => set('failed')} />
+        </>
+      ) : (
+        <>
+          <Text variant="headline">Next time</Text>
+          <Text variant="callout" color="label2">
+            If either part doesn’t pass, the whole exam is taken again, at the earliest {afterExam.retakeAfterMonths} months later and at most{' '}
+            {afterExam.retakesPerYear} times a year. A mock exam shows which part needs the most work.
+          </Text>
+          <Button label="Set a new exam date" size="medium" onPress={() => router.push('/a2-setup')} />
+          <Button label="Take a mock exam" variant="secondary" size="medium" onPress={() => router.push('/learn/mock')} />
+        </>
+      )}
+      {result && result !== 'waiting' ? change : null}
+    </Card>
   );
 }
 
@@ -194,6 +263,8 @@ function ReadinessRow({ r }: { r: SkillReadiness }) {
 }
 
 const styles = StyleSheet.create({
+  checkIn: { gap: space.sm },
+  checkInHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   content: { padding: layout.gutter, paddingBottom: space.huge, gap: space.xxl },
   flex: { flex: 1 },
   note: { paddingHorizontal: space.xs, marginTop: space.sm },

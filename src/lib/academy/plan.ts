@@ -3,7 +3,7 @@ import type { DailyMinutes, Difficulty } from '@/lib/learn/profile';
 import { weakObjectives, type Attempt } from './evidence';
 import { grammarById } from './grammar';
 import { lessonDone, nextLesson, retestsDue, type LessonLog } from './roadmap';
-import { taskSets } from './tasks';
+import { practiceSets } from './tasks';
 import { speakingTasks } from './tasks/speaking';
 import { writingTasks } from './tasks/writing';
 import { topicById, topics } from './topics';
@@ -115,7 +115,7 @@ function examPractice(difficulty: Difficulty | undefined, canListen: boolean, do
   const count = (id: string) => done[id] ?? 0;
   const parts = (['reading', 'listening', 'writing', 'speaking'] as const).filter((p) => p !== 'listening' || canListen);
   const total = (p: (typeof parts)[number]) =>
-    (p === 'writing' ? writingTasks : p === 'speaking' ? speakingTasks : taskSets.filter((s) => s.part === p)).reduce((n, s) => n + count(s.id), 0);
+    (p === 'writing' ? writingTasks : p === 'speaking' ? speakingTasks : practiceSets.filter((s) => s.part === p)).reduce((n, s) => n + count(s.id), 0);
   const part = parts.includes(difficulty as (typeof parts)[number]) ? (difficulty as (typeof parts)[number]) : [...parts].sort((a, b) => total(a) - total(b))[0];
   if (part === 'writing') {
     const w = [...writingTasks].sort((a, b) => count(a.id) - count(b.id))[0];
@@ -125,7 +125,7 @@ function examPractice(difficulty: Difficulty | undefined, canListen: boolean, do
     const t = [...speakingTasks].sort((a, b) => count(a.id) - count(b.id) || a.task - b.task)[0];
     return { kind: 'speaking', id: t.id, minutes: STEP_MINUTES.speaking, title: `Speaking ${t.task}: ${t.title}`, why: count(t.id) ? 'Say it aloud, then play it back' : 'New: speaking, as in the exam' };
   }
-  const set = taskSets.filter((s) => s.part === part).sort((a, b) => count(a.id) - count(b.id) || a.task - b.task)[0];
+  const set = practiceSets.filter((s) => s.part === part).sort((a, b) => count(a.id) - count(b.id) || a.task - b.task)[0];
   return { kind: 'task', id: set.id, minutes: STEP_MINUTES.task, title: `${partNames[part]} ${set.task}: ${set.title}`, why: 'Practice in the exam’s own format' };
 }
 
