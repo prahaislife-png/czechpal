@@ -19,6 +19,8 @@ import {
   type ReplyInput,
   type QuickTranslateInput,
   type QuickTranslation,
+  type WritingFeedback,
+  type WritingFeedbackInput,
 } from './types';
 
 const NETWORK_MESSAGE = 'Couldn’t connect. Check your internet and try again.';
@@ -78,7 +80,7 @@ async function accessToken(): Promise<string> {
   }
 }
 
-async function invoke<T>(name: 'reply' | 'compose' | 'allowance' | 'translate', body: Record<string, unknown>): Promise<T> {
+async function invoke<T>(name: 'reply' | 'compose' | 'allowance' | 'translate' | 'learn-feedback', body: Record<string, unknown>): Promise<T> {
   await accessToken();
   const controller = new AbortController();
   let timedOut = false;
@@ -265,5 +267,9 @@ export const liveClient: AIClient = {
       throw new AnalyzeError('unreadable', 'The photo couldn’t be opened. Try again.');
     }
     return invoke<QuickTranslation>('translate', { image, language: language ?? DEFAULT_LANGUAGE });
+  },
+
+  async writingFeedback(input: WritingFeedbackInput): Promise<WritingFeedback> {
+    return invoke<WritingFeedback>('learn-feedback', { ...input, language: input.language ?? DEFAULT_LANGUAGE });
   },
 };

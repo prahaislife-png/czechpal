@@ -186,7 +186,39 @@ export interface AIClient {
   getAllowance?(): Promise<Allowance>;
   /** A quick look at a camera frame: the Czech lines and their translation. */
   quickTranslate(input: QuickTranslateInput): Promise<QuickTranslation>;
+  /** Feedback on A2 Academy writing practice: an estimate, the task's requirements, corrections. */
+  writingFeedback(input: WritingFeedbackInput): Promise<WritingFeedback>;
 }
+
+export type WritingFeedbackInput = {
+  kind: 'form' | 'email';
+  /** The task's instruction, in Czech. */
+  instruction: string;
+  /** Form: the three questions. */
+  questions?: string[];
+  /** E-mail: the question at each picture. */
+  pictures?: string[];
+  register?: 'ty' | 'vy';
+  /** Form: one answer per question. E-mail: the whole e-mail. */
+  texts: string[];
+  language?: LanguageCode;
+};
+
+export type FeedbackCriterion = { label: string; met: 'yes' | 'partly' | 'no'; note: string };
+
+/**
+ * The AI's feedback. `estimate` is not an exam score: the marking scale isn't published, so it is
+ * an estimate, and the e-mail's 35-word zero rule is applied by the server, not the model.
+ */
+export type WritingFeedback = {
+  estimate: { points: number; of: number };
+  zeroRule: boolean;
+  summary: string;
+  criteria: FeedbackCriterion[];
+  corrections: { original: string; corrected: string; why: string }[];
+  /** The learner's text with the mistakes fixed: one per form answer, or the e-mail. */
+  improved: string[];
+};
 
 export type QuickTranslateInput = { uri: string; language?: LanguageCode };
 /** `no_text`: nothing Czech could be read. */

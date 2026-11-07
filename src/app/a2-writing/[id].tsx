@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
+import { WritingFeedbackCard } from '@/components/academy/writing-feedback';
 import { Button } from '@/components/ui/button';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { HeaderCloseButton } from '@/components/ui/header-button';
@@ -167,9 +168,10 @@ function FormCoach({ task }: { task: WritingTask }) {
         <>
           <SectionHeader title="Check it yourself" />
           <Checklist items={['Each answer fits its question word (proč, kde, kdy…)', 'Every sentence has a verb in the right form', 'The tense fits the question (past for the past)']} />
+          <WritingFeedbackCard task={task} texts={answers} />
           <Sample lines={task.sample} />
           <Text variant="footnote" color="label3" style={styles.note}>
-            CzechPal doesn’t score writing. The checks above are the exam’s own rules. Saved on this phone.
+            The checks above are the exam’s own rules; ask for AI feedback for an estimate and corrections. Saved on this phone.
           </Text>
           <Button label="Done" onPress={() => router.back()} />
         </>
@@ -241,9 +243,10 @@ function EmailCoach({ task }: { task: WritingTask }) {
         <>
           <SectionHeader title="Check it yourself" />
           <Checklist items={[...pictures.map((p) => `A sentence for: ${p.question}`), task.register === 'ty' ? 'I wrote ty all the way through' : 'I wrote vy all the way through']} />
+          <WritingFeedbackCard task={task} texts={[text]} />
           <Sample lines={task.sample} />
           <Text variant="footnote" color="label3" style={styles.note}>
-            CzechPal doesn’t score writing. The checks above are the exam’s own rules. Saved on this phone.
+            The checks above are the exam’s own rules; ask for AI feedback for an estimate and corrections. Saved on this phone.
           </Text>
           <Button label="Done" onPress={() => router.back()} />
         </>
