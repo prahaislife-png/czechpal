@@ -14,7 +14,7 @@
 </header>
 <main>
 <h1>Privacy policy</h1>
-<p class="meta">Last updated 7 November 2026</p>
+<p class="meta">Last updated 8 November 2026</p>
 
 <p class="lead">CzechPal explains Czech text and helps you write Czech. It's built to know as little about you as possible: no sign-up, no name, no email, no ads and no tracking.</p>
 
@@ -23,6 +23,7 @@
   <ul>
     <li>Your history, photos, saved details and voice recordings <strong>stay on your phone</strong>.</li>
     <li>A text or photo leaves your phone <strong>only when you ask</strong> CzechPal to explain or write something, or to give feedback on your writing practice. It goes to Anthropic's Claude AI to produce the answer, and <strong>we don't keep it</strong>.</li>
+    <li>If you talk with CzechPal in <em>Speak Czech</em>, your voice goes <strong>live to OpenAI</strong>, which runs the conversation, and the text of it to Anthropic's Claude for meanings and feedback. <strong>Nothing is recorded or kept</strong> by us.</li>
     <li>The server only knows a <strong>random, anonymous account</strong>, used to count your free explanations.</li>
     <li>You can <strong>delete everything</strong>, on your phone and on the server, in Settings.</li>
   </ul>
@@ -39,6 +40,7 @@
 
 <h3>Your microphone</h3>
 <p>If you allow it, speaking practice in <em>A2 Academy</em> records your voice so you can play your answers back. The microphone is on only while you record an answer, and a recording stops by itself after two minutes. Recordings are saved on your phone only, one for each question (a new one replaces the old), and are never sent to us or to the AI. You can delete them at the end of each task, with <em>Settings → Delete everything</em>, or by deleting the app. You can turn the microphone off at any time in your phone's settings; speaking practice then works without recording.</p>
+<p>In <em>Speak Czech</em>, the microphone is on only during a conversation you start, and it goes off when the conversation ends, when you leave the app, or after a long silence. What you say is streamed to the AI as described below; it is not recorded on your phone or on our server. You can turn the microphone off during a conversation, or type instead.</p>
 
 <h2>What we process on our server</h2>
 
@@ -54,26 +56,35 @@
 </ul>
 <p>The app asks for your permission before the first time anything is sent to the AI. You can withdraw it at any time in <em>Settings → Send texts to the AI</em>.</p>
 
-<h3>3. A usage log, without content</h3>
-<p>For each AI request we record the time, the kind of request (explanation, reply, message, translation or writing feedback), the model used, its size, and whether it worked, linked to your anonymous account. It never includes what you sent or what came back. We use it to count your free explanations, limit how often requests can be made, keep costs under control and detect abuse. When you delete your account, these records lose the link to it.</p>
+<h3>3. Speak Czech conversations</h3>
+<p>When you start a conversation in <em>Speak Czech</em>, the app connects your microphone directly to <strong>OpenAI</strong>'s voice AI (GPT-Live) over an encrypted connection; our server only sets the connection up, with our key, and never hears the audio. OpenAI turns your speech into text and answers in Czech. With the conversation, the app sends a few facts from your progress on your phone so the partner can pitch it for you: a level from 0 to 5, up to six Czech words you're learning, one practice goal, and your explanation language. If you choose to see meanings, type instead, or get feedback at the end, the text of the conversation goes through our server to Anthropic's Claude API.</p>
+<ul>
+  <li><strong>No recording is made or kept</strong>, on your phone or by us, and we don't store the conversation's text. Only the feedback and short quotes of your own words that it uses as evidence of your progress are saved, on your phone.</li>
+  <li><strong>OpenAI</strong> processes your voice and the conversation on our behalf. We ask it not to store the session. Under its API terms it does not use API data to train its models; it may keep it for a limited time for safety and abuse monitoring, as described in <a href="https://openai.com/policies/privacy-policy/">OpenAI's privacy policy</a>.</li>
+  <li>For each voice conversation we record when it started and ended, the situation and how many seconds it used, linked to your anonymous account, to give everyone a fair daily speaking time, end conversations that run too long, and keep costs under control.</li>
+</ul>
+<p>The app asks for your permission before your first conversation. CzechPal doesn't assess pronunciation.</p>
 
-<h3>4. Reports you choose to send</h3>
+<h3>4. A usage log, without content</h3>
+<p>For each AI request we record the time, the kind of request (explanation, reply, message, translation, writing feedback, or a Speak Czech meaning, typed reply or feedback), the model used, its size, and whether it worked, linked to your anonymous account. It never includes what you sent or what came back. We use it to count your free explanations, limit how often requests can be made, keep costs under control and detect abuse. When you delete your account, these records lose the link to it.</p>
+
+<h3>5. Reports you choose to send</h3>
 <p>If you report on a doctor's practice (new patients, English, extra fees, insurers) or on waiting times at an immigration office, we store your answers, which are fixed choices with no free text, with your anonymous account, so each person counts once. Only combined summaries are shown to other users. Your reports are deleted when you delete your account.</p>
 
-<h3>5. Public lists the app downloads</h3>
+<h3>6. Public lists the app downloads</h3>
 <p>Some parts of the app download public information from our server: places in <em>Explore</em> (from OpenStreetMap), and doctors, pharmacies and offices in <em>Find</em> (from official registers). These requests carry no personal data beyond what any internet connection does, and we don't link them to you.</p>
 
 <h2>What we don't do</h2>
 <ul>
   <li>No advertising, no third-party analytics or trackers, no selling or sharing of data for marketing.</li>
-  <li>No location tracking: your location, if you allow it, stays on your phone. The camera is used only while you scan, and the microphone only while you record a speaking answer.</li>
+  <li>No location tracking: your location, if you allow it, stays on your phone. The camera is used only while you scan, and the microphone only while you record a speaking answer or talk in a Speak Czech conversation.</li>
   <li>No payments are processed in the app at the moment.</li>
 </ul>
 
 <h2>Legal bases</h2>
 <ul>
   <li><strong>Providing the service you ask for</strong> (GDPR Art. 6(1)(b)): the anonymous account, explanations, replies and messages.</li>
-  <li><strong>Your consent</strong> (Art. 6(1)(a)): sending your content to the AI. You can withdraw it in Settings.</li>
+  <li><strong>Your consent</strong> (Art. 6(1)(a)): sending your content, or your voice in Speak Czech, to the AI. You can withdraw it in Settings, or simply not use these features.</li>
   <li><strong>Legitimate interests</strong> (Art. 6(1)(f)): the usage log, rate limits and abuse prevention, and the reports you choose to send.</li>
 </ul>
 
@@ -81,13 +92,16 @@
 <ul>
   <li><strong>Supabase</strong>: hosting, database and server functions, in the EU (Ireland).</li>
   <li><strong>Anthropic</strong>: the Claude AI that writes explanations, replies and messages. Anthropic is based in the United States; transfers are covered by its data processing terms and the safeguards they include.</li>
+  <li><strong>OpenAI</strong>: the voice AI behind Speak Czech conversations. OpenAI is based in the United States; transfers are covered by its data processing terms and the safeguards they include.</li>
 </ul>
 <p>Apple and Google distribute the app under their own privacy policies.</p>
 
 <h2>How long we keep it</h2>
 <ul>
   <li>Content you ask us to explain or write: not stored by us.</li>
+  <li>Your voice in Speak Czech: not recorded or stored by us.</li>
   <li>Your anonymous account, its monthly count and your reports: until you delete your account in the app.</li>
+  <li>The Speak Czech session log (times, situation, seconds): like the usage log below.</li>
   <li>The usage log: as long as needed for cost accounting and abuse prevention, without the link to you once your account is deleted.</li>
 </ul>
 

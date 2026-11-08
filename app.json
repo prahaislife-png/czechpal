@@ -107,7 +107,7 @@
         {
           "photosPermission": "CzechPal opens your photos so you can explain a picture of Czech text you took earlier.",
           "cameraPermission": "CzechPal uses the camera to read Czech text you point it at.",
-          "microphonePermission": "CzechPal records you speaking Czech so you can play it back when you practise for the A2 exam. Recordings stay on your phone."
+          "microphonePermission": "CzechPal uses the microphone when you practise speaking Czech: to record answers you play back on your phone, and in Speak Czech, to talk with its AI conversation partner."
         }
       ],
       [
@@ -116,7 +116,7 @@
           "cameraPermission": "CzechPal uses the camera to read Czech text you point it at.",
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": false,
-          "microphonePermission": "CzechPal records you speaking Czech so you can play it back when you practise for the A2 exam. Recordings stay on your phone."
+          "microphonePermission": "CzechPal uses the microphone when you practise speaking Czech: to record answers you play back on your phone, and in Speak Czech, to talk with its AI conversation partner."
         }
       ],
       [
@@ -144,13 +144,20 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "CzechPal records you speaking Czech so you can play it back when you practise for the A2 exam. Recordings stay on your phone.",
+          "microphonePermission": "CzechPal uses the microphone when you practise speaking Czech: to record answers you play back on your phone, and in Speak Czech, to talk with its AI conversation partner.",
           "recordAudioAndroid": true,
           "enableBackgroundPlayback": false,
           "enableBackgroundRecording": false
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      [
+      "@config-plugins/react-native-webrtc",
+      {
+        "cameraPermission": "CzechPal uses the camera to read Czech text you point it at.",
+        "microphonePermission": "CzechPal uses the microphone when you practise speaking Czech: to record answers you play back on your phone, and in Speak Czech, to talk with its AI conversation partner."
+      }
+    ]
     ],
     "experiments": {
       "typedRoutes": true,

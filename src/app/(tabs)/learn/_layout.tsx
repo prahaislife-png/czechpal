@@ -22,6 +22,7 @@ export default function LearnStack() {
       <Stack.Screen name="exam" options={{ title: 'The A2 exam' }} />
       <Stack.Screen name="practice" options={{ title: 'Exam practice' }} />
       <Stack.Screen name="mock" options={{ title: 'Mock exam' }} />
+      <Stack.Screen name="speak" options={{ title: 'Speak Czech' }} />
     </Stack>
   );
 }

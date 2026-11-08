@@ -16,6 +16,7 @@ import { PRIVACY_URL, SUPPORT_URL } from '@/lib/links';
 import { testReminder } from '@/lib/reminders';
 import { allowanceRenewsOn, useFreeLimit, useRemainingAnalyses, useStore } from '@/store/cases';
 import { useAcademy } from '@/store/academy';
+import { useSpeak } from '@/store/speak';
 import { useLearn } from '@/store/learn';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -46,7 +47,7 @@ export default function SettingsScreen() {
     if (deleting) return;
     const ok = await confirm({
       title: 'Delete everything?',
-      message: `This deletes ${caseCount === 1 ? '1 item' : `${caseCount} items`} and their replies, your reminders, About you, your Learn progress, A2 Academy answers, words and speaking recordings, your saved name and address, and your anonymous account on CzechPal’s server with any doctor or office reports you sent. It can’t be undone.`,
+      message: `This deletes ${caseCount === 1 ? '1 item' : `${caseCount} items`} and their replies, your reminders, About you, your Learn progress, A2 Academy answers, words and speaking recordings, your Speak Czech progress, your saved name and address, and your anonymous account on CzechPal’s server with any doctor or office reports you sent. It can’t be undone.`,
       confirmLabel: 'Delete everything',
       destructive: true,
     });
@@ -58,6 +59,7 @@ export default function SettingsScreen() {
       clearAll();
       useLearn.getState().clear();
       useAcademy.getState().clear();
+      useSpeak.getState().clear();
       deleteRecordings();
       useStore.getState().setAiConsent(false);
     } catch (e) {
