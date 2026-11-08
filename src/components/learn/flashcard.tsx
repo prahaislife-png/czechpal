@@ -16,7 +16,7 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import type { UserCard } from '@/lib/learn/deck';
 import type { Direction } from '@/store/learn';
-import { radius, space } from '@/theme/tokens';
+import { fonts, motion, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
 const SWIPE = 110;
@@ -54,7 +54,7 @@ export function Flashcard({
 
   useEffect(() => {
     canSwipe.set(revealed);
-    turn.set(reduceMotion ? withTiming(revealed ? 1 : 0, { duration: 160 }) : withSpring(revealed ? 1 : 0, { duration: 520, dampingRatio: 0.82 }));
+    turn.set(reduceMotion ? withTiming(revealed ? 1 : 0, { duration: 160 }) : withSpring(revealed ? 1 : 0, { duration: motion.flip, dampingRatio: 0.86 }));
   }, [revealed, reduceMotion, turn, canSwipe]);
 
   const pan = usePanGesture({
@@ -141,13 +141,13 @@ export function Flashcard({
               </Text>
             ) : null}
             {canSpeak && <SpeakButton text={card.cs} onSpeak={onSpeak} />}
-            <Animated.View style={[styles.swipeHint, styles.swipeRight, goodHint]} pointerEvents="none">
-              <Text variant="subhead" weight="700" color="success">
+            <Animated.View style={[styles.swipeHint, styles.swipeRight, { backgroundColor: colors.sage }, goodHint]} pointerEvents="none">
+              <Text variant="subhead" weight="700" style={{ color: colors.sageInk }}>
                 Good
               </Text>
             </Animated.View>
-            <Animated.View style={[styles.swipeHint, styles.swipeLeft, againHint]} pointerEvents="none">
-              <Text variant="subhead" weight="700" color="danger">
+            <Animated.View style={[styles.swipeHint, styles.swipeLeft, { backgroundColor: colors.coralSoft }, againHint]} pointerEvents="none">
+              <Text variant="subhead" weight="700" style={{ color: colors.coralInk }}>
                 Again
               </Text>
             </Animated.View>
@@ -182,12 +182,13 @@ const styles = StyleSheet.create({
     backfaceVisibility: 'hidden',
   },
   corner: { position: 'absolute', top: space.xl, left: space.xl, textTransform: 'uppercase', letterSpacing: 0.8 },
-  big: { fontSize: 44, lineHeight: 52, fontWeight: '700', letterSpacing: -1 },
+  // The Czech word is the hero of the card: Newsreader, large, with room for its diacritics.
+  big: { fontFamily: fonts.display, fontSize: 46, lineHeight: 56, letterSpacing: -0.4 },
   bigEn: { fontSize: 32, lineHeight: 40, fontWeight: '600', letterSpacing: -0.6 },
-  example: { fontStyle: 'italic', marginTop: space.sm },
+  example: { fontFamily: fonts.displayItalic, fontSize: 18, lineHeight: 25, marginTop: space.sm },
   hint: { position: 'absolute', bottom: space.xl },
   speak: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginTop: space.sm },
-  swipeHint: { position: 'absolute', top: space.xl },
+  swipeHint: { position: 'absolute', top: space.lg, borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: space.xs },
   swipeRight: { right: space.xl },
   swipeLeft: { left: space.xl },
 });

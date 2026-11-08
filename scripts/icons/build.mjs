@@ -1,58 +1,65 @@
 // Builds every CzechLocal icon file (assets/images) and the in-app mark data from one definition.
 // Usage, from a scratch folder with the tools installed:
-//   npm i opentype.js@1.3.4 @resvg/resvg-js@2.6.2 @fontsource/plus-jakarta-sans@5.1.0
-//   node build.mjs <project root>
+//   npm i opentype.js@1.3.4 @resvg/resvg-js@2.6.2
+//   node build.mjs <project root> [out folder for previews]
+// The font comes from the project's own @expo-google-fonts/newsreader (SIL Open Font Licence).
 import fs from 'node:fs';
 import path from 'node:path';
-import { background, markParts, markSVG, png, svg } from './mark.mjs';
+import { background, markParts, markSVG, png, svg, useFont } from './mark.mjs';
 
 const root = process.argv[2];
-const img = (f) => path.join(root, 'assets', 'images', f);
+const out = process.argv[3]; // optional: write previews here instead of the project
+const img = (f) => (out ? path.join(out, f) : path.join(root, 'assets', 'images', f));
 const T = 1024;
 
-// The design: Plus Jakarta Sans ExtraBold "Č", white with a Czech-red háček, inside light-cobalt
-// viewfinder corners, on the app's ink. White, blue and red, without being a flag.
-const MARK = { fontKey: 'jakarta', scale: 0.68, stroke: 0.05, arm: 0.2, radius: 0.13, glyphHeight: 0.75, drop: 0.03 };
-const INK = ['#1B2333', '#0B1019'];
-const onInk = { ...MARK, glyph: '#FFFFFF', caron: '#E8333A', bracket: '#7F9DFF', bracketOpacity: 1 };
-const onLight = { ...MARK, glyph: '#0E1420', caron: '#D7141A', bracket: '#2251D1', bracketOpacity: 1 };
-const mono = { ...MARK, glyph: '#FFFFFF', caron: '#FFFFFF', bracket: '#FFFFFF', bracketOpacity: 0.7 };
+useFont(path.join(root, 'node_modules', '@expo-google-fonts', 'newsreader', '600SemiBold', 'Newsreader_600SemiBold.ttf'));
+
+// The design (CzechLocal 2.0): an editorial Newsreader "Č" in charcoal with a coral háček, on a
+// soft sky disc, on paper. The disc is Prague's river and sky, the map and the voice orb at once.
+const PAPER = '#F7F3EB';
+const CHARCOAL = '#252522';
+const SKY = '#BCE8F0';
+const CORAL = '#F2784B'; // the brief's coral, a step deeper so the háček holds at 29 pt
+const MARK = { glyphHeight: 0.54, disc: { r: 0.385, cx: 0.5, cy: 0.5 }, shiftX: 0.006, dropY: 0.012 };
+const onPaper = { ...MARK, glyph: CHARCOAL, caron: CORAL, discColour: SKY };
+const onCharcoal = { ...MARK, glyph: PAPER, caron: '#FF986E', discColour: '#2E5A61' };
+const mono = { ...MARK, glyph: '#FFFFFF', caron: '#FFFFFF', discColour: '#FFFFFF', discOpacity: 0.28 };
 
 // iOS: full-bleed squares, no transparency; the system rounds the corners.
-png(svg(T, background(T, INK) + markSVG(T, onInk)), img('icon.png'), 1024);
-png(svg(T, background(T, '#0B1019') + markSVG(T, onInk)), img('icon-dark.png'), 1024);
-// Tinted (iOS 18+): a greyscale image the system colours; the háček stays lighter than the corners.
-png(svg(T, background(T, '#000000') + markSVG(T, { ...mono, bracketOpacity: 0.55 })), img('icon-tinted.png'), 1024);
+png(svg(T, background(T, PAPER) + markSVG(T, onPaper)), img('icon.png'), 1024);
+png(svg(T, background(T, '#1B1B19') + markSVG(T, onCharcoal)), img('icon-dark.png'), 1024);
+// Tinted (iOS 18+): a greyscale image the system colours; the disc stays a faint field.
+png(svg(T, background(T, '#000000') + markSVG(T, mono)), img('icon-tinted.png'), 1024);
 
-// Android adaptive icon: 108dp canvas, only the centre 66dp circle is always visible, so the mark
-// (corners included) is scaled to sit inside it.
-const androidMark = (o) => markSVG(T, { ...o, scale: 0.44 });
-png(svg(T, androidMark(onInk)), img('android-icon-foreground.png'), 1024);
-png(svg(T, background(T, INK)), img('android-icon-background.png'), 1024);
+// Android adaptive icon: 108dp canvas, only the centre 66dp circle is always visible.
+const androidMark = (o) => markSVG(T, { ...o, glyphHeight: 0.34, disc: { r: 0.25, cx: 0.5, cy: 0.5 } });
+png(svg(T, androidMark(onPaper)), img('android-icon-foreground.png'), 1024);
+png(svg(T, background(T, PAPER)), img('android-icon-background.png'), 1024);
 png(svg(T, androidMark(mono)), img('android-icon-monochrome.png'), 1024);
 
-// Splash: the mark alone, in ink on the light background and in white on the dark one.
-const splash = (o) => svg(T, markSVG(T, { ...o, scale: 0.92 }));
-png(splash(onLight), img('splash-icon.png'), 600);
-png(splash(onInk), img('splash-icon-dark.png'), 600);
+// Splash: the mark alone on the app's background (paper, or charcoal in dark mode).
+const splash = (o) => svg(T, markSVG(T, { ...o, glyphHeight: 0.68, disc: { r: 0.48, cx: 0.5, cy: 0.5 } }));
+png(splash(onPaper), img('splash-icon.png'), 600);
+png(splash(onCharcoal), img('splash-icon-dark.png'), 600);
 
-// Web: a rounded tile, readable at 48px.
-png(svg(T, background(T, INK) + markSVG(T, { ...onInk, stroke: 0.07, glyphHeight: 0.8 }), { rounded: true }), img('favicon.png'), 48);
+// Web: a rounded tile, readable at 48px (a bigger letter).
+png(svg(T, background(T, PAPER) + markSVG(T, { ...onPaper, glyphHeight: 0.6, disc: { r: 0.42, cx: 0.5, cy: 0.5 } }), { rounded: true }), img('favicon.png'), 48);
 
-// The same mark for the app itself (react-native-svg), on a 100-unit canvas.
-// Small sizes (the header logo is ~26pt) need heavier corners and a bigger letter, like the favicon.
-const m = markParts(100, { ...MARK, stroke: 0.07, glyphHeight: 0.8 });
-const ts = `/**
- * The CzechLocal mark as vector data, generated with the app icon (Plus Jakarta Sans ExtraBold "Č",
- * SIL Open Font Licence, converted to outlines). Draw on a 100 × 100 viewBox.
+if (!out) {
+  // The same mark for the app itself (react-native-svg), on a 100-unit canvas, a little bigger for
+  // header sizes (~24 pt).
+  const m = markParts(100, { ...MARK, glyphHeight: 0.58, disc: { r: 0.42, cx: 0.5, cy: 0.5 } });
+  const ts = `/**
+ * The CzechLocal mark as vector data, generated with the app icon (scripts/icons): a Newsreader "Č"
+ * (SIL Open Font Licence, converted to outlines) on a sky disc. Draw on a 100 × 100 viewBox.
  */
 export const brandMark = {
-  corners: '${m.corners}',
-  stroke: ${m.stroke.toFixed(3)},
+  disc: { cx: ${m.disc.cx.toFixed(2)}, cy: ${m.disc.cy.toFixed(2)}, r: ${m.disc.r.toFixed(2)} },
   glyphTransform: 'translate(${m.tx.toFixed(3)} ${m.ty.toFixed(3)}) scale(${m.k.toFixed(6)})',
   body: '${m.body}',
   caron: '${m.caron}',
 };
 `;
-fs.writeFileSync(path.join(root, 'src', 'components', 'ui', 'brand-mark-data.ts'), ts);
-console.log('built');
+  fs.writeFileSync(path.join(root, 'src', 'components', 'ui', 'brand-mark-data.ts'), ts);
+}
+console.log('built', out ? `previews in ${out}` : 'into the project');

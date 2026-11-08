@@ -42,22 +42,25 @@ export function AcademyCard() {
   const first = plan[0];
   const left = examDate ? daysToExam(examDate) : null;
   return (
-    <Card style={styles.card}>
+    <Card style={[styles.card, { backgroundColor: colors.lavender }]}>
+      <Text variant="footnote" weight="600" style={[styles.eyebrow, { color: colors.lavenderInk }]}>
+        MY A2 JOURNEY
+      </Text>
       <View style={styles.head}>
-        <Text variant="title2" accessibilityRole="header" style={styles.flex}>
+        <Text variant="title2" accessibilityRole="header" style={[styles.flex, { color: colors.lavenderInk }]}>
           A2 Academy
         </Text>
         {left !== null && left >= 0 ? (
-          <View style={[styles.pill, { backgroundColor: colors.accentSoft }]}>
-            <Text variant="footnote" weight="700" color="accent" tabular>
+          <View style={[styles.pill, { backgroundColor: colors.surface }]}>
+            <Text variant="footnote" weight="700" tabular style={{ color: colors.lavenderInk }}>
               {left === 0 ? 'Exam today' : `${left} ${left === 1 ? 'day' : 'days'} to go`}
             </Text>
           </View>
         ) : null}
       </View>
       {first ? (
-        <View style={[styles.next, { backgroundColor: colors.accentSoft }]}>
-          <Icon name={stepIcon[first.kind]} size={22} color={colors.accent} />
+        <View style={[styles.next, { backgroundColor: colors.surface }]}>
+          <Icon name={stepIcon[first.kind]} size={22} color={colors.lavenderInk} />
           <View style={styles.flex}>
             <Text variant="callout" weight="600" numberOfLines={2}>
               {first.title}
@@ -72,7 +75,7 @@ export function AcademyCard() {
           Every lesson written so far is done. More topics are on the way.
         </Text>
       )}
-      <Text variant="footnote" color="label2">
+      <Text variant="footnote" style={{ color: colors.lavenderInk }}>
         {plan.length > 1 ? `Today: ${plan.length} things, about ${planMinutes(plan)} min.` : 'Your roadmap, readiness and grammar are inside.'}
       </Text>
       <View style={styles.actions}>
@@ -86,6 +89,7 @@ export function AcademyCard() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   card: { gap: space.md },
+  eyebrow: { letterSpacing: 0.8, marginBottom: -space.sm },
   head: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   pill: { paddingHorizontal: space.sm, paddingVertical: 4, borderRadius: radius.pill },
   well: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },

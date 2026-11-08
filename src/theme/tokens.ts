@@ -161,8 +161,17 @@ export const camera = {
   glass: 'rgba(12, 14, 18, 0.48)',
 } as const;
 
-/** Brand mark colours (the app icon): never UI state. */
-export const brand = { inkTop: '#1B2333', inkBottom: '#0B1019', corners: '#7F9DFF', glyph: '#FFFFFF', hacek: '#E8333A' };
+/** Brand mark colours (the app icon, scripts/icons/build.mjs): never UI state. */
+export const brand = {
+  tile: '#F7F3EB',
+  disc: '#BCE8F0',
+  glyph: '#252522',
+  hacek: '#F2784B',
+  tileDark: '#1B1B19',
+  discDark: '#2E5A61',
+  glyphDark: '#F7F3EB',
+  hacekDark: '#FF986E',
+};
 
 export const space = {
   xxs: 2,

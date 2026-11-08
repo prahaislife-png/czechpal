@@ -70,13 +70,16 @@ export default function LearnScreen() {
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
-      <AcademyCard />
-
-      <SpeakCard />
+      <View style={styles.heading}>
+        <Text variant="title1" accessibilityRole="header">
+          A little Czech every day
+        </Text>
+        <Text variant="callout" color="label2">
+          Today’s practice, your A2 journey, speaking and your words. Everything else is further down.
+        </Text>
+      </View>
 
       <DailyCard focus={focus} minutes={minutes} preview={preview} doneToday={doneToday} streakDays={streak(days)} />
-
-      <GetReady coming={coming} />
 
       {showContinue && last && (
         <PressableScale
@@ -100,6 +103,36 @@ export default function LearnScreen() {
         </PressableScale>
       )}
 
+      <AcademyCard />
+
+      <SpeakCard />
+
+      <Card style={[styles.words, { backgroundColor: colors.sky }]}>
+        <View style={styles.wordsHead}>
+          <View style={[styles.wordsIcon, { backgroundColor: colors.surface }]}>
+            <Icon name="cards" size={22} color={colors.skyInk} />
+          </View>
+          <View style={styles.wordsText}>
+            <Text variant="title3">My words</Text>
+            <Text variant="footnote" color="label2">
+              {saved === 0
+                ? 'Tap a word in a story and save it. It comes back here at the right moment.'
+                : due > 0
+                  ? `${due} ${due === 1 ? 'card' : 'cards'} to review · ${saved} saved`
+                  : `All caught up · ${saved} saved${next ? ` · next in ${untilLabel(next)}` : ''}`}
+            </Text>
+          </View>
+        </View>
+        {saved > 0 && (
+          <View style={styles.wordsActions}>
+            {due > 0 && <Button label={`Review ${Math.min(due, 20)}`} size="medium" variant="secondary" onPress={() => router.push('/flashcards')} />}
+            <Button label="See all" variant="secondary" size="medium" onPress={() => router.push('/learn/words')} />
+          </View>
+        )}
+      </Card>
+
+      <GetReady coming={coming} />
+
       <View>
         <SectionHeader
           title="Missions"
@@ -117,30 +150,6 @@ export default function LearnScreen() {
           ))}
         </View>
       </View>
-
-      <Card style={styles.words}>
-        <View style={styles.wordsHead}>
-          <View style={[styles.wordsIcon, { backgroundColor: colors.accentSoft }]}>
-            <Icon name="cards" size={22} color={colors.accent} />
-          </View>
-          <View style={styles.wordsText}>
-            <Text variant="headline">Your words</Text>
-            <Text variant="footnote" color="label2">
-              {saved === 0
-                ? 'Tap a word in a story and save it. It comes back here at the right moment.'
-                : due > 0
-                  ? `${due} ${due === 1 ? 'card' : 'cards'} to review · ${saved} saved`
-                  : `All caught up · ${saved} saved${next ? ` · next in ${untilLabel(next)}` : ''}`}
-            </Text>
-          </View>
-        </View>
-        {saved > 0 && (
-          <View style={styles.wordsActions}>
-            {due > 0 && <Button label={`Review ${Math.min(due, 20)}`} size="medium" variant="secondary" onPress={() => router.push('/flashcards')} />}
-            <Button label="See all" variant="secondary" size="medium" onPress={() => router.push('/learn/words')} />
-          </View>
-        )}
-      </Card>
 
       <List>
         <Row icon="chart" title="Progress" subtitle="Your streak, words known and the A2 exam parts" chevron onPress={() => router.push('/learn/progress')} />
@@ -206,9 +215,12 @@ function DailyCard({
   const { colors } = useTheme();
   const start = () => router.push('/session');
   return (
-    <Card style={styles.today}>
+    <Card style={[styles.today, { backgroundColor: colors.sage }]}>
+      <Text variant="footnote" weight="600" style={[styles.eyebrow, { color: colors.sageInk }]}>
+        TODAY’S PRACTICE
+      </Text>
       <View style={styles.todayHead}>
-        <Text variant="title2" accessibilityRole="header" style={styles.flex}>
+        <Text variant="title2" accessibilityRole="header" style={[styles.flex, { color: colors.sageInk }]}>
           {doneToday ? 'Done for today' : `Your ${minutes} minutes`}
         </Text>
         {streakDays > 0 && (
@@ -220,8 +232,8 @@ function DailyCard({
           </View>
         )}
       </View>
-      <View style={[styles.focus, { backgroundColor: colors.accentSoft }]}>
-        <Icon name={focus.situation.icon} size={22} color={colors.accent} />
+      <View style={[styles.focus, { backgroundColor: colors.surface }]}>
+        <Icon name={focus.situation.icon} size={22} color={colors.sageInk} />
         <View style={styles.flex}>
           <Text variant="callout" weight="600" numberOfLines={2}>
             {focus.situation.title}
@@ -231,7 +243,7 @@ function DailyCard({
           </Text>
         </View>
       </View>
-      <Text variant="footnote" color="label2">
+      <Text variant="footnote" style={{ color: colors.sageInk }}>
         {doneToday ? 'Come back tomorrow, or go round again.' : preview}
       </Text>
       <Button
@@ -369,6 +381,8 @@ function ProgressBar({ value }: { value: number }) {
 }
 
 const styles = StyleSheet.create({
+  heading: { gap: space.xs, paddingHorizontal: space.xs },
+  eyebrow: { letterSpacing: 0.8 },
   content: { padding: layout.gutter, paddingBottom: space.huge, gap: space.xxl },
   flex: { flex: 1 },
   today: { gap: space.md },

@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { CaseRow } from '@/components/case-row';
@@ -23,6 +23,7 @@ export default function HelpScreen() {
   const { colors } = useTheme();
   const cases = useStore((s) => s.cases);
   const recent = useMemo(() => cases.filter((c) => c.status !== 'draft').slice(0, 2), [cases]);
+  const [shareOpen, setShareOpen] = useState(false);
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
@@ -60,9 +61,25 @@ export default function HelpScreen() {
           <Source icon="pdf" label="PDF" onPress={async () => openReview(await pickPdf())} />
           <Source icon="paste" label="Type or paste" onPress={() => router.push('/paste')} />
         </View>
-        <Text variant="footnote" style={{ color: colors.skyInk }}>
-          Or share a photo, PDF or text to CzechLocal from any app.
-        </Text>
+        <Pressable
+          onPress={() => setShareOpen((o) => !o)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: shareOpen }}
+          accessibilityLabel="Share from other apps"
+          hitSlop={6}
+          style={styles.shareRow}>
+          <Icon name="share" size={16} color={colors.skyInk} />
+          <Text variant="subhead" weight="600" style={[styles.flex, { color: colors.skyInk }]}>
+            Share from other apps
+          </Text>
+          <Icon name="chevronDown" size={14} color={colors.skyInk} style={shareOpen ? styles.flip : undefined} />
+        </Pressable>
+        {shareOpen ? (
+          <Text variant="footnote" style={{ color: colors.skyInk }}>
+            In Photos, Files, Mail, Messages or WhatsApp, tap Share and choose CzechLocal. If it isn’t in the row, tap More and switch it on.
+            CzechLocal opens with the photo, PDF or text ready to explain.
+          </Text>
+        ) : null}
       </View>
 
       {recent.length ? (
@@ -134,5 +151,7 @@ const styles = StyleSheet.create({
   eyebrow: { letterSpacing: 0.8 },
   camera: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderRadius: radius.tile + 4, borderCurve: 'continuous', padding: space.lg, minHeight: 64 },
   sources: { flexDirection: 'row', gap: space.sm },
+  shareRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 44 },
+  flip: { transform: [{ rotate: '180deg' }] },
   source: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.xs, borderRadius: radius.tile, borderCurve: 'continuous', paddingVertical: space.md, minHeight: 72 },
 });
