@@ -2,7 +2,7 @@ import type { GrammarItem } from './types';
 
 /**
  * Grammar foundations: short, practical explanations with examples, in the order learners need
- * them. Written for CzechPal and checked by AI on 2026-11-06; not reviewed by a teacher.
+ * them. Written for CzechLocal and checked by AI on 2026-11-06; not reviewed by a teacher.
  * Tips marked with the exam come from the organiser's guide "Na co si dát pozor" (2026).
  */
 const meta = { review: 'ai-checked', checkedOn: '2026-11-06' } as const;

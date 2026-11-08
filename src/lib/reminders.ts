@@ -108,7 +108,7 @@ export async function scheduleReminder(input: Omit<Reminder, 'notificationIds'>)
 export async function testReminder() {
   if (!supported || !(await allowed())) return false;
   await Notifications.scheduleNotificationAsync({
-    content: { title: 'Due in 3 days: Pay 1 840 Kč', body: 'A test reminder from CzechPal.' },
+    content: { title: 'Due in 3 days: Pay 1 840 Kč', body: 'A test reminder from CzechLocal.' },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 10, channelId: CHANNEL },
   });
   return true;

@@ -39,7 +39,7 @@ export default function HelpCategoryScreen() {
           </List>
           <Text variant="footnote" color="label3" style={styles.note}>
             Every practice and pharmacy in the official register, with who’s taking new patients and who speaks English, as
-            reported by other CzechPal users. Needing a doctor tonight? See After-hours care on the Help page.
+            reported by other CzechLocal users. Needing a doctor tonight? See After-hours care on the Help page.
           </Text>
         </View>
       )}

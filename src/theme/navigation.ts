@@ -1,6 +1,6 @@
 import type { NativeStackNavigationOptions } from 'expo-router';
 
-import type { Palette } from './tokens';
+import { fonts, type Palette } from './tokens';
 
 const isIOS = process.env.EXPO_OS === 'ios';
 
@@ -24,7 +24,7 @@ export function largeTitleOptions(colors: Palette): NativeStackNavigationOptions
     headerBlurEffect: isIOS ? 'systemChromeMaterial' : undefined,
     headerLargeStyle: { backgroundColor: 'transparent' },
     headerLargeTitleShadowVisible: false,
-    headerLargeTitleStyle: { color: colors.label },
+    headerLargeTitleStyle: { color: colors.label, fontFamily: fonts.display },
     headerStyle: isIOS ? undefined : { backgroundColor: colors.background },
   };
 }

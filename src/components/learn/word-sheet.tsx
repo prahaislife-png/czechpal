@@ -105,7 +105,7 @@ export function WordSheet({
         </>
       ) : (
         <Text variant="callout" color="label2">
-          This word isn’t in CzechPal’s word list yet, so there’s no explanation for it.
+          This word isn’t in CzechLocal’s word list yet, so there’s no explanation for it.
         </Text>
       )}
     </Animated.View>

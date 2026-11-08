@@ -35,7 +35,7 @@ export default function HistoryScreen() {
             Everything you scan or type is kept here, so you can come back to the translation and your reply.
           </Text>
         </View>
-        <Button label="Scan something" variant="secondary" size="medium" onPress={() => router.push('/scan')} />
+        <Button label="Go to Help" variant="secondary" size="medium" onPress={() => router.navigate('/help')} />
       </ScrollView>
     );
   }

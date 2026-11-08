@@ -122,7 +122,7 @@ function Conversation({ info, czechVoice }: { info: SituationInfo; czechVoice: s
                   : c.phase === 'lost'
                     ? 'Disconnected'
                     : c.partnerSpeaking
-                      ? 'CzechPal is speaking'
+                      ? 'CzechLocal is speaking'
                       : c.muted
                         ? 'Microphone off'
                         : 'Listening… take your time'}
@@ -348,8 +348,8 @@ function Intro({ info, c }: { info: SituationInfo; c: C }) {
           <Text variant="headline">Czech only</Text>
           <Text variant="footnote" color="label2">
             {czechOnly
-              ? 'CzechPal speaks only Czech, like a real conversation. Fewer corrections.'
-              : 'Off: talk in any language. CzechPal answers in yours, teaches you Czech and corrects you as you go.'}
+              ? 'CzechLocal speaks only Czech, like a real conversation. Fewer corrections.'
+              : 'Off: talk in any language. CzechLocal answers in yours, teaches you Czech and corrects you as you go.'}
           </Text>
         </View>
         <Switch
@@ -379,7 +379,7 @@ function Intro({ info, c }: { info: SituationInfo; c: C }) {
       {!consent && !voiceOff ? (
         <Text variant="footnote" color="label2" align="center">
           Speak Czech sends your voice to OpenAI, which runs the conversation, and the text of it to Anthropic’s Claude for meanings and feedback. Neither is
-          kept by CzechPal, and no recording is saved. Your progress stays on this phone.
+          kept by CzechLocal, and no recording is saved. Your progress stays on this phone.
         </Text>
       ) : null}
 
@@ -470,7 +470,7 @@ function Typed({ info, c, canTalk }: { info: SituationInfo; c: C; canTalk: boole
       <TranscriptList turns={c.turns} meanings={c.meanings} meaningOn={meaningOn} />
       {c.waiting ? (
         <Text variant="footnote" color="label3" align="center">
-          CzechPal is writing…
+          CzechLocal is writing…
         </Text>
       ) : null}
       {c.error ? (
@@ -537,7 +537,7 @@ function Review({ info, c }: { info: SituationInfo; c: C }) {
         <View style={[styles.card, { backgroundColor: colors.surface, boxShadow: colors.shadow }]}>
           <Text variant="headline">Nothing to review this time</Text>
           <Text variant="callout" color="label2">
-            CzechPal didn’t hear an answer from you, so there’s no feedback and nothing was added to your progress. Try again whenever you like.
+            CzechLocal didn’t hear an answer from you, so there’s no feedback and nothing was added to your progress. Try again whenever you like.
           </Text>
         </View>
       ) : (

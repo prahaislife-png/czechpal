@@ -27,7 +27,7 @@ export default function GrammarScreen() {
         ))}
       </List>
       <Text variant="footnote" color="label3" style={styles.note}>
-        Written for CzechPal and checked by AI. If something looks wrong, tell us from Help.
+        Written for CzechLocal and checked by AI. If something looks wrong, tell us from Help.
       </Text>
     </ScrollView>
   );

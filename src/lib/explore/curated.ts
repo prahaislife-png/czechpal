@@ -1,7 +1,7 @@
 import type { ActivityId, ExplorePlace, PlaceCategory } from './types';
 
 /**
- * Places CzechPal has written up by hand. Coordinates and districts were checked against
+ * Places CzechLocal has written up by hand. Coordinates and districts were checked against
  * OpenStreetMap (Nominatim) on 2026-11-03. Descriptions keep to lasting facts: no opening hours,
  * prices or anything else that changes; seasonal places say so and ask the reader to check.
  *

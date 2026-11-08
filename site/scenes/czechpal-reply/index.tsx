@@ -3,7 +3,7 @@ import { Bar, Phone, Spinner, Stage, Stream, type Act } from '../../kit'
 import { useDark } from '../czechpal-app/ui'
 import './reply.css'
 
-// "Write in Czech, from your own words": CzechPal's Write in Czech screen,
+// "Write in Czech, from your own words": CzechLocal's Write in Czech screen,
 // phone only. Story: the person types what they want to say in plain
 // English, taps Write it in Czech, and a polite Czech message is written
 // out word by word under it. The loop leaves the way it came: the message
@@ -47,7 +47,7 @@ const script = async (a: Act<S>) => {
   await a.wait(400)
 }
 
-export default function CzechPalReply() {
+export default function CzechLocalReply() {
   const dark = useDark()
   return (
     <Stage<S>

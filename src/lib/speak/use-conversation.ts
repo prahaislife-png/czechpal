@@ -184,7 +184,7 @@ export function useConversation(situation: SpeakSituation, czechVoice?: string |
       setElapsed(0);
       go('live');
       voice.cue(cues.current!.greeting);
-      announce('Connected. CzechPal is speaking.');
+      announce('Connected. CzechLocal is speaking.');
     } catch (e) {
       provider.current = null;
       await stopVoice('failed');

@@ -85,7 +85,7 @@ export async function callStructured(opts: {
     if (e instanceof Anthropic.APIUserAbortError || opts.signal?.aborted) {
       throw new AiError(499, 'cancelled', 'The app stopped waiting for this explanation.');
     }
-    if (e instanceof Anthropic.RateLimitError) throw new AiError(503, 'busy', 'CzechPal is busy right now. Try again in a minute.');
+    if (e instanceof Anthropic.RateLimitError) throw new AiError(503, 'busy', 'CzechLocal is busy right now. Try again in a minute.');
     if (e instanceof Anthropic.APIError) {
       console.error('Claude API error', e.status, e.message);
       throw new AiError(502, 'ai_error', 'The AI service had a problem. Please try again.', `${e.status} ${e.message}`.slice(0, 500));

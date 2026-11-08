@@ -1,4 +1,4 @@
-# Rehearsal: CzechPal website scenes
+# Rehearsal: CzechLocal website scenes
 
 Built with the Stageshow kit and filmed with its film tool at both widths, light and dark.
 
@@ -9,7 +9,7 @@ Built with the Stageshow kit and filmed with its film tool at both widths, light
 | `czechpal-anything` | `choreography` (content changing in place) | A conveyor of a door notice, a menu and a medicine label; the app's answer card beside it changes to say what each means. |
 | `czechpal-find` | `phone-touch` | The Find tab: India typed, the Indian embassy found, its address, phone and hours from the official list. |
 
-The screens copy the app's real ones (`src/app/case/[id].tsx`, `src/components/analysis.tsx`, `src/app/compose.tsx`, `src/app/(tabs)/help/`) with the app's own tokens. The embassy's details are the ones in CzechPal's `places` table.
+The screens copy the app's real ones (`src/app/case/[id].tsx`, `src/components/analysis.tsx`, `src/app/compose.tsx`, `src/app/(tabs)/help/`) with the app's own tokens. The embassy's details are the ones in CzechLocal's `places` table.
 
 ## Film lines left on purpose
 

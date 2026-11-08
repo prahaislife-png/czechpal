@@ -1,5 +1,5 @@
 /**
- * The CzechPal mark as vector data, generated with the app icon (Plus Jakarta Sans ExtraBold "Č",
+ * The CzechLocal mark as vector data, generated with the app icon (Plus Jakarta Sans ExtraBold "Č",
  * SIL Open Font Licence, converted to outlines). Draw on a 100 × 100 viewBox.
  */
 export const brandMark = {

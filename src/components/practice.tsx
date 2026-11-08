@@ -71,7 +71,7 @@ function StatusLine({ icon, title, detail, tone }: { icon: IconName; title: stri
   );
 }
 
-/** What CzechPal users reported about a practice, each with its date. */
+/** What CzechLocal users reported about a practice, each with its date. */
 export function PracticeStatus({ practice: p }: { practice: Practice }) {
   const recent = p.new_patients_yes + p.new_patients_no;
   const agreeing = p.new_patients === 'yes' ? p.new_patients_yes : p.new_patients_no;

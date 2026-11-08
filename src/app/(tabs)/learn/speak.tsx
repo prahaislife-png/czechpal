@@ -28,7 +28,7 @@ import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
 /**
- * Speak Czech: talk with CzechPal in Czech. Free talk and situations to start a conversation, then
+ * Speak Czech: talk with CzechLocal in Czech. Free talk and situations to start a conversation, then
  * what the learner's own conversations show: level, abilities, words, what to practise next.
  */
 export default function SpeakHub() {
@@ -52,7 +52,7 @@ export default function SpeakHub() {
           <Orb size={96} input={idle} output={idle} state="idle" />
         </View>
         <Text variant="title2" align="center" accessibilityRole="header">
-          Talk with CzechPal
+          Talk with CzechLocal
         </Text>
         <Text variant="callout" color="label2" align="center">
           A friendly tutor who talks with you in any language, teaches you Czech as you go and corrects you kindly. Feedback at the end.
@@ -173,8 +173,8 @@ export default function SpeakHub() {
       ) : null}
 
       <Text variant="footnote" color="label3" style={styles.note}>
-        Your voice goes to OpenAI during a conversation, and its text to Anthropic’s Claude for meanings and feedback; neither is kept by CzechPal and no
-        recording is saved. CzechPal can’t judge pronunciation. Progress stays on this phone.
+        Your voice goes to OpenAI during a conversation, and its text to Anthropic’s Claude for meanings and feedback; neither is kept by CzechLocal and no
+        recording is saved. CzechLocal can’t judge pronunciation. Progress stays on this phone.
       </Text>
     </ScrollView>
   );

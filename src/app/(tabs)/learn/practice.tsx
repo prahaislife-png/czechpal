@@ -44,7 +44,7 @@ export default function PracticeScreen() {
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
       <Text variant="subhead" color="label2" style={styles.note}>
-        Practice in the exam’s own formats, one task at a time. Written for CzechPal, never copied from a real test.
+        Practice in the exam’s own formats, one task at a time. Written for CzechLocal, never copied from a real test.
       </Text>
 
       <List>
@@ -99,12 +99,12 @@ export default function PracticeScreen() {
           ))}
         </List>
         <Text variant="footnote" color="label3" style={[styles.note, styles.under]}>
-          You record your answers and play them back. Recordings stay on this phone. CzechPal doesn’t score speaking.
+          You record your answers and play them back. Recordings stay on this phone. CzechLocal doesn’t score speaking.
         </Text>
       </View>
 
       <Text variant="footnote" color="label3" style={styles.note}>
-        Written for CzechPal and checked by AI; if something looks wrong, tell us from Help.
+        Written for CzechLocal and checked by AI; if something looks wrong, tell us from Help.
       </Text>
     </ScrollView>
   );

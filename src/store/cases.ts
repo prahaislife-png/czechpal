@@ -85,7 +85,11 @@ type State = {
   about: AboutMe;
   /** Deadline and permit reminders scheduled on this phone. */
   reminders: Reminder[];
+  /** Where the app opens: auto = Explore, or Learn when the learner's goal is the A2 exam. */
+  startTab: StartTab;
 };
+
+export type StartTab = 'auto' | 'explore' | 'learn';
 
 export type MyDetails = { name: string; address: string; insurer?: Insurer };
 
@@ -106,6 +110,7 @@ type Actions = {
   /** Asks the server for this month's allowance. Quietly does nothing offline or in demo mode. */
   syncAllowance: () => Promise<void>;
   setAiConsent: (value: boolean) => void;
+  setStartTab: (value: StartTab) => void;
   setLanguage: (language: LanguageCode) => void;
   setDetails: (change: Partial<MyDetails>) => void;
   setAbout: (change: Partial<AboutMe>) => void;
@@ -142,6 +147,7 @@ export const useStore = create<State & Actions>()(
         details: { name: '', address: '' },
         about: {},
         reminders: [],
+        startTab: 'auto',
 
         completeOnboarding: () => set({ onboarded: true }),
         resetOnboarding: () => set({ onboarded: false }),
@@ -243,6 +249,7 @@ export const useStore = create<State & Actions>()(
           }
         },
         setAiConsent: (aiConsent) => set({ aiConsent }),
+        setStartTab: (startTab) => set({ startTab }),
         setLanguage: (language) => set({ language }),
         setDetails: (change) => set((s) => ({ details: { ...s.details, ...change } })),
         setAbout: (change) => set((s) => ({ about: { ...s.about, ...change } })),
@@ -258,8 +265,9 @@ export const useStore = create<State & Actions>()(
     {
       name: STORAGE_KEY,
       storage: createJSONStorage(() => storage),
-      partialize: ({ onboarded, cases, usage, aiConsent, language, details, about, reminders }) => ({
+      partialize: ({ onboarded, cases, usage, aiConsent, language, details, about, reminders, startTab }) => ({
         onboarded,
+        startTab,
         aiConsent,
         language,
         details,

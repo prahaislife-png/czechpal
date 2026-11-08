@@ -118,9 +118,9 @@ export default function PlaceScreen() {
         <View style={[styles.note, { backgroundColor: ex.card, borderColor: ex.line }]}>
           <Text variant="footnote" style={{ color: ex.ink2 }}>
             {place.source === 'curated'
-              ? `Written up by CzechPal; location from OpenStreetMap, checked on ${checked}.`
+              ? `Written up by CzechLocal; location from OpenStreetMap, checked on ${checked}.`
               : `From OpenStreetMap, the map anyone can edit, as of ${checked}.`}{' '}
-            CzechPal shows no opening hours or prices: check before you go.
+            CzechLocal shows no opening hours or prices: check before you go.
           </Text>
           {place.sourceUrl ? (
             <Pressable onPress={() => Linking.openURL(place.sourceUrl!)} accessibilityRole="link" hitSlop={6}>

@@ -9,7 +9,7 @@ import { ensureSession, supabase } from '@/lib/supabase';
  *
  * The list is the official National Register of Healthcare Providers (NRPZS, ÚZIS ČR, CC BY 4.0),
  * imported by scripts/import-providers.mjs. The status (new patients, English, extra fees) is
- * what CzechPal users reported, each with a date, summarised on the server.
+ * what CzechLocal users reported, each with a date, summarised on the server.
  */
 
 export type PracticeKind = 'gp' | 'dentist' | 'children' | 'gynecology' | 'psychiatry' | 'psychology' | 'pharmacy';

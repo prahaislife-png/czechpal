@@ -26,7 +26,7 @@ const MZV = 'https://mzv.gov.cz';
 const MZV_INDEX = `${MZV}/jnp/en/diplomatic_missions/foreign_missions_to_the_czech_republic/index.html`;
 const MZV_RANGES = ['A-C', 'D-F', 'G-I', 'J-L', 'M-O', 'P-R', 'S-U', 'V-Z'];
 const PRAGUE = 'Hlavní město Praha';
-const UA = { 'User-Agent': 'CzechPal directory importer (contact: see app support page)' };
+const UA = { 'User-Agent': 'CzechLocal directory importer (contact: see app support page)' };
 
 const dryRun = process.argv.includes('--dry-run');
 const today = new Date().toISOString().slice(0, 10);

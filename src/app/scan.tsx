@@ -67,7 +67,7 @@ export default function ScanScreen() {
       <Prompt
         icon="camera"
         title="Camera access is off"
-        body="Turn on camera access for CzechPal in Settings, or choose a photo you already have."
+        body="Turn on camera access for CzechLocal in Settings, or choose a photo you already have."
         action={isNative ? { label: 'Open Settings', onPress: () => Linking.openSettings() } : undefined}
         onLibrary={fromLibrary}
       />

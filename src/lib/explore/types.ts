@@ -34,7 +34,7 @@ export type ExplorePlace = {
   description: string;
   /** Only a photo whose source and licence were checked. */
   photo?: { uri: string; credit: string };
-  /** 'osm': OpenStreetMap. 'curated': written up by CzechPal (and checked on the map). */
+  /** 'osm': OpenStreetMap. 'curated': written up by CzechLocal (and checked on the map). */
   source: 'osm' | 'curated';
   /** The place on openstreetmap.org, for OSM places. */
   sourceUrl?: string;

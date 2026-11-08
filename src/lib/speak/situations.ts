@@ -5,7 +5,7 @@ import type { SpeakSituation } from './types';
 /**
  * Speak Czech conversations. The partner's side of each (role, objectives, pitch) is written on the
  * server in speak-policy.ts; this is what the learner sees. Ids must match SPEAK_SITUATIONS there.
- * Original CzechPal content, AI-checked, not teacher-reviewed.
+ * Original CzechLocal content, AI-checked, not teacher-reviewed.
  */
 export type SituationInfo = {
   id: SpeakSituation;

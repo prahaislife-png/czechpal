@@ -164,7 +164,7 @@ export default function ReplyScreen() {
               />
               {needsConsent && (
                 <Text variant="footnote" color="label2">
-                  CzechPal sends this to Anthropic’s Claude AI to write the reply. CzechPal doesn’t keep it, and Anthropic
+                  CzechLocal sends this to Anthropic’s Claude AI to write the reply. CzechLocal doesn’t keep it, and Anthropic
                   doesn’t use it to train AI models.
                 </Text>
               )}

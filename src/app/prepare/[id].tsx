@@ -127,7 +127,7 @@ export default function PrepareScreen() {
         <Text variant="footnote" color="label3" style={styles.note}>
           {SITUATIONS_REVIEWED
             ? 'Phrases reviewed by a native Czech teacher.'
-            : 'Phrases written for CzechPal. If one sounds wrong to you, tell us from Help.'}
+            : 'Phrases written for CzechLocal. If one sounds wrong to you, tell us from Help.'}
           {canListen ? ' Audio uses your phone’s own Czech voice.' : ''}
         </Text>
       </ScrollView>

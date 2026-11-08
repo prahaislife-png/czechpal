@@ -4,10 +4,10 @@ import type { TaskSet } from '../types';
 /**
  * Listening practice shaped like the exam's five listening tasks, spoken by the phone's own Czech
  * voice (one voice for every speaker; a dash marks a new speaker). In exam mode each recording can
- * be played twice, as in the exam. Every recording is written for CzechPal.
+ * be played twice, as in the exam. Every recording is written for CzechLocal.
  */
 
-const meta = { version: 1, review: 'ai-checked', author: 'CzechPal', licence: 'original', checkedOn: CONTENT_CHECKED_ON } as const;
+const meta = { version: 1, review: 'ai-checked', author: 'CzechLocal', licence: 'original', checkedOn: CONTENT_CHECKED_ON } as const;
 
 export const listeningSets: TaskSet[] = [
   {

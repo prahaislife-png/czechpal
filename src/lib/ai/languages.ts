@@ -1,5 +1,5 @@
 /**
- * Languages CzechPal can explain in. The app's own buttons stay in English; this sets the
+ * Languages CzechLocal can explain in. The app's own buttons stay in English; this sets the
  * language of explanations and of the translation shown under a Czech reply.
  * The server keeps the same list (supabase/functions/_shared/languages.ts) and ignores anything else.
  */

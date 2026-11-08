@@ -2,12 +2,12 @@ import { CONTENT_CHECKED_ON } from '../make';
 import type { SpeakingTask } from '../types';
 
 /**
- * Speaking practice shaped like the exam's four tasks. Written for CzechPal, never copied from a
+ * Speaking practice shaped like the exam's four tasks. Written for CzechLocal, never copied from a
  * real test. Nothing here is marked automatically: the learner records, plays it back, compares
  * with a model answer and checks it against the list.
  */
 
-const meta = { version: 1, review: 'ai-checked', author: 'CzechPal', licence: 'original', checkedOn: CONTENT_CHECKED_ON } as const;
+const meta = { version: 1, review: 'ai-checked', author: 'CzechLocal', licence: 'original', checkedOn: CONTENT_CHECKED_ON } as const;
 
 const CHECKS = {
   1: [

@@ -6,7 +6,7 @@ import { fail } from '../_shared/claude.ts';
  * POST /report-provider
  * { providerId, newPatients?: 'yes'|'no', english?: 'good'|'basic'|'none', extraFee?: 'yes'|'no', insurer?: '111'|… }
  *
- * What a CzechPal user found out about a practice. One report per person per practice per day
+ * What a CzechLocal user found out about a practice. One report per person per practice per day
  * (sending again that day corrects it), at most DAILY_LIMIT reports per person per day.
  * Returns the practice's updated public summary.
  */

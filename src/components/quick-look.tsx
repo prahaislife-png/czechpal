@@ -45,7 +45,7 @@ export function QuickLook({
       {look.state === 'consent' ? (
         <View style={styles.body}>
           <Text variant="callout" color="label2">
-            Translating sends this photo to the AI service that reads it for CzechPal. Nothing is kept.
+            Translating sends this photo to the AI service that reads it for CzechLocal. Nothing is kept.
           </Text>
           <Button label="Allow and translate" size="medium" onPress={onAllow} style={styles.start} />
         </View>

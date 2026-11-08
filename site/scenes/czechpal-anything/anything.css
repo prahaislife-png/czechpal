@@ -181,7 +181,7 @@
   line-height: 1.25;
 }
 
-/* CzechPal's answer: the app's own card, in front */
+/* CzechLocal's answer: the app's own card, in front */
 .cp-anything .cp-answer-card {
   position: absolute;
   top: 246px;

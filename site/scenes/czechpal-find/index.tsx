@@ -3,14 +3,14 @@ import { Bar, Phone, Stage, type Act } from '../../kit'
 import { useDark } from '../czechpal-app/ui'
 import './find.css'
 
-// "Find who you need": CzechPal's Find tab, phone only. Story: someone types
+// "Find who you need": CzechLocal's Find tab, phone only. Story: someone types
 // India into the search, the Indian embassy comes up among the places, a tap
 // opens it with the address, phone and office hours from the official list,
 // and Back returns to the search. The loop leaves the way the product does:
 // the search is cleared and the areas come back.
 // Real strings: Find, the placeholder, the five areas, what is typed, the
 // result, and the embassy's details (as published by the Ministry of Foreign
-// Affairs and kept in CzechPal's places table).
+// Affairs and kept in CzechLocal's places table).
 
 type S = { q: string; caret: boolean; page: 'find' | 'place' }
 
@@ -47,7 +47,7 @@ const script = async (a: Act<S>) => {
   await a.wait(600)
 }
 
-export default function CzechPalFind() {
+export default function CzechLocalFind() {
   const dark = useDark()
   return (
     <Stage<S>

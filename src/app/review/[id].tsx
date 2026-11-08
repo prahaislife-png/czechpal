@@ -85,7 +85,7 @@ export default function ReviewScreen() {
         ) : needsConsent ? (
           <>
             <Text variant="footnote" color="label2" align="center">
-              To explain it, CzechPal sends this text or photo securely to Anthropic’s Claude AI. CzechPal doesn’t keep
+              To explain it, CzechLocal sends this text or photo securely to Anthropic’s Claude AI. CzechLocal doesn’t keep
               it, and Anthropic doesn’t use it to train AI models. You can change this in Settings.
             </Text>
             <Button

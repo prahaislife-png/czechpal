@@ -35,7 +35,7 @@ import {
 import { useExplorePlaces } from '@/lib/explore/source';
 import type { ActivityId, Area, ExplorePlace, LatLng } from '@/lib/explore/types';
 import { useExplore } from '@/store/explore';
-import { layout, radius, space } from '@/theme/tokens';
+import { fonts, layout, radius, space } from '@/theme/tokens';
 import { useExploreTheme } from '@/theme/use-theme';
 
 type Tab = 'explore' | 'plan' | 'people' | 'saved';
@@ -110,12 +110,16 @@ export default function ExploreScreen() {
   );
   const selectedPlace = activeId ? (shown.find((p) => p.id === activeId) ?? null) : null;
 
-  // Sheet heights: about a quarter (never less than its header), about half, about nine tenths.
+  // Sheet heights, measured on the space actually available above the tab bar: Discover (about 28 %,
+  // never less than its header), Browse (about 56 %) and Details (about 86 %, always below the
+  // status bar and the sheet's own tabs).
   const [headerHeight, setHeaderHeight] = useState(180);
   const snaps = useMemo(() => {
-    const high = Math.max(Math.round(H * 0.1), insets.top + TAB_HEIGHT + space.sm);
-    const low = Math.max(high + 160, Math.min(Math.round(H * 0.75), H - tabBar - headerHeight));
-    const mid = Math.min(Math.round(H * 0.45), low - 80);
+    const usable = H - tabBar;
+    const showing = (share: number) => H - tabBar - Math.round(usable * share);
+    const high = Math.max(showing(0.86), insets.top + TAB_HEIGHT + space.sm);
+    const low = Math.max(high + 160, Math.min(showing(0.28), H - tabBar - headerHeight));
+    const mid = Math.max(high + 80, Math.min(showing(0.56), low - 80));
     return { low, mid, high };
   }, [H, insets.top, tabBar, headerHeight]);
   const [stop, setStop] = useState<SheetStop>('mid');
@@ -223,7 +227,7 @@ export default function ExploreScreen() {
       const p = await Location.requestForegroundPermissionsAsync();
       if (!p.granted) {
         setCanLocate(p.canAskAgain);
-        say('Location is off for CzechPal. You can still explore the whole city.');
+        say('Location is off for CzechLocal. You can still explore the whole city.');
         return null;
       }
       const here = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
@@ -510,10 +514,10 @@ export default function ExploreScreen() {
         <View
           style={[styles.brand, { backgroundColor: ex.float, borderColor: ex.line, boxShadow: ex.shadow }]}
           accessibilityRole="header"
-          accessibilityLabel="CzechPal Explore">
+          accessibilityLabel="CzechLocal: explore Prague">
           <BrandMark size={24} />
-          <Text variant="headline" weight="700" chrome style={{ color: ex.ink }}>
-            Explore
+          <Text maxFontSizeMultiplier={1.4} style={[styles.wordmark, { color: ex.ink }]}>
+            CzechLocal
           </Text>
         </View>
         <View style={styles.controls}>
@@ -742,6 +746,7 @@ function SourceNote() {
 const count = (n: number) => (n === 1 ? '1 place' : `${n.toLocaleString('en-GB')} places`);
 
 const styles = StyleSheet.create({
+  wordmark: { fontFamily: fonts.display, fontSize: 20, lineHeight: 24, letterSpacing: -0.2 },
   root: { flex: 1 },
   bar: {
     position: 'absolute',

@@ -3,10 +3,10 @@ import type { TaskSet } from '../types';
 
 /**
  * Reading practice shaped like the exam's five reading tasks. Every text is written for
- * CzechPal; the formats follow the organiser's description, the content isn't taken from any test.
+ * CzechLocal; the formats follow the organiser's description, the content isn't taken from any test.
  */
 
-const meta = { version: 1, review: 'ai-checked', author: 'CzechPal', licence: 'original', checkedOn: CONTENT_CHECKED_ON } as const;
+const meta = { version: 1, review: 'ai-checked', author: 'CzechLocal', licence: 'original', checkedOn: CONTENT_CHECKED_ON } as const;
 
 export const readingSets: TaskSet[] = [
   {

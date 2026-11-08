@@ -44,7 +44,7 @@ export type ContentMeta = {
   taskType?: string;
   difficulty: 1 | 2 | 3;
   review: Review;
-  author: 'CzechPal';
+  author: 'CzechLocal';
   licence: 'original';
   checkedOn: string;
 };
@@ -187,7 +187,7 @@ export type TaskSet = {
   /** 'mock': kept for the mock exam, so it is unseen there; not listed in everyday practice. */
   pool?: 'mock';
   review: Review;
-  author: 'CzechPal';
+  author: 'CzechLocal';
   licence: 'original';
   checkedOn: string;
 };
@@ -211,7 +211,7 @@ export type WritingTask = {
   /** 'mock': kept for the mock exam; not listed in everyday practice. */
   pool?: 'mock';
   review: Review;
-  author: 'CzechPal';
+  author: 'CzechLocal';
   licence: 'original';
   checkedOn: string;
 };
@@ -238,7 +238,7 @@ export type SpeakingPrompt = {
   tip?: string;
 };
 
-/** A speaking task shaped like the exam's. Written for CzechPal; never copied from a real test. */
+/** A speaking task shaped like the exam's. Written for CzechLocal; never copied from a real test. */
 export type SpeakingTask = {
   id: string;
   version: number;
@@ -253,7 +253,7 @@ export type SpeakingTask = {
   /** What to listen for when you play yourself back. */
   checklist: string[];
   review: Review;
-  author: 'CzechPal';
+  author: 'CzechLocal';
   licence: 'original';
   checkedOn: string;
 };

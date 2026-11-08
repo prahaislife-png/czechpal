@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "CzechPal",
+    "name": "CzechLocal",
     "slug": "czechpal",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -94,7 +94,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "CzechPal shows where you are on the Explore map, so you can find parks and viewpoints near you.",
+          "locationWhenInUsePermission": "CzechLocal shows where you are on the Explore map, so you can find parks and viewpoints near you.",
           "locationAlwaysAndWhenInUsePermission": false,
           "locationAlwaysPermission": false,
           "isIosBackgroundLocationEnabled": false,
@@ -105,18 +105,18 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "CzechPal opens your photos so you can explain a picture of Czech text you took earlier.",
-          "cameraPermission": "CzechPal uses the camera to read Czech text you point it at.",
-          "microphonePermission": "CzechPal uses the microphone when you practise speaking Czech: to record answers you play back on your phone, and in Speak Czech, to talk with its AI conversation partner."
+          "photosPermission": "CzechLocal opens your photos so you can explain a picture of Czech text you took earlier.",
+          "cameraPermission": "CzechLocal uses the camera to read Czech text you point it at.",
+          "microphonePermission": "CzechLocal uses the microphone when you practise speaking Czech: to record answers you play back on your phone, and in Speak Czech, to talk with its AI conversation partner."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "CzechPal uses the camera to read Czech text you point it at.",
+          "cameraPermission": "CzechLocal uses the camera to read Czech text you point it at.",
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": false,
-          "microphonePermission": "CzechPal uses the microphone when you practise speaking Czech: to record answers you play back on your phone, and in Speak Czech, to talk with its AI conversation partner."
+          "microphonePermission": "CzechLocal uses the microphone when you practise speaking Czech: to record answers you play back on your phone, and in Speak Czech, to talk with its AI conversation partner."
         }
       ],
       [
@@ -144,7 +144,7 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "CzechPal uses the microphone when you practise speaking Czech: to record answers you play back on your phone, and in Speak Czech, to talk with its AI conversation partner.",
+          "microphonePermission": "CzechLocal uses the microphone when you practise speaking Czech: to record answers you play back on your phone, and in Speak Czech, to talk with its AI conversation partner.",
           "recordAudioAndroid": true,
           "enableBackgroundPlayback": false,
           "enableBackgroundRecording": false
@@ -154,8 +154,8 @@
       [
       "@config-plugins/react-native-webrtc",
       {
-        "cameraPermission": "CzechPal uses the camera to read Czech text you point it at.",
-        "microphonePermission": "CzechPal uses the microphone when you practise speaking Czech: to record answers you play back on your phone, and in Speak Czech, to talk with its AI conversation partner."
+        "cameraPermission": "CzechLocal uses the camera to read Czech text you point it at.",
+        "microphonePermission": "CzechLocal uses the microphone when you practise speaking Czech: to record answers you play back on your phone, and in Speak Czech, to talk with its AI conversation partner."
       }
     ]
     ],
