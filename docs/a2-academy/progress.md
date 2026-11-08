@@ -157,7 +157,7 @@ the answers).
 Limits: there is one mock so far; a second run repeats the same questions, and the hub says so.
 Writing and speaking aren't scored. A mock shows one day's performance; it isn't a prediction.
 
-## Phase 4 – Content and polish: done (except AI writing feedback)
+## Phase 4 – Content and polish: done
 
 | Item | Where | State |
 |---|---|---|
@@ -188,3 +188,19 @@ cost). Not tested on an iPhone; listening not heard (no Czech voice in the brows
 
 Limits: all content is AI-checked, not teacher-reviewed. Pictures are icons. One device voice reads
 every speaker.
+
+## AI writing feedback: built (approved by the owner on 2026-11-07)
+
+| Item | Where | State |
+|---|---|---|
+| `learn-feedback` Edge Function: Claude (Sonnet 5.5) judges a form or e-mail against the exam's published requirements and returns an estimate of the points, each requirement judged, up to 8 corrections and a corrected version. Its own limits (3 a minute, 10 a day); doesn't use the 20 free explanations; the text isn't stored, only the call's size and result, as for every AI call | `supabase/functions/learn-feedback`, `_shared/feedback.ts` | Built; deploy pending |
+| Hard rules in code, not left to the model: points kept whole and within 0–8 / 0–12; an e-mail under 35 words scores 0; one corrected text per answer | `_shared/feedback-rules.ts` | Done, tested |
+| `ai_calls.kind` allows `learn` | `supabase/migrations/20261107090000_learn_feedback_calls.sql` | Written; push pending |
+| "Get feedback from AI" after the writing coach and the mock's writing: the same consent as explanations, labelled "an estimate, not an exam score" everywhere; saved on the phone with the attempt; the demo build says it needs the server instead of inventing feedback | `src/components/academy/writing-feedback.tsx`, `a2-writing/[id].tsx`, `a2-mock/[section].tsx`, `src/lib/ai` | Done |
+| Privacy policy: writing feedback added to what is sent to the AI and to the usage log | `docs/privacy.html` | Done |
+
+Also fixed while checking: `expo-asset`, a required peer of `expo-audio`, was missing (expo-doctor:
+the app could crash outside Expo Go). Installed; expo-doctor passes 20 of 20.
+
+To go live (needs the owner's terminal; the agent's production-deploy step was blocked):
+`npx supabase db push --remote`, then `npx supabase functions deploy learn-feedback`.

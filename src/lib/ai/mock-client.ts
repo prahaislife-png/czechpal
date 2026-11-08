@@ -9,6 +9,7 @@ import {
   type QuickTranslation,
   type ReplyDraft,
   type ReplyInput,
+  type WritingFeedback,
 } from './types';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -79,5 +80,11 @@ export const mockClient: AIClient = {
   async quickTranslate(): Promise<QuickTranslation> {
     await wait(900);
     return DEMO_TRANSLATION;
+  },
+
+  /** The demo can't judge someone's writing, and won't pretend to. */
+  async writingFeedback(): Promise<WritingFeedback> {
+    await wait(300);
+    throw new AnalyzeError('server', 'Feedback on your writing needs CzechPal’s server, which this demo doesn’t use.');
   },
 };
