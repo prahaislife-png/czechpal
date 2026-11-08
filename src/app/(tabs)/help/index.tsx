@@ -1,326 +1,138 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useMemo } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { CaseRow } from '@/components/case-row';
+import { LearningCard } from '@/components/design/cards';
 import { SectionHeader } from '@/components/ui/card';
-import { Icon } from '@/components/ui/icon';
+import { Icon, type IconName } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
-import { useLargeText } from '@/lib/a11y';
-import { allEntries, areas } from '@/lib/help/areas';
-import { emergencyNumbers } from '@/lib/help/directory';
-import { ELSEWHERE } from '@/lib/about';
-import { listPlaces, placeKinds, placeTitle, searchPlaces, type Place } from '@/lib/help/places';
-import { fold } from '@/lib/help/practices';
-import { supportLines } from '@/lib/help/urgent';
+import { openReview, pickImage, pickPdf } from '@/lib/capture';
 import { useStore } from '@/store/cases';
-import { layout, radius, space, type as ramp } from '@/theme/tokens';
+import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
 /**
- * Find: every contact and place an expat looks for, in one tab. Search first, then the areas,
- * then the numbers to call in an emergency or when someone needs to talk.
+ * Help: a calm landing instead of a camera that opens by itself. First, understanding Czech text
+ * (photo, image or PDF, typing, sharing); then writing in Czech; then the right place to go.
+ * No playful motion here: people come with letters and deadlines.
  */
-export default function FindScreen() {
+export default function HelpScreen() {
   const { colors } = useTheme();
-  const [query, setQuery] = useState('');
-  const searching = fold(query).length >= 2;
-  const [primary, ...others] = emergencyNumbers;
+  const cases = useStore((s) => s.cases);
+  const recent = useMemo(() => cases.filter((c) => c.status !== 'draft').slice(0, 2), [cases]);
 
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="on-drag"
-      contentContainerStyle={styles.content}>
-      <View style={[styles.search, { backgroundColor: colors.surface, borderColor: colors.separator }]}>
-        <Icon name="search" size={18} color={colors.label3} />
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Doctor, embassy, notary, plumber…"
-          placeholderTextColor={colors.label3}
-          returnKeyType="search"
-          autoCorrect={false}
-          accessibilityLabel="Search everything in Find"
-          style={[styles.searchInput, ramp.body, { color: colors.label }]}
-        />
-        {query ? (
-          <Pressable onPress={() => setQuery('')} hitSlop={10} accessibilityRole="button" accessibilityLabel="Clear search">
-            <Icon name="close" size={16} color={colors.label3} />
-          </Pressable>
-        ) : null}
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+      <View style={styles.head}>
+        <Text variant="title1" accessibilityRole="header">
+          What do you need help with?
+        </Text>
+        <Text variant="callout" color="label2">
+          CzechPal explains anything written in Czech, helps you answer, and finds the right place to go.
+        </Text>
       </View>
 
-      {searching ? (
-        <SearchResults query={query} />
-      ) : (
-        <>
-          <List inset={false}>
-            <EmergencyRow {...primary} prominent />
-            <Row
-              icon="night"
-              title="Sick tonight or at the weekend?"
-              subtitle="After-hours doctors, dentists and night pharmacies"
-              chevron
-              onPress={() => router.push('/help/urgent')}
-            />
-          </List>
+      <View style={[styles.understand, { backgroundColor: colors.sky }]}>
+        <Text variant="footnote" weight="600" style={[styles.eyebrow, { color: colors.skyInk }]}>
+          UNDERSTAND CZECH TEXT OR DOCUMENTS
+        </Text>
+        <PressableScale
+          onPress={() => router.push('/camera')}
+          accessibilityRole="button"
+          accessibilityLabel="Take a photo of Czech text"
+          style={[styles.camera, { backgroundColor: colors.accentFill }]}>
+          <Icon name="camera" size={22} color={colors.onAccent} />
+          <View style={styles.flex}>
+            <Text variant="headline" color="onAccent">
+              Take a photo
+            </Text>
+            <Text variant="footnote" style={{ color: colors.onAccent, opacity: 0.8 }}>
+              Letters, signs, menus, labels, forms
+            </Text>
+          </View>
+          <Icon name="chevronRight" size={16} color={colors.onAccent} />
+        </PressableScale>
+        <View style={styles.sources}>
+          <Source icon="photo" label="Image" onPress={async () => openReview(await pickImage())} />
+          <Source icon="pdf" label="PDF" onPress={async () => openReview(await pickPdf())} />
+          <Source icon="paste" label="Type or paste" onPress={() => router.push('/paste')} />
+        </View>
+        <Text variant="footnote" style={{ color: colors.skyInk }}>
+          Or share a photo, PDF or text to CzechPal from any app.
+        </Text>
+      </View>
 
-          <YourTownHall />
-
-          <View style={styles.tiles}>
-            {areas.map((a) => (
-              <AreaTile
-                key={a.id}
-                icon={a.icon}
-                title={a.title}
-                short={a.short}
-                onPress={() => router.push({ pathname: '/help/area/[area]', params: { area: a.id } })}
-              />
+      {recent.length ? (
+        <View>
+          <SectionHeader
+            title="Recent"
+            action={
+              <Pressable onPress={() => router.navigate('/you/history')} hitSlop={10} accessibilityRole="link" accessibilityLabel="See all history">
+                <Text variant="subhead" weight="600" color="accent" chrome>
+                  See all
+                </Text>
+              </Pressable>
+            }
+          />
+          <List>
+            {recent.map((c) => (
+              <CaseRow key={c.id} item={c} />
             ))}
-          </View>
+          </List>
+        </View>
+      ) : null}
 
-          <View>
-            <SectionHeader title="Emergency" />
-            <List inset={false}>
-              {others.map((e) => (
-                <EmergencyRow key={e.number} {...e} />
-              ))}
-            </List>
-            <Text variant="footnote" color="label3" style={styles.footer}>
-              Emergency calls are free from any phone.
-            </Text>
-          </View>
+      <LearningCard
+        eyebrow="Write in Czech"
+        title="A message, an e-mail, a reply"
+        detail="Say what you need in your words; CzechPal writes it in correct Czech."
+        icon="compose"
+        tone="lavender"
+        onPress={() => router.push('/compose')}
+      />
 
-          <View>
-            <SectionHeader title="Someone to talk to" />
-            <List inset={false}>
-              {supportLines.map((l) => (
-                <EmergencyRow key={l.number} number={l.number} label={l.label} detail={l.detail} />
-              ))}
-            </List>
-            <Text variant="footnote" color="label3" style={styles.footer}>
-              Free and open day and night. Official 116 numbers listed by the Czech government.
-            </Text>
-          </View>
-        </>
-      )}
+      <View>
+        <SectionHeader title="Find the right place" />
+        <List>
+          <Row
+            icon="doctor"
+            title="Find a doctor"
+            subtitle="GPs, dentists, children's doctors, who takes new patients"
+            chevron
+            onPress={() => router.push({ pathname: '/help/[category]', params: { category: 'doctors' } })}
+          />
+          <Row icon="night" title="Sick tonight or at the weekend?" subtitle="After-hours care and night pharmacies" chevron onPress={() => router.push('/help/urgent')} />
+          <Row icon="government" title="Immigration offices" subtitle="Which one is yours, hours, today's waits" chevron onPress={() => router.push('/help/offices')} />
+          <Row icon="document" title="What do I need?" subtitle="Checklists for your permit: new address, employer, extending" chevron onPress={() => router.push('/help/checklists')} />
+          <Row icon="search" title="All services" subtitle="Town halls, embassies, notaries, translators, emergency numbers" chevron onPress={() => router.push('/help/services')} />
+        </List>
+      </View>
     </ScrollView>
   );
 }
 
-/** Lists that match by title or keyword, then the places themselves (office, embassy, notary…). */
-function SearchResults({ query }: { query: string }) {
-  const q = fold(query);
-  const entries = allEntries.filter((e) => fold(`${e.title} ${e.subtitle} ${e.keywords.join(' ')}`).includes(q));
-  const [places, setPlaces] = useState<{ q: string; items: Place[] } | null>(null);
-  const [failed, setFailed] = useState<string | null>(null);
-
-  // Wait for a pause in typing before asking the server.
-  useEffect(() => {
-    let active = true;
-    const t = setTimeout(() => {
-      searchPlaces(query)
-        .then((items) => {
-          if (!active) return;
-          setPlaces({ q, items });
-          setFailed(null);
-        })
-        .catch((e: Error) => {
-          if (active) setFailed(e.message);
-        });
-    }, 300);
-    return () => {
-      active = false;
-      clearTimeout(t);
-    };
-  }, [query, q]);
-
-  const loading = !failed && places?.q !== q;
-  const found = places?.q === q ? places.items : [];
-
-  return (
-    <View style={styles.results}>
-      {entries.length > 0 && (
-        <View>
-          <SectionHeader title="Lists" />
-          <List>
-            {entries.map((e) => (
-              <Row key={e.id} icon={e.icon} title={e.title} subtitle={e.subtitle} chevron onPress={() => router.push(e.href)} />
-            ))}
-          </List>
-        </View>
-      )}
-      {found.length > 0 && (
-        <View>
-          <SectionHeader title="Places" />
-          <List>
-            {found.map((p) => (
-              <Row
-                key={p.id}
-                icon={placeKinds[p.kind === 'consulate' ? 'embassy' : p.kind].icon}
-                title={placeTitle(p)}
-                subtitle={[
-                  // Say what it is: a notary's result is just a person's name otherwise.
-                  p.kind === 'consulate' ? 'Consulate' : placeKinds[p.kind].one,
-                  p.address,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-                chevron
-                onPress={() => router.push({ pathname: '/help/place/[id]', params: { id: p.id } })}
-              />
-            ))}
-          </List>
-        </View>
-      )}
-      {loading ? (
-        <ActivityIndicator style={styles.spinner} accessibilityLabel="Searching" />
-      ) : failed ? (
-        <Text variant="callout" color="danger" style={styles.footer} accessibilityLiveRegion="polite">
-          {failed}
-        </Text>
-      ) : entries.length === 0 && found.length === 0 ? (
-        <Text variant="callout" color="label2" style={styles.footer} accessibilityLiveRegion="polite">
-          Nothing found for “{query.trim()}”. Try another word, or clear the search to browse.
-        </Text>
-      ) : null}
-    </View>
-  );
-}
-
-function AreaTile({ icon, title, short, onPress }: { icon: Parameters<typeof Icon>[0]['name']; title: string; short: string; onPress: () => void }) {
+function Source({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
   const { colors } = useTheme();
-  const largeText = useLargeText();
   return (
-    <PressableScale
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={title}
-      accessibilityHint={short}
-      style={[styles.tile, largeText && styles.tileWide, { backgroundColor: colors.surface }]}>
-      <View style={[styles.tileIcon, { backgroundColor: colors.accentSoft }]}>
-        <Icon name={icon} size={22} color={colors.accent} />
-      </View>
-      <Text variant="headline">{title}</Text>
-      <Text variant="footnote" color="label2">
-        {short}
+    <PressableScale onPress={onPress} accessibilityRole="button" accessibilityLabel={label} style={[styles.source, { backgroundColor: colors.surface }]}>
+      <Icon name={icon} size={20} color={colors.skyInk} />
+      <Text variant="footnote" weight="600" align="center" chrome>
+        {label}
       </Text>
     </PressableScale>
   );
 }
 
-function EmergencyRow({
-  number,
-  label,
-  detail,
-  prominent,
-}: {
-  number: string;
-  label: string;
-  detail: string;
-  prominent?: boolean;
-}) {
-  const { colors } = useTheme();
-  return (
-    <Pressable
-      onPress={() => Linking.openURL(`tel:${number.replace(/\s/g, '')}`)}
-      accessibilityRole="button"
-      accessibilityLabel={`Call ${label}, ${number}`}
-      style={({ pressed }) => [styles.emergency, pressed && { backgroundColor: colors.fill }]}>
-      <Text
-        variant={prominent ? 'title2' : 'title3'}
-        weight="700"
-        color={prominent ? 'danger' : 'label'}
-        tabular
-        style={styles.number}>
-        {number}
-      </Text>
-      <View style={styles.emergencyText}>
-        <Text variant="callout" weight="600">
-          {label}
-        </Text>
-        <Text variant="footnote" color="label2">
-          {detail}
-        </Text>
-      </View>
-      <Icon name="phone" size={18} color={colors.accent} />
-    </Pressable>
-  );
-}
-
-/** The town hall for the district in About you; nothing until one is chosen, or offline. */
-function YourTownHall() {
-  const district = useStore((s) => s.about.district);
-  const [found, setFound] = useState<{ district: string; place?: Place } | null>(null);
-
-  useEffect(() => {
-    if (!district || district === ELSEWHERE) return;
-    let active = true;
-    listPlaces('town_hall')
-      .then((all) => {
-        if (active) setFound({ district, place: all.find((p) => p.district === district) });
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, [district]);
-
-  // Only the answer for the district chosen now, never a stale one.
-  const place = found && found.district === district ? found.place : undefined;
-  if (!place) return null;
-  return (
-    <List>
-      <Row
-        icon="government"
-        title="Your town hall"
-        subtitle={[district, place.address].filter(Boolean).join(' · ')}
-        chevron
-        onPress={() => router.push({ pathname: '/help/place/[id]', params: { id: place.id } })}
-      />
-    </List>
-  );
-}
-
 const styles = StyleSheet.create({
   content: { padding: layout.gutter, paddingBottom: space.huge, gap: space.xxl },
-  search: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    minHeight: 48,
-    paddingHorizontal: space.lg,
-    borderRadius: radius.tile,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-  },
-  searchInput: { flex: 1, paddingVertical: space.md, outlineWidth: 0, outlineColor: 'transparent' },
-  results: { gap: space.xxl },
-  spinner: { marginTop: space.lg },
-  footer: { paddingHorizontal: space.lg, marginTop: space.sm },
-  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md },
-  tile: {
-    flexBasis: '47%',
-    flexGrow: 1,
-    gap: space.xs,
-    padding: space.lg,
-    borderRadius: radius.card,
-    borderCurve: 'continuous',
-    minHeight: 132,
-  },
-  tileWide: { flexBasis: '100%' },
-  tileIcon: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: space.xs },
-  emergency: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.lg,
-    paddingHorizontal: space.lg,
-    paddingVertical: space.md,
-    minHeight: 60,
-  },
-  number: { minWidth: 52 },
-  emergencyText: { flex: 1, gap: 1 },
+  head: { gap: space.xs },
+  flex: { flex: 1 },
+  understand: { borderRadius: radius.card, borderCurve: 'continuous', padding: space.lg, gap: space.md },
+  eyebrow: { letterSpacing: 0.8 },
+  camera: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderRadius: radius.tile + 4, borderCurve: 'continuous', padding: space.lg, minHeight: 64 },
+  sources: { flexDirection: 'row', gap: space.sm },
+  source: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.xs, borderRadius: radius.tile, borderCurve: 'continuous', paddingVertical: space.md, minHeight: 72 },
 });

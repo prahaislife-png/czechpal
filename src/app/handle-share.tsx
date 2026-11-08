@@ -38,7 +38,7 @@ function NothingShared() {
           ready to explain.
         </Text>
       </View>
-      <Button label="Go to Home" variant="secondary" size="medium" onPress={() => router.replace('/')} />
+      <Button label="Go to Help" variant="secondary" size="medium" onPress={() => router.replace('/help')} />
     </View>
   );
 }

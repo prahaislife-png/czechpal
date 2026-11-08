@@ -2,11 +2,12 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text as RNText, View } from 'react-native';
 
 import { Icon } from '@/components/ui/icon';
-import { space } from '@/theme/tokens';
+import { fonts, space } from '@/theme/tokens';
 import { useExploreTheme } from '@/theme/use-theme';
 
 /** Display type for the sentence: larger and tighter than the app's titles, still the system face. */
-const SIZE = { fontSize: 24, lineHeight: 30, letterSpacing: -0.6 } as const;
+/** The sentence reads like a line of a magazine: Newsreader for its words, the system font in the chips. */
+const SIZE = { fontSize: 27, lineHeight: 34, letterSpacing: -0.3 } as const;
 const MAX_SCALE = 1.6;
 
 /** One line of the sentence; chips wrap onto the next line when they don't fit. */
@@ -73,7 +74,7 @@ export function AddChip({ onPress, label }: { onPress: () => void; label: string
 
 const styles = StyleSheet.create({
   line: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: space.sm, rowGap: space.xs },
-  words: { ...SIZE, fontWeight: '600' },
+  words: { ...SIZE, fontFamily: fonts.displayMedium },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -16,8 +16,8 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { useTheme } from '@/theme/use-theme';
 
 /**
- * The Speak Czech voice orb: a soft cobalt shape that breathes while idle, swells with the
- * partner's voice and leans with the learner's. CzechPal's own: cobalt and sky with a cool white
+ * The Speak Czech voice orb: a soft coral shape that breathes while idle, swells with the
+ * partner's voice and leans with the learner's. CzechPal's own: coral and lavender with a cool sky
  * light, a slowly changing outline, and rings while the partner speaks. With Reduce Motion on it
  * holds its shape and only brightens with speech.
  */
@@ -87,7 +87,8 @@ export function Orb({
   });
 
   const dim = state === 'muted' || state === 'idle';
-  const edge = scheme === 'dark' ? '#1C3A9E' : '#2251D1';
+  // CzechPal 2.0: warm coral at the heart, lavender at the edge, a cool sky light.
+  const edge = scheme === 'dark' ? '#8F7FD6' : '#B7A8EE';
 
   return (
     <View style={{ width: size * 1.35, height: size * 1.35, alignItems: 'center', justifyContent: 'center' }} accessible={false} importantForAccessibility="no-hide-descendants">
@@ -96,21 +97,21 @@ export function Orb({
       <Animated.View
         style={[
           styles.orb,
-          { width: size, height: size, opacity: dim ? 0.72 : 1, boxShadow: `0px 18px 48px ${scheme === 'dark' ? 'rgba(58,100,234,0.35)' : 'rgba(34,81,209,0.28)'}` },
+          { width: size, height: size, opacity: dim ? 0.72 : 1, boxShadow: `0px 18px 48px ${scheme === 'dark' ? 'rgba(255,152,110,0.22)' : 'rgba(255,152,110,0.32)'}` },
           shape,
         ]}>
         <Animated.View style={[StyleSheet.absoluteFill, light]}>
           <Svg width={size} height={size}>
             <Defs>
               <RadialGradient id="body" cx="38%" cy="32%" r="78%">
-                <Stop offset="0" stopColor="#CFE0FF" />
-                <Stop offset="0.35" stopColor="#6F9BFF" />
-                <Stop offset="0.75" stopColor={edge} />
-                <Stop offset="1" stopColor="#13328A" />
+                <Stop offset="0" stopColor="#FFF1E4" />
+                <Stop offset="0.38" stopColor="#FFB08A" />
+                <Stop offset="0.72" stopColor="#FF986E" />
+                <Stop offset="1" stopColor={edge} />
               </RadialGradient>
               <RadialGradient id="tint" cx="78%" cy="76%" r="45%">
-                <Stop offset="0" stopColor="#7FE3F0" stopOpacity="0.55" />
-                <Stop offset="1" stopColor="#7FE3F0" stopOpacity="0" />
+                <Stop offset="0" stopColor="#BCE8F0" stopOpacity="0.7" />
+                <Stop offset="1" stopColor="#BCE8F0" stopOpacity="0" />
               </RadialGradient>
             </Defs>
             <Rect width={size} height={size} fill="url(#body)" />

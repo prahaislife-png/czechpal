@@ -1,110 +1,141 @@
 import { Easing } from 'react-native-reanimated';
 
 /**
- * CzechPal design tokens.
+ * CzechPal design tokens (2.0: editorial, warm paper).
  *
- * Rules (see design-system/MASTER.md):
- * - One accent (Czech cobalt). Spent only on the primary action, active state and progress.
- * - One cool grey family.
- * - Radius scale: icon wells 10 · inputs & inner tiles 14 · cards 20 · actions & chips are pills.
+ * Rules (see docs/czechlocal-design/02-design-system.md):
+ * - Paper and charcoal carry the app. Primary actions are charcoal pills.
+ * - Four soft pastels (sky, sage, coral, lavender) tint surfaces: categories, progress, highlights.
+ *   They are never text colours: each has a deep "ink" partner that passes 4.5:1 on its tint.
+ * - The interactive accent is Vltava teal, the deep partner of sky blue.
+ * - Radius scale: icon wells 10 · inputs & inner tiles 14 · cards 22 · sheets 28 · actions & chips are pills.
  * - Spacing base unit 4.
  */
 
+/** The brief's starting colours, kept as named swatches. */
+export const swatch = {
+  paper: '#F7F3EB',
+  charcoal: '#252522',
+  sky: '#BCE8F0',
+  sage: '#B8D2BA',
+  coral: '#FF986E',
+  lavender: '#DCD4F5',
+};
+
 const light = {
-  background: '#F2F4F7',
-  surface: '#FFFFFF',
-  surfaceMuted: '#F6F7F9',
-  fill: 'rgba(118, 128, 150, 0.12)',
-  fillPressed: 'rgba(118, 128, 150, 0.2)',
-  label: '#0B1220',
-  label2: '#4B5567',
-  label3: '#646D7E', // 4.7:1 on background, 5.2:1 on surface (HIG: 4.5:1 up to 17 pt)
-  separator: '#E3E7ED',
-  accent: '#2251D1',
-  accentFill: '#2251D1',
-  accentSoft: '#E8EEFD',
-  onAccent: '#FFFFFF',
-  success: '#14804A',
-  successSoft: '#E4F4EB',
-  warning: '#A65800',
-  warningSoft: '#FDF0DF',
-  danger: '#C42B1C',
-  dangerSoft: '#FCE8E6',
+  background: swatch.paper,
+  surface: '#FFFDF8',
+  surfaceMuted: '#EFE9DD',
+  fill: 'rgba(37, 37, 34, 0.07)',
+  fillPressed: 'rgba(37, 37, 34, 0.13)',
+  label: swatch.charcoal,
+  label2: '#57544C',
+  label3: '#6B675D', // 5.0:1 on paper, 5.4:1 on surface
+  separator: '#E3DCCD',
+  accent: '#1F5C67', // Vltava teal: 6.9:1 on paper
+  accentFill: swatch.charcoal,
+  accentSoft: '#DDF1F4',
+  onAccent: swatch.paper,
+  success: '#2F6B3C',
+  successSoft: '#E2EEE2',
+  warning: '#9A4318',
+  warningSoft: '#FFE6DA',
+  danger: '#B3261E',
+  dangerSoft: '#FBE5E1',
   paper: '#FFFEFB',
-  paperInk: '#1E2430',
+  paperInk: '#1E1E1B',
   /** The viewfinder: the one dark surface in light mode, standing in for the camera. */
-  ink: '#0E1420',
-  onInk: '#F4F6FA',
-  onInk2: 'rgba(244, 246, 250, 0.62)',
-  scrim: 'rgba(0, 0, 0, 0.4)',
-  shadow: '0px 1px 2px rgba(16, 24, 40, 0.04), 0px 6px 20px rgba(16, 24, 40, 0.06)',
-  shadowRaised: '0px 2px 6px rgba(16, 24, 40, 0.06), 0px 16px 40px rgba(16, 24, 40, 0.10)',
+  ink: '#22221F',
+  onInk: '#F7F3EB',
+  onInk2: 'rgba(247, 243, 235, 0.64)',
+  scrim: 'rgba(20, 20, 18, 0.4)',
+  shadow: '0px 1px 2px rgba(60, 50, 30, 0.05), 0px 8px 24px rgba(60, 50, 30, 0.07)',
+  shadowRaised: '0px 2px 6px rgba(60, 50, 30, 0.07), 0px 18px 44px rgba(60, 50, 30, 0.12)',
+  /** Pastel tints for surfaces (chips, cards, progress) and their readable inks. */
+  sky: swatch.sky,
+  skyInk: '#1A4D57',
+  sage: swatch.sage,
+  sageInk: '#24482A',
+  coral: swatch.coral,
+  coralSoft: '#FFE1D3',
+  coralInk: '#7A320F',
+  lavender: swatch.lavender,
+  lavenderInk: '#3F3577',
 };
 
 const dark: typeof light = {
-  background: '#0A0C10',
-  surface: '#15181E',
-  surfaceMuted: '#1B1F26',
-  fill: 'rgba(130, 140, 160, 0.16)',
-  fillPressed: 'rgba(130, 140, 160, 0.26)',
-  label: '#F1F3F7',
-  label2: '#A4ADBC',
-  label3: '#858E9C', // 5.9:1 on background, 5.0:1 on muted surface
-  separator: '#262B33',
-  accent: '#86A2FF',
-  accentFill: '#3A64EA',
-  accentSoft: '#18213A',
-  onAccent: '#FFFFFF',
-  success: '#3FCF8E',
-  successSoft: '#0F2619',
-  warning: '#F2B14C',
-  warningSoft: '#2A1F0E',
-  danger: '#FF7A6E',
-  dangerSoft: '#2C1513',
-  paper: '#1E222A',
-  paperInk: '#E3E7EE',
-  ink: '#1A1F28',
-  onInk: '#F4F6FA',
-  onInk2: 'rgba(244, 246, 250, 0.62)',
+  background: '#161614',
+  surface: '#20201D',
+  surfaceMuted: '#292926',
+  fill: 'rgba(247, 243, 235, 0.08)',
+  fillPressed: 'rgba(247, 243, 235, 0.15)',
+  label: '#F3EFE6',
+  label2: '#BCB6A9',
+  label3: '#999387', // 5.9:1 on background
+  separator: '#33322D',
+  accent: '#9ED8E2',
+  accentFill: '#F3EFE6',
+  accentSoft: '#1D3A3F',
+  onAccent: '#1B1B19',
+  success: '#8FCB98',
+  successSoft: '#1C2E1F',
+  warning: '#FFB08C',
+  warningSoft: '#3A2418',
+  danger: '#FF8A7E',
+  dangerSoft: '#3A1916',
+  paper: '#24241F',
+  paperInk: '#ECE7DD',
+  ink: '#1C1C1A',
+  onInk: '#F7F3EB',
+  onInk2: 'rgba(247, 243, 235, 0.62)',
   scrim: 'rgba(0, 0, 0, 0.55)',
   shadow: '0px 0px 0px rgba(0, 0, 0, 0)',
-  shadowRaised: '0px 12px 32px rgba(0, 0, 0, 0.45)',
+  shadowRaised: '0px 12px 32px rgba(0, 0, 0, 0.5)',
+  sky: '#2B4D53',
+  skyInk: '#BDEBF2',
+  sage: '#2E4532',
+  sageInk: '#C6E0C8',
+  coral: '#6A3B27',
+  coralSoft: '#3A2418',
+  coralInk: '#FFC2A6',
+  lavender: '#3A3555',
+  lavenderInk: '#DDD5FA',
 };
 
 export const palettes = { light, dark };
 
 /**
- * Explore only: warm ivory paper over the map, with soft blue chips for what is selected.
- * Kept apart from the app palette so the rest of CzechPal stays cool grey.
+ * Explore: the same paper over the map, with sky chips for what is selected.
+ * Same keys as before so the map screens keep working.
  */
 const exploreLight = {
-  sheet: '#FBF7EF',
-  sheetMuted: '#F0E9DB',
+  sheet: swatch.paper,
+  sheetMuted: '#EFE9DD',
   card: '#FFFDF8',
-  line: '#E3DACA',
-  ink: '#1F1B16',
-  ink2: '#5B5449',
-  ink3: '#6F675B', // 5.0:1 on sheet
-  chip: '#DCE7FA',
-  chipInk: '#1E3E8C',
-  chipLine: '#C2D3F2',
-  float: 'rgba(251, 247, 239, 0.94)',
-  shadow: '0px 1px 2px rgba(60, 45, 20, 0.06), 0px 8px 24px rgba(60, 45, 20, 0.10)',
-  sheetShadow: '0px -2px 6px rgba(60, 45, 20, 0.05), 0px -12px 32px rgba(60, 45, 20, 0.10)',
+  line: '#E3DCCD',
+  ink: swatch.charcoal,
+  ink2: '#57544C',
+  ink3: '#6B675D',
+  chip: swatch.sky,
+  chipInk: '#1A4D57',
+  chipLine: '#A6D9E2',
+  float: 'rgba(247, 243, 235, 0.94)',
+  shadow: '0px 1px 2px rgba(60, 50, 30, 0.06), 0px 8px 24px rgba(60, 50, 30, 0.10)',
+  sheetShadow: '0px -2px 6px rgba(60, 50, 30, 0.05), 0px -12px 32px rgba(60, 50, 30, 0.10)',
 };
 
 const exploreDark: typeof exploreLight = {
-  sheet: '#1C1A16',
-  sheetMuted: '#26231E',
-  card: '#23201B',
-  line: '#38332B',
-  ink: '#F3EEE4',
-  ink2: '#C2B9AA',
-  ink3: '#A1988A',
-  chip: '#23324D',
-  chipInk: '#C4D5FF',
-  chipLine: '#34476A',
-  float: 'rgba(28, 26, 22, 0.94)',
+  sheet: '#191917',
+  sheetMuted: '#24241F',
+  card: '#20201D',
+  line: '#34332E',
+  ink: '#F3EFE6',
+  ink2: '#BCB6A9',
+  ink3: '#999387',
+  chip: '#2B4D53',
+  chipInk: '#BDEBF2',
+  chipLine: '#3A6268',
+  float: 'rgba(25, 25, 23, 0.94)',
   shadow: '0px 8px 24px rgba(0, 0, 0, 0.45)',
   sheetShadow: '0px -12px 32px rgba(0, 0, 0, 0.5)',
 };
@@ -118,8 +149,8 @@ export type Palette = typeof light;
  * background, as Apple's own adaptive colours do. Everything else stays the same.
  */
 export const highContrastPalettes: Record<'light' | 'dark', Palette> = {
-  light: { ...light, label2: '#2E3646', label3: '#454E5F', separator: '#B9C0CB', accent: '#1A3FAA' },
-  dark: { ...dark, label2: '#CBD2DD', label3: '#AAB2BF', separator: '#4A515D', accent: '#A9BEFF' },
+  light: { ...light, label2: '#3C3A34', label3: '#4B4841', separator: '#C2B9A8', accent: '#154750' },
+  dark: { ...dark, label2: '#D3CDC1', label3: '#B5AFA3', separator: '#4A4842', accent: '#BDEBF2' },
 };
 
 /** Camera chrome: always light-on-black whatever the theme, because it sits on the live lens image. */
@@ -148,15 +179,27 @@ export const space = {
 export const radius = {
   well: 10,
   tile: 14,
-  card: 20,
+  card: 22,
+  sheet: 28,
   pill: 999,
 } as const;
 
-/** iOS type ramp. One display size per screen. */
+/**
+ * Fonts. Newsreader (an editorial serif with full Czech diacritics) for display headings, the
+ * system font for everything else. Loaded in the root layout; until it loads, headings use the
+ * system font.
+ */
+export const fonts = {
+  display: 'Newsreader_600SemiBold',
+  displayMedium: 'Newsreader_500Medium',
+  displayItalic: 'Newsreader_500Medium_Italic',
+} as const;
+
+/** Type ramp. The three display sizes are set in Newsreader (see Text); the rest is the system font. One display size per screen. */
 export const type = {
-  largeTitle: { fontSize: 34, lineHeight: 41, fontWeight: '700', letterSpacing: -0.6 },
-  title1: { fontSize: 28, lineHeight: 34, fontWeight: '700', letterSpacing: -0.5 },
-  title2: { fontSize: 22, lineHeight: 28, fontWeight: '700', letterSpacing: -0.3 },
+  largeTitle: { fontSize: 36, lineHeight: 42, fontWeight: '600', letterSpacing: -0.4 },
+  title1: { fontSize: 30, lineHeight: 36, fontWeight: '600', letterSpacing: -0.3 },
+  title2: { fontSize: 24, lineHeight: 30, fontWeight: '600', letterSpacing: -0.2 },
   title3: { fontSize: 20, lineHeight: 26, fontWeight: '600', letterSpacing: -0.2 },
   headline: { fontSize: 17, lineHeight: 22, fontWeight: '600', letterSpacing: -0.2 },
   body: { fontSize: 17, lineHeight: 24, fontWeight: '400', letterSpacing: -0.2 },
@@ -170,14 +213,25 @@ export type TypeVariant = keyof typeof type;
 
 export const icon = { sm: 16, md: 20, lg: 24, xl: 28 } as const;
 
-/** Motion vocabulary — one per app. */
+/**
+ * Motion vocabulary, one for the whole app (docs/czechlocal-design/03-motion.md).
+ * press 100 ms (80-130) · chip 180 ms (150-220) · reveal 260 ms (220-320) · flip 350 ms (300-400).
+ * Sheets and drags settle on springs. Reduce Motion: fades only, no movement.
+ */
 export const motion = {
   easeOut: Easing.bezier(0.23, 1, 0.32, 1),
-  press: 120,
+  press: 100,
   fast: 180,
+  chip: 180,
   base: 240,
+  reveal: 260,
   slow: 300,
+  flip: 350,
   snap: { duration: 400, dampingRatio: 1 },
+  /** Bottom sheets: settles without overshoot, fast enough to follow a flick. */
+  sheet: { damping: 32, stiffness: 320, mass: 1 },
+  /** Cards and chips that answer a touch: a touch of bounce. */
+  tactile: { damping: 18, stiffness: 260, mass: 0.9 },
 } as const;
 
 export const layout = {

@@ -2,7 +2,7 @@ import { Children, useEffect } from 'react';
 import { Platform, Text as RNText, type TextProps, type TextStyle } from 'react-native';
 
 import { announce } from '@/lib/a11y';
-import { type Palette, type TypeVariant, type as ramp } from '@/theme/tokens';
+import { fonts, type Palette, type TypeVariant, type as ramp } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
 type ColorKey = Extract<
@@ -35,6 +35,10 @@ export const CHROME_MAX_SCALE = 2;
 
 const webFont = Platform.OS === 'web' ? { fontFamily: 'var(--font-display)' } : null;
 
+/** Display sizes are set in Newsreader; its weight lives in the font file, so fontWeight is reset. */
+const DISPLAY = new Set<TypeVariant>(['largeTitle', 'title1', 'title2']);
+const displayFont = { fontFamily: fonts.display, fontWeight: 'normal' as const };
+
 export function Text({
   variant = 'body',
   color = 'label',
@@ -63,9 +67,9 @@ export function Text({
       {...rest}
       style={[
         ramp[variant],
-        webFont,
+        DISPLAY.has(variant) ? displayFont : webFont,
         { color: colors[color] },
-        weight != null && { fontWeight: weight },
+        weight != null && !DISPLAY.has(variant) && { fontWeight: weight },
         align != null && { textAlign: align },
         tabular && { fontVariant: ['tabular-nums'] },
         style,

@@ -7,7 +7,7 @@ import { Text } from '@/components/ui/text';
 import { space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
-/** Web stand-in for the native tab bar: the same four peers, iOS tab-bar proportions. */
+/** Web stand-in for the native tab bar: the same four peers (Explore, Learn, Help, You), iOS tab-bar proportions. */
 export default function AppTabs() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -23,17 +23,17 @@ export default function AppTabs() {
             paddingBottom: Math.max(insets.bottom, space.sm),
           },
         ]}>
-        <TabTrigger name="(home)" href="/" asChild>
-          <TabButton icon="home" label="Home" />
+        <TabTrigger name="explore" href="/explore" asChild>
+          <TabButton icon="map" label="Explore" />
         </TabTrigger>
         <TabTrigger name="learn" href="/learn" asChild>
           <TabButton icon="book" label="Learn" />
         </TabTrigger>
         <TabTrigger name="help" href="/help" asChild>
-          <TabButton icon="search" label="Find" />
+          <TabButton icon="help" label="Help" />
         </TabTrigger>
-        <TabTrigger name="explore" href="/explore" asChild>
-          <TabButton icon="map" label="Explore" />
+        <TabTrigger name="you" href="/you" asChild>
+          <TabButton icon="person" label="You" />
         </TabTrigger>
       </TabList>
     </Tabs>
@@ -45,7 +45,7 @@ type ButtonProps = TabTriggerSlotProps & { icon: IconName; label: string };
 // React 19: `ref` arrives as a regular prop.
 function TabButton({ icon, label, isFocused, ref, ...props }: ButtonProps) {
   const { colors } = useTheme();
-  const tint = isFocused ? colors.accent : colors.label3;
+  const tint = isFocused ? colors.label : colors.label3;
   return (
     <Pressable
       {...props}

@@ -12,7 +12,6 @@ import { CaseRow } from '@/components/case-row';
 import { DocumentPaper } from '@/components/document-paper';
 import { HomeCamera } from '@/components/home-camera';
 import { QuickLook, type QuickLookState } from '@/components/quick-look';
-import { BrandMark } from '@/components/ui/brand-mark';
 import { Button } from '@/components/ui/button';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { GlassSurface } from '@/components/ui/glass';
@@ -37,11 +36,12 @@ const STOP_NAMES: Record<Stop, string> = { top: 'Camera small', half: 'Camera an
 const PEEK = 112;
 
 /**
- * Home opens on the camera. A panel slides over it with three resting heights: half (the camera
- * on top, everything else below), full camera (pinch out, or drag the panel down) and a camera
- * strip (drag it up to read more). The camera runs only while Home is in view and the app is open.
+ * The camera, opened from Help (full screen, explicit Close). A panel slides over it with three
+ * resting heights: half (the camera on top, everything else below), full camera (pinch out, or
+ * drag the panel down) and a camera strip (drag it up to read more). The camera runs only while
+ * this screen is in view and the app is open. (Until 2.0 this was the Home tab.)
  */
-export default function HomeScreen() {
+export default function CameraScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
@@ -51,8 +51,8 @@ export default function HomeScreen() {
   const remaining = useRemainingAnalyses();
   const largeText = useLargeText();
 
-  // On iOS the tab bar floats over the screen, so the panel keeps clear of it.
-  const tabBar = process.env.EXPO_OS === 'ios' ? 49 + insets.bottom : 0;
+  // A full-screen modal: no tab bar, only the home indicator to keep clear of.
+  const tabBar = insets.bottom;
   const snaps = useMemo(
     () => ({ top: insets.top + 96, half: Math.round(height * 0.56), full: height - tabBar - PEEK }),
     [height, insets.top, tabBar],
@@ -175,28 +175,20 @@ export default function HomeScreen() {
       </GestureDetector>
 
       <View style={[styles.topBar, { top: insets.top + space.sm }]} pointerEvents="box-none">
-        <View style={styles.brand}>
-          <BrandMark size={26} />
-          <Text variant="headline" color="onInk">
-            CzechPal
-          </Text>
-        </View>
-        {/* One control, one destination: VoiceOver hears "Settings" once, with the count. */}
-        <Pressable
-          onPress={() => router.push('/settings')}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="Settings"
-          accessibilityValue={{ text: `${remaining} free explanations left this month` }}>
+        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel="Close camera">
           {({ pressed }) => (
-            <GlassSurface style={[styles.settings, { opacity: pressed ? 0.7 : 1 }]}>
-              <Text variant="footnote" weight="600" color="onInk" chrome>
-                {remaining} free
-              </Text>
-              <Icon name="settings" size={20} color={cam.foreground} />
+            <GlassSurface style={[styles.close, { opacity: pressed ? 0.7 : 1 }]}>
+              <Icon name="close" size={20} color={cam.foreground} />
             </GlassSurface>
           )}
         </Pressable>
+        <View accessible accessibilityLabel={`${remaining} free explanations left this month`}>
+          <GlassSurface style={styles.settings}>
+            <Text variant="footnote" weight="600" color="onInk" chrome>
+              {remaining} free
+            </Text>
+          </GlassSurface>
+        </View>
       </View>
 
       <Animated.View style={[styles.panel, { height, backgroundColor: colors.background }, panelStyle]}>
@@ -361,7 +353,7 @@ function PanelBody() {
           <SectionHeader
             title="Recent"
             action={
-              <Pressable onPress={() => router.push('/history')} hitSlop={12} accessibilityRole="link">
+              <Pressable onPress={() => router.push('/you/history')} hitSlop={12} accessibilityRole="link">
                 <Text variant="subhead" color="accent" weight="500" chrome>
                   See all
                 </Text>
@@ -420,6 +412,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     minHeight: 44,
   },
+  close: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   brand: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   settings: {
     flexDirection: 'row',

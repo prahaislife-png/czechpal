@@ -1,5 +1,9 @@
 import '@/global.css';
 
+import { Newsreader_500Medium } from '@expo-google-fonts/newsreader/500Medium';
+import { Newsreader_500Medium_Italic } from '@expo-google-fonts/newsreader/500Medium_Italic';
+import { Newsreader_600SemiBold } from '@expo-google-fonts/newsreader/600SemiBold';
+import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -22,11 +26,14 @@ export default function RootLayout() {
   const { scheme, colors } = useTheme();
   const hydrated = useStore((s) => s.hydrated);
   const onboarded = useStore((s) => s.onboarded);
+  // The display font: only three weights, so the splash waits for them. A failure falls back to the system font.
+  const [fontsLoaded, fontError] = useFonts({ Newsreader_500Medium, Newsreader_500Medium_Italic, Newsreader_600SemiBold });
+  const ready = hydrated && (fontsLoaded || !!fontError);
 
-  // Hold the splash until persisted state is known — never flash Welcome before Home.
+  // Hold the splash until persisted state and fonts are known — never flash Welcome before the app.
   useEffect(() => {
-    if (hydrated) SplashScreen.hideAsync();
-  }, [hydrated]);
+    if (ready) SplashScreen.hideAsync();
+  }, [ready]);
 
   // The server decides the free allowance; refresh the app's copy once per launch.
   useEffect(() => {
@@ -45,7 +52,7 @@ export default function RootLayout() {
   );
   useReminderTap(openReminder);
 
-  if (!hydrated) return null;
+  if (!ready) return null;
 
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
   const navTheme = {
@@ -73,7 +80,12 @@ export default function RootLayout() {
               </Stack.Protected>
 
               <Stack.Protected guard={onboarded}>
+                <Stack.Screen name="index" options={{ headerShown: false, animation: 'none' }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="camera"
+                  options={{ presentation: 'fullScreenModal', headerShown: false, animation: process.env.EXPO_OS === 'web' ? 'none' : 'fade' }}
+                />
                 <Stack.Screen
                   name="scan"
                   // Fade into the camera on device; on web the fade leaves a stale transformed layer.
