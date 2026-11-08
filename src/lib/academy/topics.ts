@@ -1,7 +1,7 @@
 import type { Topic, TopicId } from './types';
 
 /**
- * Fourteen everyday topics: CzechPal's teaching plan from A1 to A2. This is a proposed teaching
+ * Fourteen everyday topics: CzechLocal's teaching plan from A1 to A2. This is a proposed teaching
  * order, not the exam's own list: the exam draws on everyday life (housing, travel, food,
  * shopping, weather, work, free time, education, health…) without a fixed set of modules.
  * Each topic links what already exists in Learn: teacher-reviewed texts and situation phrases.

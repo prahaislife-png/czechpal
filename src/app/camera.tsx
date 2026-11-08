@@ -286,7 +286,7 @@ function PanelBody() {
         <Card style={styles.about}>
           <View style={styles.aboutHead}>
             <Text variant="headline" style={styles.aboutTitle}>
-              Make CzechPal fit you
+              Make CzechLocal fit you
             </Text>
             <Pressable
               onPress={() => useStore.getState().setAbout({ dismissed: true })}
@@ -371,7 +371,7 @@ function PanelBody() {
       <View style={styles.trust}>
         <Icon name="lock" size={14} color={colors.label3} />
         <Text variant="footnote" color="label3" style={styles.trustText}>
-          You review everything. CzechPal never sends anything for you.
+          You review everything. CzechLocal never sends anything for you.
         </Text>
       </View>
     </>

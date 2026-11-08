@@ -120,7 +120,7 @@ export default function AboutScreen() {
           {denied && (
             <Pressable onPress={() => Linking.openSettings()} accessibilityRole="link" style={styles.note}>
               <Text variant="footnote" color="label2">
-                Notifications are off for CzechPal, so reminders only show in the app.{' '}
+                Notifications are off for CzechLocal, so reminders only show in the app.{' '}
                 <Text variant="footnote" color="accent" weight="600">
                   Turn them on in Settings
                 </Text>

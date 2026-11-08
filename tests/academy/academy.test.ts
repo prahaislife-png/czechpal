@@ -85,7 +85,7 @@ describe('content integrity', () => {
   it('ids are unique and every item carries its provenance', () => {
     assert.equal(new Set(all.map((e) => e.id)).size, all.length);
     for (const e of all) {
-      assert.equal(e.author, 'CzechPal', e.id);
+      assert.equal(e.author, 'CzechLocal', e.id);
       assert.equal(e.licence, 'original', e.id);
       // Nothing is shown as teacher-reviewed until a teacher has reviewed it.
       assert.equal(e.review, 'ai-checked', e.id);

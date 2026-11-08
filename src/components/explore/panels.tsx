@@ -40,7 +40,7 @@ export function PlanPanel({ plan, matches, onShow }: { plan: PlanState; matches:
           Plans made for your time are coming
         </Text>
         <Text variant="subhead" style={{ color: ex.ink2 }}>
-          Soon CzechPal will turn this sentence into a short route: where to start, what to see and how long each stop takes.
+          Soon CzechLocal will turn this sentence into a short route: where to start, what to see and how long each stop takes.
           It doesn’t do that yet, so nothing below is a generated plan.
         </Text>
         <Text variant="subhead" style={{ color: ex.ink2 }}>
@@ -76,11 +76,11 @@ export function PeoplePanel() {
           Find people to go with
         </Text>
         <Text variant="subhead" style={{ color: ex.ink2 }}>
-          Walking groups, park runs and outdoor meetups for newcomers to Prague will be listed here, from organisers CzechPal has
+          Walking groups, park runs and outdoor meetups for newcomers to Prague will be listed here, from organisers CzechLocal has
           checked.
         </Text>
         <Text variant="subhead" style={{ color: ex.ink2 }}>
-          Nothing is listed yet. CzechPal won’t show an event it can’t confirm is real.
+          Nothing is listed yet. CzechLocal won’t show an event it can’t confirm is real.
         </Text>
       </View>
       <Point icon="calendar" text="Dates, places and who runs each event, so you know what you’re joining." />

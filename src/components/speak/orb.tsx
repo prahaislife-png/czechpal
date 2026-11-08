@@ -17,7 +17,7 @@ import { useTheme } from '@/theme/use-theme';
 
 /**
  * The Speak Czech voice orb: a soft coral shape that breathes while idle, swells with the
- * partner's voice and leans with the learner's. CzechPal's own: coral and lavender with a cool sky
+ * partner's voice and leans with the learner's. CzechLocal's own: coral and lavender with a cool sky
  * light, a slowly changing outline, and rings while the partner speaks. With Reduce Motion on it
  * holds its shape and only brightens with speech.
  */
@@ -87,7 +87,7 @@ export function Orb({
   });
 
   const dim = state === 'muted' || state === 'idle';
-  // CzechPal 2.0: warm coral at the heart, lavender at the edge, a cool sky light.
+  // CzechLocal 2.0: warm coral at the heart, lavender at the edge, a cool sky light.
   const edge = scheme === 'dark' ? '#8F7FD6' : '#B7A8EE';
 
   return (

@@ -38,7 +38,7 @@ export default function WelcomeScreen() {
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + space.lg }]}>
         <Animated.View entering={FadeIn.duration(motion.base)} style={styles.brand}>
           <BrandMark size={30} />
-          <Text variant="headline">CzechPal</Text>
+          <Text variant="headline">CzechLocal</Text>
         </Animated.View>
 
         <View style={styles.vignette} accessibilityLabel="Example: a Czech parking sign explained in English">

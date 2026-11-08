@@ -1,4 +1,4 @@
-# CzechPal 2.0 motion
+# CzechLocal 2.0 motion
 
 Tokens: `motion` in `src/theme/tokens.ts`. Tools: Reanimated 4 (UI thread), Gesture Handler 3,
 expo-haptics, native navigation transitions. No Skia, Rive or 3D.

@@ -71,7 +71,7 @@ export function WritingFeedbackCard({ task, texts }: { task: WritingTask; texts:
       <View style={styles.ask}>
         {needsConsent ? (
           <Text variant="footnote" color="label2" align="center">
-            CzechPal sends what you wrote to Anthropic’s Claude AI for feedback. CzechPal doesn’t keep it, and Anthropic doesn’t use it to train AI models.
+            CzechLocal sends what you wrote to Anthropic’s Claude AI for feedback. CzechLocal doesn’t keep it, and Anthropic doesn’t use it to train AI models.
           </Text>
         ) : null}
         <Button

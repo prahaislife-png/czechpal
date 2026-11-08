@@ -1,7 +1,9 @@
-# CzechPal 2.0 redesign: audit and migration plan
+# CzechLocal 2.0 redesign: audit and migration plan
 
-Branch: `feature/czechpal-2-redesign` (from `master` at a3ba305, 2026-11-08). The app keeps its name,
-CzechPal; "CzechLocal" in the brief is read as the product direction, not a rename.
+Branch: `feature/czechpal-2-redesign` (from `master` at a3ba305, 2026-11-08). The app was renamed
+from CzechPal to **CzechLocal** on 2026-11-08 (display name and all text; the bundle id
+`com.czechpal.app`, the `czechpal` URL scheme, the EAS project and storage keys stay, so existing
+installs, TestFlight and saved data carry on).
 
 ## 1. Repository audit
 

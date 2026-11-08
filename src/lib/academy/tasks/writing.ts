@@ -1,9 +1,9 @@
 import { CONTENT_CHECKED_ON } from '../make';
 import type { WritingTask } from '../types';
 
-/** Writing practice shaped like the exam's form and e-mail. Written for CzechPal. */
+/** Writing practice shaped like the exam's form and e-mail. Written for CzechLocal. */
 
-const meta = { version: 1, review: 'ai-checked', author: 'CzechPal', licence: 'original', checkedOn: CONTENT_CHECKED_ON } as const;
+const meta = { version: 1, review: 'ai-checked', author: 'CzechLocal', licence: 'original', checkedOn: CONTENT_CHECKED_ON } as const;
 
 export const writingTasks: WritingTask[] = [
   {

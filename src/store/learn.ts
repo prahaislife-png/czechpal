@@ -22,7 +22,7 @@ import type { Answer, ReviewEntry } from '@/lib/learn/srs';
 /**
  * Learn's private progress: the learner's plan, reading places, quiz answers, saved words and
  * their review schedule, and what they did each day.
- * Kept on this phone, like the rest of CzechPal, in its own storage key so it never touches
+ * Kept on this phone, like the rest of CzechLocal, in its own storage key so it never touches
  * explanations. Shared lessons are bundled content (src/lib/learn/content), never stored here.
  */
 

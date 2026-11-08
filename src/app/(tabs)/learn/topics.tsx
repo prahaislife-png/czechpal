@@ -20,7 +20,7 @@ export default function TopicsScreen() {
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
       <Text variant="subhead" color="label2" style={styles.note}>
-        Everyday topics from A1 to A2, in the order CzechPal teaches them. The exam draws on everyday life like this, but it has no fixed list of topics.
+        Everyday topics from A1 to A2, in the order CzechLocal teaches them. The exam draws on everyday life like this, but it has no fixed list of topics.
       </Text>
       <List>
         {map.map((t, i) => (

@@ -3,7 +3,7 @@ import { rtc } from './rtc';
 import type { Channel, Peer, Stream } from './rtc-types';
 
 /**
- * OpenAI GPT-Live over WebRTC. The app makes the offer; CzechPal's server exchanges it with the
+ * OpenAI GPT-Live over WebRTC. The app makes the offer; CzechLocal's server exchanges it with the
  * provider (the key never reaches the phone) and returns the answer. Events arrive on the
  * "oai-events" data channel. Lifecycle after Mural's LiveTransport (MIT, github.com/Chuloo/mural).
  */
@@ -123,7 +123,7 @@ export function gptLive(handlers: VoiceHandlers): VoiceProvider {
       try {
         mic = await rtc.microphone();
       } catch {
-        throw new VoiceError('microphone', 'CzechPal can’t use the microphone. Allow it in Settings, or type your answers.');
+        throw new VoiceError('microphone', 'CzechLocal can’t use the microphone. Allow it in Settings, or type your answers.');
       }
       try {
         peer = rtc.createPeer();

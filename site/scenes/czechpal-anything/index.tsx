@@ -6,7 +6,7 @@ import './anything.css'
 
 // "Not just letters": the things people meet every day in Czech. A conveyor
 // of three real objects (a notice on a door, a menu, a pharmacy's dosage
-// label) slides past; on each, CzechPal's viewfinder corners settle on the
+// label) slides past; on each, CzechLocal's viewfinder corners settle on the
 // words, and the app's answer card beside it says what they mean. The
 // answer card stays put and swaps its content; the objects travel. After the
 // third, a copy of the first comes in and the track snaps back unseen.
@@ -110,7 +110,7 @@ function Label({ on }: { on: boolean }) {
 
 const THINGS = [Notice, Menu, Label, Notice]
 
-export default function CzechPalAnything() {
+export default function CzechLocalAnything() {
   return (
     <Stage<S>
       width={480}

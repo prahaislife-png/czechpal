@@ -160,7 +160,7 @@ export default function AcademyScreen() {
       <List>
         <Row icon="flag" title="Exam practice" subtitle="Every exam task, one at a time" chevron onPress={() => router.push('/learn/practice')} />
         <Row icon="clock" title="Mock exam" subtitle={mockSubtitle} chevron onPress={() => router.push('/learn/mock')} />
-        <Row icon="mic" title="Speak Czech" subtitle="Talk with CzechPal, out loud" chevron onPress={() => router.push('/learn/speak')} />
+        <Row icon="mic" title="Speak Czech" subtitle="Talk with CzechLocal, out loud" chevron onPress={() => router.push('/learn/speak')} />
         <Row icon="map" title="Topics" subtitle={`${started} of ${map.length} started`} chevron onPress={() => router.push('/learn/topics')} />
         <Row icon="book" title="Grammar" subtitle={`${grammar.length} short explanations`} chevron onPress={() => router.push('/learn/grammar')} />
         <Row icon="info" title="About the exam" subtitle={`Checked ${longDate(EXAM_CHECKED_ON)}`} chevron onPress={() => router.push('/learn/exam')} />
@@ -169,7 +169,7 @@ export default function AcademyScreen() {
       </List>
 
       <Text variant="footnote" color="label3" style={styles.note}>
-        Lessons and exercises are written for CzechPal and checked by AI, not by a teacher yet. If something looks wrong, tell us from Help. Saved on this
+        Lessons and exercises are written for CzechLocal and checked by AI, not by a teacher yet. If something looks wrong, tell us from Help. Saved on this
         phone only.
       </Text>
     </ScrollView>
@@ -191,7 +191,7 @@ function ExamCheckIn({ examDate }: { examDate: string }) {
         <>
           <Text variant="headline">How did your exam go?</Text>
           <Text variant="footnote" color="label2">
-            Your exam was on {longDate(examDate)}. Tell CzechPal, and your plan follows. Saved on this phone only.
+            Your exam was on {longDate(examDate)}. Tell CzechLocal, and your plan follows. Saved on this phone only.
           </Text>
           <Button label="I passed" size="medium" onPress={() => set('passed')} />
           <Button label="Waiting for the result" variant="secondary" size="medium" onPress={() => set('waiting')} />

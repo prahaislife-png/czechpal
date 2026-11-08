@@ -47,7 +47,7 @@ export default function SettingsScreen() {
     if (deleting) return;
     const ok = await confirm({
       title: 'Delete everything?',
-      message: `This deletes ${caseCount === 1 ? '1 item' : `${caseCount} items`} and their replies, your reminders, About you, your Learn progress, A2 Academy answers, words and speaking recordings, your Speak Czech progress, your saved name and address, and your anonymous account on CzechPal’s server with any doctor or office reports you sent. It can’t be undone.`,
+      message: `This deletes ${caseCount === 1 ? '1 item' : `${caseCount} items`} and their replies, your reminders, About you, your Learn progress, A2 Academy answers, words and speaking recordings, your Speak Czech progress, your saved name and address, and your anonymous account on CzechLocal’s server with any doctor or office reports you sent. It can’t be undone.`,
       confirmLabel: 'Delete everything',
       destructive: true,
     });
@@ -168,7 +168,7 @@ export default function SettingsScreen() {
         )}
         <Text variant="footnote" color="label2" style={styles.footer}>
           Your history and saved name and address are kept on this device. A photo or text is sent to Anthropic’s
-          Claude AI only when you ask CzechPal to explain or write something; CzechPal doesn’t keep it, and Anthropic
+          Claude AI only when you ask CzechLocal to explain or write something; CzechLocal doesn’t keep it, and Anthropic
           doesn’t use it to train AI models. Nothing is ever sent to anyone on your behalf.
         </Text>
       </View>
@@ -194,7 +194,7 @@ export default function SettingsScreen() {
       </View>
 
       <Text variant="footnote" color="label3" align="center">
-        CzechPal {Constants.expoConfig?.version ?? ''}
+        CzechLocal {Constants.expoConfig?.version ?? ''}
         {isDemoMode ? ' · Demo' : ''}
       </Text>
     </ScrollView>

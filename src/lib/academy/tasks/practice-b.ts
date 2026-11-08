@@ -3,10 +3,10 @@ import type { TaskSet } from '../types';
 
 /**
  * A second practice set for each reading and listening task, so repeating a task tests skill
- * rather than memory. Written for CzechPal in the exam's formats; nothing is taken from a test.
+ * rather than memory. Written for CzechLocal in the exam's formats; nothing is taken from a test.
  */
 
-const meta = { version: 1, review: 'ai-checked', author: 'CzechPal', licence: 'original', checkedOn: CONTENT_CHECKED_ON } as const;
+const meta = { version: 1, review: 'ai-checked', author: 'CzechLocal', licence: 'original', checkedOn: CONTENT_CHECKED_ON } as const;
 
 export const readingSetsB: TaskSet[] = [
   {

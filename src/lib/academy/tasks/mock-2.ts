@@ -3,10 +3,10 @@ import type { TaskSet, WritingTask } from '../types';
 
 /**
  * The second mock exam: the same shape as the first, with different questions, kept out of
- * everyday practice. Written for CzechPal; nothing is taken from a real test.
+ * everyday practice. Written for CzechLocal; nothing is taken from a real test.
  */
 
-const meta = { version: 1, review: 'ai-checked', author: 'CzechPal', licence: 'original', checkedOn: CONTENT_CHECKED_ON, pool: 'mock' } as const;
+const meta = { version: 1, review: 'ai-checked', author: 'CzechLocal', licence: 'original', checkedOn: CONTENT_CHECKED_ON, pool: 'mock' } as const;
 
 export const mockReadingSets2: TaskSet[] = [
   {

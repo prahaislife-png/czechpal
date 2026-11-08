@@ -227,7 +227,7 @@ export default function ExploreScreen() {
       const p = await Location.requestForegroundPermissionsAsync();
       if (!p.granted) {
         setCanLocate(p.canAskAgain);
-        say('Location is off for CzechPal. You can still explore the whole city.');
+        say('Location is off for CzechLocal. You can still explore the whole city.');
         return null;
       }
       const here = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
@@ -514,10 +514,10 @@ export default function ExploreScreen() {
         <View
           style={[styles.brand, { backgroundColor: ex.float, borderColor: ex.line, boxShadow: ex.shadow }]}
           accessibilityRole="header"
-          accessibilityLabel="CzechPal: explore Prague">
+          accessibilityLabel="CzechLocal: explore Prague">
           <BrandMark size={24} />
           <Text maxFontSizeMultiplier={1.4} style={[styles.wordmark, { color: ex.ink }]}>
-            CzechPal
+            CzechLocal
           </Text>
         </View>
         <View style={styles.controls}>

@@ -1,4 +1,4 @@
-// The CzechPal mark: a bold "Č" inside viewfinder corner marks.
+// The CzechLocal mark: a bold "Č" inside viewfinder corner marks.
 // Glyphs come from open-licence fonts (SIL OFL) and are converted to outlines,
 // so the finished artwork has no font dependency.
 import fs from 'node:fs';

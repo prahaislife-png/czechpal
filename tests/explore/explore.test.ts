@@ -24,7 +24,7 @@ import {
 import { fromRow } from '../../src/lib/explore/rows';
 
 describe('curated places', () => {
-  it('has unique ids, marked as CzechPal’s own', () => {
+  it('has unique ids, marked as CzechLocal’s own', () => {
     const ids = curatedPlaces.map((p) => p.id);
     assert.equal(new Set(ids).size, ids.length);
     for (const p of curatedPlaces) {

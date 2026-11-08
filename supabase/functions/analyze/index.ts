@@ -94,7 +94,7 @@ export default {
           await refund(); // an unreadable photo doesn't use up an explanation
           await logCall(admin, { userId, kind: 'analyze', ok: false, usage, error: out.status });
           return out.status === 'not_czech'
-            ? { error: { status: 422, code: 'not_czech', message: 'This doesn’t look like Czech. CzechPal explains text written in Czech.' } }
+            ? { error: { status: 422, code: 'not_czech', message: 'This doesn’t look like Czech. CzechLocal explains text written in Czech.' } }
             : { error: { status: 422, code: 'unreadable', message: 'The photo is hard to read. Try again closer, in good light, with the whole text in the frame.' } };
         }
 

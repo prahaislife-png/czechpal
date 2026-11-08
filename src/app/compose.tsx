@@ -289,7 +289,7 @@ export default function ComposeScreen() {
           <>
             {needsConsent && (
               <Text variant="footnote" color="label2" align="center">
-                CzechPal sends what you write to Anthropic’s Claude AI to turn it into Czech. CzechPal doesn’t keep it, and
+                CzechLocal sends what you write to Anthropic’s Claude AI to turn it into Czech. CzechLocal doesn’t keep it, and
                 Anthropic doesn’t use it to train AI models.
               </Text>
             )}

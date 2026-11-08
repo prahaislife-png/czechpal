@@ -2,7 +2,7 @@
  * Certified court translators and interpreters (soudní překladatelé a tlumočníci).
  *
  * The official register is the Ministry of Justice's "Seznamy znalců, tlumočníků a překladatelů"
- * (seznat.justice.cz). Translators are private individuals, so CzechPal doesn't copy their details:
+ * (seznat.justice.cz). Translators are private individuals, so CzechLocal doesn't copy their details:
  * it opens the official register already filtered by language and region. The register's own
  * page reads its filter from the `query` parameter (checked 1 Nov 2026); language IDs below are
  * the register's own.

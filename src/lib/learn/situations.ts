@@ -5,7 +5,7 @@ import type { IconName } from '@/components/ui/icon';
  * through it. Learn picks the one coming up next (a permit expiring, a bill due, a doctor's
  * letter) and gets the learner ready for it.
  *
- * DRAFT: written for CzechPal and checked by AI on 2026-11-03; a native-speaking Czech teacher
+ * DRAFT: written for CzechLocal and checked by AI on 2026-11-03; a native-speaking Czech teacher
  * still needs to review them, as with the stories. Phrases avoid the past tense and adjectives
  * about the speaker, so they work whoever says them.
  */

@@ -12,7 +12,7 @@
  * credits OpenStreetMap wherever these places show.
  * Left out: anything tagged private or customers-only, playgrounds and pitches on school or
  * kindergarten grounds, unnamed gardens (almost always someone's yard), and sports that aren't
- * open to passers-by. Places CzechPal wrote up by hand (src/lib/explore/curated.ts) replace the
+ * open to passers-by. Places CzechLocal wrote up by hand (src/lib/explore/curated.ts) replace the
  * generated description of the OSM place they match.
  * Politeness: four Overpass queries, one at a time, with a pause between them.
  */
@@ -33,7 +33,7 @@ const { areaHa, classify, describe, inShape, joinRings, pinPoint, sportsOf } = u
 
 const PRAGUE_AREA = 3600435514; // relation 435514, Hlavní město Praha
 const SERVERS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
-const UA = { 'User-Agent': 'CzechPal Explore importer (contact: see app support page)' };
+const UA = { 'User-Agent': 'CzechLocal Explore importer (contact: see app support page)' };
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
@@ -274,7 +274,7 @@ for (const r of kept) {
   });
 }
 
-/* ───────────── CzechPal's own write-ups ───────────── */
+/* ───────────── CzechLocal's own write-ups ───────────── */
 
 const shapeById = new Map(kept.filter((r) => r.shape).map((r) => [`osm:${r.el.type[0]}${r.el.id}`, boxed(r.shape!)]));
 const unmatched: string[] = [];

@@ -31,7 +31,7 @@ export default function HelpScreen() {
           What do you need help with?
         </Text>
         <Text variant="callout" color="label2">
-          CzechPal explains anything written in Czech, helps you answer, and finds the right place to go.
+          CzechLocal explains anything written in Czech, helps you answer, and finds the right place to go.
         </Text>
       </View>
 
@@ -61,7 +61,7 @@ export default function HelpScreen() {
           <Source icon="paste" label="Type or paste" onPress={() => router.push('/paste')} />
         </View>
         <Text variant="footnote" style={{ color: colors.skyInk }}>
-          Or share a photo, PDF or text to CzechPal from any app.
+          Or share a photo, PDF or text to CzechLocal from any app.
         </Text>
       </View>
 
@@ -88,7 +88,7 @@ export default function HelpScreen() {
       <LearningCard
         eyebrow="Write in Czech"
         title="A message, an e-mail, a reply"
-        detail="Say what you need in your words; CzechPal writes it in correct Czech."
+        detail="Say what you need in your words; CzechLocal writes it in correct Czech."
         icon="compose"
         tone="lavender"
         onPress={() => router.push('/compose')}

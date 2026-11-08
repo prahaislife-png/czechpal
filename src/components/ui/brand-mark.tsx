@@ -5,12 +5,12 @@ import { brand } from '@/theme/tokens';
 import { brandMark } from './brand-mark-data';
 
 /**
- * The CzechPal mark, the app icon in miniature: a white "Č" with a red háček inside cobalt
+ * The CzechLocal mark, the app icon in miniature: a white "Č" with a red háček inside cobalt
  * viewfinder corners, on ink. White, blue and red, without being a flag (the app isn't official).
  */
 export function BrandMark({ size = 28 }: { size?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 100 100" accessibilityLabel="CzechPal">
+    <Svg width={size} height={size} viewBox="0 0 100 100" accessibilityLabel="CzechLocal">
       <Defs>
         <LinearGradient id="brandInk" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={brand.inkTop} />

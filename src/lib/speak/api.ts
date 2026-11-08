@@ -5,7 +5,7 @@ import { ensureSession, isBackendConfigured, supabase } from '@/lib/supabase';
 import type { Cues, SpeakRequest, SpeakReview, Turn } from './types';
 
 /**
- * Speak Czech's calls to CzechPal's server (supabase/functions/speak). Errors arrive worded for the
+ * Speak Czech's calls to CzechLocal's server (supabase/functions/speak). Errors arrive worded for the
  * learner; `code` tells the screen what to offer next (type instead, try tomorrow…).
  */
 
@@ -25,7 +25,7 @@ const TIMEOUT_MS = 45_000;
 export const speakAvailable = isBackendConfigured;
 
 async function call<T>(body: Record<string, unknown>, timeoutMs = TIMEOUT_MS): Promise<T> {
-  if (!supabase) throw new SpeakError('voice_off', 'Speak Czech needs CzechPal’s server, which this demo doesn’t use.');
+  if (!supabase) throw new SpeakError('voice_off', 'Speak Czech needs CzechLocal’s server, which this demo doesn’t use.');
   try {
     await ensureSession();
   } catch {

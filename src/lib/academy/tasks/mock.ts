@@ -3,11 +3,11 @@ import type { TaskSet, WritingTask } from '../types';
 
 /**
  * The mock exam's own sets, kept out of everyday practice so they are unseen when the mock starts:
- * one set for each reading and listening task, a form and an e-mail. Written for CzechPal in the
+ * one set for each reading and listening task, a form and an e-mail. Written for CzechLocal in the
  * exam's formats; nothing is taken from a real test.
  */
 
-const meta = { version: 1, review: 'ai-checked', author: 'CzechPal', licence: 'original', checkedOn: CONTENT_CHECKED_ON, pool: 'mock' } as const;
+const meta = { version: 1, review: 'ai-checked', author: 'CzechLocal', licence: 'original', checkedOn: CONTENT_CHECKED_ON, pool: 'mock' } as const;
 
 export const mockReadingSets: TaskSet[] = [
   {

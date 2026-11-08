@@ -1,7 +1,7 @@
 import { Easing } from 'react-native-reanimated';
 
 /**
- * CzechPal design tokens (2.0: editorial, warm paper).
+ * CzechLocal design tokens (2.0: editorial, warm paper).
  *
  * Rules (see docs/czechlocal-design/02-design-system.md):
  * - Paper and charcoal carry the app. Primary actions are charcoal pills.

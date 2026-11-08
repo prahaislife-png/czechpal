@@ -190,7 +190,7 @@ function PracticeList({ kind, title }: { kind: PracticeKind; title: string }) {
               </Text>
             ) : null}
             <Text variant="footnote" color="label3" align="center">
-              {SOURCE_NOTE} Reports come from CzechPal users and can change, so call to confirm.
+              {SOURCE_NOTE} Reports come from CzechLocal users and can change, so call to confirm.
             </Text>
           </View>
         }

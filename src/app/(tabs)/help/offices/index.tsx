@@ -115,7 +115,7 @@ export default function OfficesScreen() {
         <Text variant="footnote" color="label3" style={styles.note}>
           {waitsError
             ? 'Couldn’t load today’s waiting times. The offices are listed anyway.'
-            : 'Waits are reported by CzechPal users at the office today. If you’re there, add yours on the office’s page.'}
+            : 'Waits are reported by CzechLocal users at the office today. If you’re there, add yours on the office’s page.'}
         </Text>
       </View>
 

@@ -4,7 +4,7 @@ import { Bar, Connector, Phone, Spinner, Stage, type Act } from '../../kit'
 import { Lines, useDark } from '../czechpal-app/ui'
 import './czechpal.css'
 
-// CzechPal's website hero: a device pair where the "desktop" is paper. A
+// CzechLocal's website hero: a device pair where the "desktop" is paper. A
 // Czech electricity bill sits top-left and runs off the bottom; the phone
 // straddles its right margin, over filler lines only. The phone tells the
 // app's real flow for a photo of that bill:
@@ -183,7 +183,7 @@ function Explanation({ shown }: { shown: boolean }) {
   )
 }
 
-export default function CzechPalHero() {
+export default function CzechLocalHero() {
   const dark = useDark()
   return (
     <Stage<S>

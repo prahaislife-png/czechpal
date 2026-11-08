@@ -2,14 +2,14 @@ import { CONTENT_CHECKED_ON, exercise as ex, type ExerciseBase as Base } from '.
 import type { Lesson } from './types';
 
 /**
- * Lessons for topics 9–14. Written for CzechPal and checked by AI; not reviewed by a teacher
+ * Lessons for topics 9–14. Written for CzechLocal and checked by AI; not reviewed by a teacher
  * (review: 'ai-checked'). Each exercise is original.
  */
 
 const L = (lesson: Omit<Lesson, 'version' | 'review' | 'author' | 'licence' | 'checkedOn'>): Lesson => ({
   version: 1,
   review: 'ai-checked',
-  author: 'CzechPal',
+  author: 'CzechLocal',
   licence: 'original',
   checkedOn: CONTENT_CHECKED_ON,
   ...lesson,

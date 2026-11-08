@@ -69,7 +69,7 @@ export const mockClient: AIClient = {
   // Without the server nothing can be written from the reader's words: say so plainly.
   async composeMessage({ details }: ComposeInput): Promise<ComposeResult> {
     await wait(700);
-    const demo = '[Demo: CzechPal writes your message here when it is connected to the server.]';
+    const demo = '[Demo: CzechLocal writes your message here when it is connected to the server.]';
     return {
       czech: `Dobrý den,\n\n${demo}\n\nČesky mluvím jen trochu, proto prosím o odpověď písemně.\n\nS pozdravem\n${details.name?.trim() || '[Vaše jméno]'}`,
       english: `Hello,\n\n${demo}\n\nI only speak a little Czech, so please reply in writing.\n\nKind regards\n${details.name?.trim() || '[Your name]'}`,
@@ -85,6 +85,6 @@ export const mockClient: AIClient = {
   /** The demo can't judge someone's writing, and won't pretend to. */
   async writingFeedback(): Promise<WritingFeedback> {
     await wait(300);
-    throw new AnalyzeError('server', 'Feedback on your writing needs CzechPal’s server, which this demo doesn’t use.');
+    throw new AnalyzeError('server', 'Feedback on your writing needs CzechLocal’s server, which this demo doesn’t use.');
   },
 };

@@ -4,7 +4,7 @@ import { iconGlyph } from '@/components/ui/icon';
 import { useTheme } from '@/theme/use-theme';
 
 /**
- * Four peers (CzechPal 2.0): Explore Prague, Learn Czech, get Help with Czech life, and You.
+ * Four peers (CzechLocal 2.0): Explore Prague, Learn Czech, get Help with Czech life, and You.
  * Native tabs keep each tab's own stack and scroll position when switching.
  */
 export default function AppTabs() {

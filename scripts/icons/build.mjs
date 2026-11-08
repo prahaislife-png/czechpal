@@ -1,4 +1,4 @@
-// Builds every CzechPal icon file (assets/images) and the in-app mark data from one definition.
+// Builds every CzechLocal icon file (assets/images) and the in-app mark data from one definition.
 // Usage, from a scratch folder with the tools installed:
 //   npm i opentype.js@1.3.4 @resvg/resvg-js@2.6.2 @fontsource/plus-jakarta-sans@5.1.0
 //   node build.mjs <project root>
@@ -43,7 +43,7 @@ png(svg(T, background(T, INK) + markSVG(T, { ...onInk, stroke: 0.07, glyphHeight
 // Small sizes (the header logo is ~26pt) need heavier corners and a bigger letter, like the favicon.
 const m = markParts(100, { ...MARK, stroke: 0.07, glyphHeight: 0.8 });
 const ts = `/**
- * The CzechPal mark as vector data, generated with the app icon (Plus Jakarta Sans ExtraBold "Č",
+ * The CzechLocal mark as vector data, generated with the app icon (Plus Jakarta Sans ExtraBold "Č",
  * SIL Open Font Licence, converted to outlines). Draw on a 100 × 100 viewBox.
  */
 export const brandMark = {

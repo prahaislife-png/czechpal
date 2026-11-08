@@ -39,7 +39,7 @@ const TEXT_PER_DAY = 150;
 type Admin = SupabaseClient;
 type Row = { id: string; created_at: string; limit_seconds: number; provider_session_id: string | null; status: string };
 
-const NOT_SET_UP = 'Speaking with CzechPal isn’t switched on yet. Type your answers instead.';
+const NOT_SET_UP = 'Speaking with CzechLocal isn’t switched on yet. Type your answers instead.';
 
 /** Ends a session: hangs up at the provider (if it started) and counts its time. Idempotent. */
 async function endSession(admin: Admin, row: Row, reason: string) {

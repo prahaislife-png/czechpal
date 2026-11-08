@@ -1,4 +1,4 @@
-# CzechPal 2.0 design system
+# CzechLocal 2.0 design system
 
 Source of truth: `src/theme/tokens.ts`. Screens read colours through `useTheme()` (and Explore
 through `useExploreTheme()`), so these roles restyle the whole app.

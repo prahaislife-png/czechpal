@@ -3,7 +3,7 @@ import { moreLessons } from './lessons-more';
 import type { Lesson } from './types';
 
 /**
- * Lessons for topics 1–8 (topics 9–14 are in lessons-more.ts). Written for CzechPal and checked by AI on 2026-11-06;
+ * Lessons for topics 1–8 (topics 9–14 are in lessons-more.ts). Written for CzechLocal and checked by AI on 2026-11-06;
  * not reviewed by a teacher (review: 'ai-checked'). Each exercise is original.
  */
 
@@ -12,7 +12,7 @@ const CHECKED = CONTENT_CHECKED_ON;
 const L = (lesson: Omit<Lesson, 'version' | 'review' | 'author' | 'licence' | 'checkedOn'>): Lesson => ({
   version: 1,
   review: 'ai-checked',
-  author: 'CzechPal',
+  author: 'CzechLocal',
   licence: 'original',
   checkedOn: CHECKED,
   ...lesson,

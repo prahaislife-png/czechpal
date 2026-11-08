@@ -36,7 +36,7 @@ import { useTheme } from '@/theme/use-theme';
 /**
  * Speaking practice in the exam's four task formats: hear the examiner (or read the card), answer
  * aloud, play yourself back and compare with one good answer. Recordings stay on this phone, one
- * per prompt. Nothing is scored: CzechPal can't yet judge speech, so the learner checks a list.
+ * per prompt. Nothing is scored: CzechLocal can't yet judge speech, so the learner checks a list.
  */
 
 /** Mono and modest: speech needs no more, and the files stay small. */
@@ -426,7 +426,7 @@ function Recorder({ id, takes, playback }: { id: string; takes: ReturnType<typeo
         <Icon name="mic" size={20} color={colors.label3} />
         <View style={styles.flex}>
           <Text variant="subhead" weight="600">
-            {takes.mic === 'failed' ? 'Recording didn’t work' : 'The microphone is off for CzechPal'}
+            {takes.mic === 'failed' ? 'Recording didn’t work' : 'The microphone is off for CzechLocal'}
           </Text>
           <Text variant="footnote" color="label2">
             Say your answer aloud anyway, then compare it with the answer below.
@@ -579,7 +579,7 @@ function Review({
       </View>
 
       <Text variant="footnote" color="label3" style={styles.note}>
-        CzechPal doesn’t score speaking.{points ? ` In the exam this task gives ${points} points, and pronunciation is marked across the whole speaking part.` : ''}{' '}
+        CzechLocal doesn’t score speaking.{points ? ` In the exam this task gives ${points} points, and pronunciation is marked across the whole speaking part.` : ''}{' '}
         {recorded.length ? `Your ${recorded.length === 1 ? 'recording is' : `${recorded.length} recordings are`} saved on this phone only.` : ''}
       </Text>
       {mock ? (

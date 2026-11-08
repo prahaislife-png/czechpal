@@ -18,7 +18,7 @@ export function SpeakCard() {
     <PressableScale
       onPress={() => router.push('/learn/speak')}
       accessibilityRole="button"
-      accessibilityLabel="Speak Czech: talk with CzechPal out loud"
+      accessibilityLabel="Speak Czech: talk with CzechLocal out loud"
       style={[styles.card, { backgroundColor: colors.surface, boxShadow: colors.shadow }]}>
       <View style={[styles.well, { backgroundColor: colors.accentFill }]}>
         <Icon name="mic" size={22} color={colors.onAccent} />

@@ -1,7 +1,7 @@
 # A2 Academy: repository audit
 
 Audited 2026-11-06 on branch `feature/live-backend` (= `master` at 0e7b14e + nothing pending in Learn).
-Product name in code, store listing and website: **CzechPal** (the brief says "CzechLocal"; same app).
+Product name in code, store listing and website: **CzechLocal** (the brief says "CzechLocal"; same app).
 
 ## Stack
 

@@ -1,4 +1,4 @@
-/* CzechPal's app look, shared by every scene on the website: the app's own
+/* CzechLocal's app look, shared by every scene on the website: the app's own
    tokens (src/theme/tokens.ts), light and dark, and the screen parts the
    scenes draw inside a Phone (nav bar, section headers, cards, buttons).
    Everything is scoped to .cp-scene. */

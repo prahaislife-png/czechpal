@@ -2,7 +2,7 @@
   "name": "czechpal-site",
   "private": true,
   "type": "module",
-  "description": "The animated hero on CzechPal's website (docs/, GitHub Pages). Builds into docs/hero/.",
+  "description": "The animated hero on CzechLocal's website (docs/, GitHub Pages). Builds into docs/hero/.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -63,7 +63,7 @@ export function DeadlineReminder({ caseId, deadline }: { caseId: string; deadlin
       {denied && (
         <Pressable onPress={() => Linking.openSettings()} accessibilityRole="link" style={styles.note}>
           <Text variant="footnote" color="label2">
-            Notifications are off for CzechPal, so this reminder only shows on Home.{' '}
+            Notifications are off for CzechLocal, so this reminder only shows on Home.{' '}
             <Text variant="footnote" color="accent" weight="600">
               Turn them on in Settings
             </Text>

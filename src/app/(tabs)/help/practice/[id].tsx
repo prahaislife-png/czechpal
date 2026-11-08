@@ -113,7 +113,7 @@ function PracticeDetails({ practice: p }: { practice: Practice }) {
         </View>
 
         <View>
-          <SectionHeader title="What CzechPal users found" />
+          <SectionHeader title="What CzechLocal users found" />
           <List inset={false}>
             <PracticeStatus practice={p} />
           </List>
@@ -156,7 +156,7 @@ function PracticeDetails({ practice: p }: { practice: Practice }) {
         </View>
 
         <Text variant="footnote" color="label3" style={styles.note}>
-          {SOURCE_NOTE} Reports come from CzechPal users and can change, so confirm when you call.
+          {SOURCE_NOTE} Reports come from CzechLocal users and can change, so confirm when you call.
         </Text>
       </ScrollView>
 

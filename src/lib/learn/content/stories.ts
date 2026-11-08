@@ -1,12 +1,12 @@
 import type { LearningContent } from '../types';
 
 /**
- * The first library: original short texts written for CzechPal at A1 and A2.
+ * The first library: original short texts written for CzechLocal at A1 and A2.
  * Written with AI assistance, checked by AI, then reviewed by a native-speaking Czech teacher
  * (2026-11-03). A changed or new text goes back to 'draft' until it is reviewed again.
  */
 const reviewed = {
-  author: 'CzechPal',
+  author: 'CzechLocal',
   license: 'original',
   reviewedByNativeSpeaker: true,
   reviewedOn: '2026-11-03',

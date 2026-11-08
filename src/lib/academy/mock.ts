@@ -8,7 +8,7 @@ import { examParts, examTasks, passMarks } from '@/lib/learn/exam';
 /**
  * The mock exam: the four parts in the exam's order, with the exam's times, on sets kept unseen
  * for it. Reading and listening are marked by rules, one point an item. Writing and speaking are
- * not scored, because CzechPal can't mark them reliably yet; the result says what reading and
+ * not scored, because CzechLocal can't mark them reliably yet; the result says what reading and
  * listening mean for the written pass mark instead of inventing a writing score.
  */
 

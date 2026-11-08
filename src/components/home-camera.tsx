@@ -198,7 +198,7 @@ export function HomeCamera({
 function CameraPrompt({ off, onAllow, onLibrary }: { off: 'ask' | 'denied' | 'none'; onAllow: () => void; onLibrary: () => void }) {
   const copy = {
     ask: { title: 'Point at anything written in Czech', body: 'Turn on the camera to point it at Czech text. Nothing is sent until you tap Translate or take a photo.' },
-    denied: { title: 'Camera access is off', body: 'Turn it on for CzechPal in Settings, or choose a photo you already have.' },
+    denied: { title: 'Camera access is off', body: 'Turn it on for CzechLocal in Settings, or choose a photo you already have.' },
     none: { title: 'No camera here', body: 'Choose a photo or screenshot instead.' },
   }[off];
   return (

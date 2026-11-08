@@ -123,7 +123,7 @@ provenance, the voice's reading of "rád/a", plan rotation). Web walkthrough of 
 the microphone blocked (the fallback path); no console errors. Not tested: an actual recording and
 playback on an iPhone.
 
-Limits: nothing is scored, since CzechPal can't yet judge speech; the examiner's lines use one
+Limits: nothing is scored, since CzechLocal can't yet judge speech; the examiner's lines use one
 device voice; written questions show both forms ("bydlel/a") and the voice reads the first.
 
 ## Phase 3 – Exam preparation: done

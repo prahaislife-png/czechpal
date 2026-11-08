@@ -79,7 +79,7 @@ export default function MockScreen() {
       ) : null}
 
       <Text variant="footnote" color="label3" style={styles.note}>
-        Written for CzechPal in the exam’s formats and checked by AI, not taken from a real test. A mock shows how you do on one day; it isn’t a prediction of your exam.
+        Written for CzechLocal in the exam’s formats and checked by AI, not taken from a real test. A mock shows how you do on one day; it isn’t a prediction of your exam.
       </Text>
     </ScrollView>
   );
