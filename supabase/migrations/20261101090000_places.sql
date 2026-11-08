@@ -1,4 +1,4 @@
--- CzechLocal: official contacts beyond healthcare, for the Find tab.
+-- CzechPal: official contacts beyond healthcare, for the Find tab.
 --
 -- Imported by scripts/import-places.mjs from public official sources:
 -- - town halls (Prague district offices) and notaries: the list of public authorities

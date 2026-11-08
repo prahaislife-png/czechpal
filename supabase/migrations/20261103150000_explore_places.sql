@@ -1,9 +1,9 @@
--- CzechLocal: every public outdoor place in Prague, for the Explore map.
+-- CzechPal: every public outdoor place in Prague, for the Explore map.
 --
 -- Imported by scripts/import-explore.mts from OpenStreetMap (© OpenStreetMap contributors,
 -- ODbL 1.0): parks, public gardens, playgrounds, outdoor gyms, sports pitches, running tracks,
 -- viewpoints, nature reserves, named woods, dog parks and swimming spots. Private and
--- school-only places are left out. Places CzechLocal wrote up by hand ('curated') carry its own
+-- school-only places are left out. Places CzechPal wrote up by hand ('curated') carry its own
 -- description. Only lasting facts are stored: no opening hours, prices or live information.
 
 create table public.explore_places (

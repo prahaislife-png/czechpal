@@ -1,4 +1,4 @@
--- CzechLocal: more kinds of practice in the directory, and live waiting times at immigration offices.
+-- CzechPal: more kinds of practice in the directory, and live waiting times at immigration offices.
 
 -- 1. Pharmacies, psychiatrists and psychologists join the directory (same register, same import).
 alter table public.providers drop constraint providers_kinds_check;
