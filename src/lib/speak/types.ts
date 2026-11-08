@@ -1,5 +1,5 @@
 import type { GrammarId, SpeakReview, SpeakSkill, WordKind } from '../../../supabase/functions/_shared/speak-review-rules';
-import type { SpeakGoal, SpeakSituation } from '../../../supabase/functions/_shared/speak-policy';
+import type { SpeakGoal, SpeakMode, SpeakSituation } from '../../../supabase/functions/_shared/speak-policy';
 
 /**
  * Speak Czech: the shapes shared by the conversation screen, the provider layer and the learner's
@@ -7,7 +7,7 @@ import type { SpeakGoal, SpeakSituation } from '../../../supabase/functions/_sha
  * review and policy types.
  */
 
-export type { GrammarId, SpeakGoal, SpeakReview, SpeakSituation, SpeakSkill, WordKind };
+export type { GrammarId, SpeakGoal, SpeakMode, SpeakReview, SpeakSituation, SpeakSkill, WordKind };
 
 export type Speaker = 'learner' | 'partner';
 
@@ -30,6 +30,8 @@ export type Cues = { greeting: string; checkIn: string; help: string; end: strin
 /** What the app sends to start a session or a typed reply: small, validated facts, never a prompt. */
 export type SpeakRequest = {
   situation: SpeakSituation;
+  /** tutor: any language, teaching and correcting; immersion: Czech only. */
+  mode: SpeakMode;
   level: number;
   words: string[];
   goal: SpeakGoal | null;

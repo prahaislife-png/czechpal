@@ -38,15 +38,17 @@ export function useConversation(situation: SpeakSituation, czechVoice?: string |
   const meaningOn = useSpeak((s) => s.meaningOn);
   const events = useSpeak((s) => s.events);
   const hidden = useSpeak((s) => s.hidden);
+  const czechOnly = useSpeak((s) => s.czechOnly);
 
   // What the partner is told about the learner, fixed when the conversation opens.
   const request = useMemo<SpeakRequest>(() => {
     const level = speakingLevel(events);
     const words = wordsToRevisit(wordStates(events.filter((e) => e.kind !== 'word' || !hidden.includes(e.lemma))));
-    return { situation, level, words, goal: nextGoal(events, level), language };
+    return { situation, mode: czechOnly ? 'immersion' : 'tutor', level, words, goal: nextGoal(events, level), language };
     // Only at the start: evidence saved at the end mustn't change this conversation's pitch.
+    // The mode can still be changed on the intro, before anything starts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [situation]);
+  }, [situation, czechOnly]);
 
   const [phase, setPhase] = useState<Phase>('intro');
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -332,7 +334,7 @@ export function useConversation(situation: SpeakSituation, czechVoice?: string |
     go('reviewing');
     setReviewError(null);
     try {
-      const r = await speakApi.review(situation, finalTurns, language);
+      const r = await speakApi.review(situation, finalTurns, language, request.mode);
       const at = new Date().toISOString();
       useSpeak.getState().saveSession(
         { ...record, independentTurns: r.independentTurns, helpUsed: r.helpUsed, summary: r.summary, wentWell: r.wentWell, corrections: r.corrections },

@@ -5,6 +5,7 @@ import {
   billedSeconds,
   DAILY_SECONDS,
   LEVEL_GUIDES,
+  TUTOR_LEVELS,
   liveCues,
   liveInstructions,
   MIN_START_SECONDS,
@@ -44,8 +45,22 @@ describe('Speak Czech policy (server)', () => {
     assert.equal(parseSpeakContext({ situation: 'free', level: -3 }, '')!.level, 0);
   });
 
-  it('writes the prompt on the server: Czech only, the level, the situation, one question per turn', () => {
-    const ctx = parseSpeakContext({ situation: 'doctor', level: 0, words: ['horečka'], goal: 'questions' }, 'English')!;
+  it("is a tutor by default: any language, teaching and correcting in the learner's language", () => {
+    const ctx = parseSpeakContext({ situation: 'doctor', level: 0, words: ['horečka'] }, 'Ukrainian')!;
+    assert.equal(ctx.mode, 'tutor');
+    const text = liveInstructions(ctx);
+    assert.ok(text.includes('speak to you in ANY language'));
+    assert.ok(text.includes('use Ukrainian'));
+    assert.ok(text.includes('correct it right away, kindly, in their language'));
+    assert.ok(text.includes(TUTOR_LEVELS[0]));
+    assert.ok(text.includes('Step out of the role'));
+    assert.ok(text.includes('horečka'));
+    assert.ok(liveCues(ctx).greeting.includes('In Ukrainian'));
+    assert.equal(TUTOR_LEVELS.length, 6);
+  });
+
+  it('writes the Czech-only prompt on the server: Czech only, the level, the situation, one question per turn', () => {
+    const ctx = parseSpeakContext({ situation: 'doctor', mode: 'immersion', level: 0, words: ['horečka'], goal: 'questions' }, 'English')!;
     const text = liveInstructions(ctx);
     assert.ok(text.includes('Speak ONLY Czech'));
     assert.ok(text.includes(LEVEL_GUIDES[0]));
@@ -60,6 +75,7 @@ describe('Speak Czech policy (server)', () => {
     const fresh = liveCues(parseSpeakContext({ situation: 'free' }, 'English')!);
     const resumed = liveCues(parseSpeakContext({ situation: 'free', history: [{ role: 'partner', text: 'Ahoj!' }] }, 'English')!);
     assert.ok(fresh.greeting.includes('Begin now'));
+    assert.ok(fresh.greeting.includes('any language'));
     assert.ok(resumed.greeting.includes('Do not greet again'));
   });
 
@@ -67,12 +83,13 @@ describe('Speak Czech policy (server)', () => {
     assert.equal(billedSeconds(0, 2_000, 300), SETUP_SECONDS);
     assert.equal(billedSeconds(0, 61_200, 300), 62);
     assert.equal(billedSeconds(0, 900_000, 300), 300);
+    assert.equal(billedSeconds(0, 900_000, SESSION_MAX_SECONDS), 600);
   });
 
-  it('gives each session at most five minutes and stops when less than the minimum is left', () => {
-    assert.equal(DAILY_SECONDS, 300);
+  it('gives ten minutes a day and stops when less than the minimum is left', () => {
+    assert.equal(DAILY_SECONDS, 600);
     assert.equal(nextLimit(0), SESSION_MAX_SECONDS);
-    assert.equal(nextLimit(200), 100);
+    assert.equal(nextLimit(200), 400);
     assert.equal(nextLimit(DAILY_SECONDS - MIN_START_SECONDS + 1), 0);
     assert.equal(nextLimit(1000), 0);
   });

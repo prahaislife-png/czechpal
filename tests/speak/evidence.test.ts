@@ -13,7 +13,7 @@ import {
 } from '../../src/lib/speak/evidence';
 
 const day = (n: number, h = 10) => new Date(Date.UTC(2026, 10, 1 + n, h)).toISOString();
-const turn = (session: string, at: string, outcome: 'success' | 'partial' | 'breakdown', independent = true): EvidenceEvent => ({
+const turn = (session: string, at: string, outcome: 'success' | 'partial' | 'breakdown' | 'other', independent = true): EvidenceEvent => ({
   kind: 'turn',
   session,
   at,
@@ -43,6 +43,9 @@ describe('Speak Czech evidence', () => {
     const two = [turn('c', day(2, 1), 'success'), turn('c', day(2, 2), 'success')];
     assert.equal(speakingLevel([...one, ...two]), 2);
     assert.equal(speakingLevel([...one, ...two, turn('d', day(3), 'breakdown')]), 1);
+    // Asking in another language between two good Czech answers neither breaks the run nor counts.
+    const mixed = [turn('e', day(4, 1), 'success'), turn('e', day(4, 2), 'other'), turn('e', day(4, 3), 'success')];
+    assert.equal(speakingLevel(mixed), 1);
   });
 
   it('never makes a word known from one good answer', () => {

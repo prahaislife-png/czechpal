@@ -29,7 +29,8 @@ export type ReviewTurn = {
 };
 
 export type WordKind = 'independent' | 'assisted' | 'lapse';
-export type TurnOutcome = 'success' | 'partial' | 'breakdown';
+/** other: not an attempt at Czech (the learner asked or chatted in their own language). It doesn't count either way. */
+export type TurnOutcome = 'success' | 'partial' | 'breakdown' | 'other';
 
 export type RawReview = {
   summary: string;
@@ -132,7 +133,7 @@ export function applyReviewRules(raw: RawReview, turns: ReviewTurn[]): SpeakRevi
     turns: outcomes,
     comprehension,
     independentTurns: outcomes.filter((o) => o.independent && o.outcome === 'success').length,
-    helpUsed: learner.filter((t) => t.helped || t.meaning || t.typed).length,
+    helpUsed: learner.filter((t, k) => (t.helped || t.meaning || t.typed) && outcomes[k].outcome !== 'other').length,
   };
 }
 

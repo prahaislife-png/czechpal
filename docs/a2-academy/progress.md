@@ -249,3 +249,22 @@ native).
 
 Known risks: expo-doctor says react-native-webrtc is untested on the New Architecture (it runs through
 the interop layer); on iPhone, sound may come from the earpiece if WebRTC overrides the speaker route.
+
+### Speak Czech becomes a tutor (owner's request, 2026-11-08)
+
+The owner found the Czech-only partner unhelpful: it should talk with the learner in any language,
+teach Czech and correct them in their own language. Now:
+- **Tutor (default):** talks and explains in the language the learner uses (or their explanation
+  language), teaches Czech as it goes, corrects one mistake at a time kindly in that language and
+  asks them to say it again, answers "how do I say…", and is conversational. Mostly the learner's
+  language at level 0, more Czech as the level rises. In the doctor role-play it steps out of the role
+  to help, then goes back in.
+- **Czech only:** a switch on the conversation screen keeps the earlier immersion partner.
+- **10 minutes a day** (was 5); one conversation can use all 10.
+- Feedback: a turn that is not an attempt at Czech (asking or chatting in another language) is
+  "other": it doesn't count against the learner, as help, or as Czech.
+
+Checked live: the voice greeting ("Hi! Ahoj! We'll chat and learn some Czech together… Try saying jak
+se máš."), a typed exchange that taught *Bydlím v Praze* and corrected *v Praha*, a Ukrainian question
+answered in Ukrainian, Czech-only staying in Czech, and the 10-minute limit. Older builds (no mode)
+get the tutor.

@@ -16,7 +16,7 @@ import type { GrammarId, SpeakGoal, SpeakReview, SpeakSituation, SpeakSkill, Wor
  */
 
 export type EvidenceEvent =
-  | { kind: 'turn'; session: string; at: string; context: SpeakSituation; outcome: 'success' | 'partial' | 'breakdown'; independent: boolean }
+  | { kind: 'turn'; session: string; at: string; context: SpeakSituation; outcome: 'success' | 'partial' | 'breakdown' | 'other'; independent: boolean }
   | { kind: 'word'; session: string; at: string; context: SpeakSituation; lemma: string; meaning: string; form: string; quote: string; type: WordKind }
   | { kind: 'skill'; session: string; at: string; context: SpeakSituation; skill: SpeakSkill; outcome: 'shown' | 'tried'; independent: boolean }
   | { kind: 'weak'; session: string; at: string; context: SpeakSituation; grammar: GrammarId; quote: string; note: string }
@@ -60,7 +60,7 @@ export function speakingLevel(events: EvidenceEvent[]): number {
   let streak = 0;
   let raisedIn: string | null = null;
   for (const e of events.filter((e) => e.kind === 'turn').sort(byTime)) {
-    if (e.kind !== 'turn') continue;
+    if (e.kind !== 'turn' || e.outcome === 'other') continue; // Speaking another language doesn't count either way.
     if (e.outcome === 'breakdown') {
       level = Math.max(0, level - 1);
       streak = 0;

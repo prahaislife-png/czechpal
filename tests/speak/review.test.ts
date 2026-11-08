@@ -97,6 +97,27 @@ describe('Speak Czech review rules', () => {
     assert.equal(r.helpUsed, 2);
   });
 
+  it("doesn't count turns in another language as help or as Czech", () => {
+    const mixed: ReviewTurn[] = [
+      { role: 'partner', text: "Hi! Let's start. Jak se jmenuješ?" },
+      { role: 'learner', text: 'How do I say my name is Anna?', meaning: true },
+      { role: 'partner', text: 'Say: Jmenuju se Anna.' },
+      { role: 'learner', text: 'Jmenuju se Anna.' },
+    ];
+    const r = applyReviewRules(
+      raw({
+        outcomes: [
+          { turn: 1, outcome: 'other' },
+          { turn: 3, outcome: 'success' },
+        ],
+      }),
+      mixed,
+    );
+    assert.deepEqual(r.turns.map((t) => t.outcome), ['other', 'success']);
+    assert.equal(r.helpUsed, 0);
+    assert.equal(r.independentTurns, 1);
+  });
+
   it('accepts only known grammar ids and partner turns for comprehension', () => {
     const r = applyReviewRules(
       raw({

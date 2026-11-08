@@ -15,6 +15,8 @@ type State = {
   consent: boolean;
   /** Show the partner's meaning under each line by default. */
   meaningOn: boolean;
+  /** Czech only (immersion) instead of the tutor who talks in the learner's language. */
+  czechOnly: boolean;
   sessions: SessionRecord[];
   events: EvidenceEvent[];
   /** Words the learner hid from their list. */
@@ -24,12 +26,13 @@ type State = {
 type Actions = {
   setConsent: (v: boolean) => void;
   setMeaningOn: (v: boolean) => void;
+  setCzechOnly: (v: boolean) => void;
   saveSession: (record: SessionRecord, events: EvidenceEvent[]) => void;
   hideWord: (lemma: string) => void;
   clear: () => void;
 };
 
-const initial: State = { consent: false, meaningOn: false, sessions: [], events: [], hidden: [] };
+const initial: State = { consent: false, meaningOn: false, czechOnly: false, sessions: [], events: [], hidden: [] };
 
 /** Enough history for evidence and progress; the oldest fall away first. */
 const MAX_SESSIONS = 200;
@@ -41,6 +44,7 @@ export const useSpeak = create<State & Actions>()(
       ...initial,
       setConsent: (consent) => set({ consent }),
       setMeaningOn: (meaningOn) => set({ meaningOn }),
+      setCzechOnly: (czechOnly) => set({ czechOnly }),
       saveSession: (record, events) =>
         set((s) => ({
           sessions: [...s.sessions.filter((r) => r.id !== record.id), record].slice(-MAX_SESSIONS),
@@ -54,7 +58,7 @@ export const useSpeak = create<State & Actions>()(
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
       migrate: (persisted) => persisted as State,
-      partialize: ({ consent, meaningOn, sessions, events, hidden }) => ({ consent, meaningOn, sessions, events, hidden }),
+      partialize: ({ consent, meaningOn, czechOnly, sessions, events, hidden }) => ({ consent, meaningOn, czechOnly, sessions, events, hidden }),
     },
   ),
 );

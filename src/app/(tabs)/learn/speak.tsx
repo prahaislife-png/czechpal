@@ -55,11 +55,11 @@ export default function SpeakHub() {
           Talk with CzechPal
         </Text>
         <Text variant="callout" color="label2" align="center">
-          A patient partner who speaks only Czech, starts very simply and follows your pace. Meanings when you need them, feedback at the end.
+          A friendly tutor who talks with you in any language, teaches you Czech as you go and corrects you kindly. Feedback at the end.
         </Text>
         <Button label="Start free talk" icon="mic" onPress={() => router.push({ pathname: '/speak/[situation]', params: { situation: 'free' } })} />
         <Text variant="footnote" color="label3" align="center">
-          5 minutes of talking a day. Typing is always open.
+          10 minutes of talking a day. Typing is always open.
         </Text>
       </Card>
 

@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Linking, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Linking, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -171,7 +171,7 @@ function Conversation({ info, czechVoice }: { info: SituationInfo; czechVoice: s
                 <Control icon="text" label="Transcript" active={showTranscript} onPress={() => setShowTranscript((v) => !v)} />
               </View>
               <Text variant="footnote" color="label3" align="center">
-                {c.muted ? 'Microphone off · tap to talk' : 'Microphone on · English is fine if you’re stuck'}
+                {c.muted ? 'Microphone off · tap to talk' : c.request.mode === 'immersion' ? 'Microphone on · Czech only' : 'Microphone on · talk in any language'}
               </Text>
               <View style={styles.secondary}>
                 <Pressable onPress={() => void c.typeInstead()} hitSlop={8} accessibilityRole="button" style={styles.link}>
@@ -292,6 +292,7 @@ function Intro({ info, c }: { info: SituationInfo; c: C }) {
   const speakConsent = useSpeak((s) => s.consent);
   const aiConsent = useStore((s) => s.aiConsent);
   const consent = speakConsent && aiConsent;
+  const czechOnly = useSpeak((s) => s.czechOnly);
   const [status, setStatus] = useState<SpeakStatus | null>(null);
   const [statusError, setStatusError] = useState(false);
   useEffect(() => {
@@ -338,8 +339,25 @@ function Intro({ info, c }: { info: SituationInfo; c: C }) {
           </View>
         ))}
         <Text variant="footnote" color="label3">
-          Pitched for you: {levelLabels[c.request.level].toLowerCase()}. It adapts to how you answer, in Czech.
+          Pitched for you: {levelLabels[c.request.level].toLowerCase()}. It adapts to how you answer.
         </Text>
+      </View>
+
+      <View style={[styles.card, styles.modeRow, { backgroundColor: colors.surface, boxShadow: colors.shadow }]}>
+        <View style={styles.flex}>
+          <Text variant="headline">Czech only</Text>
+          <Text variant="footnote" color="label2">
+            {czechOnly
+              ? 'CzechPal speaks only Czech, like a real conversation. Fewer corrections.'
+              : 'Off: talk in any language. CzechPal answers in yours, teaches you Czech and corrects you as you go.'}
+          </Text>
+        </View>
+        <Switch
+          value={czechOnly}
+          onValueChange={(v) => useSpeak.getState().setCzechOnly(v)}
+          trackColor={{ true: colors.accentFill }}
+          accessibilityLabel="Czech only"
+        />
       </View>
 
       <View style={[styles.card, { backgroundColor: colors.surface, boxShadow: colors.shadow }]}>
@@ -655,6 +673,7 @@ const styles = StyleSheet.create({
   introActions: { gap: space.sm },
   card: { borderRadius: radius.card, borderCurve: 'continuous', padding: space.lg, gap: space.sm },
   bullet: { flexDirection: 'row', gap: space.sm, alignItems: 'flex-start' },
+  modeRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   phrase: { gap: 1 },
   typedTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: layout.gutter, paddingTop: space.sm },
   composer: {

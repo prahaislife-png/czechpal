@@ -67,10 +67,11 @@ export const speakApi = {
   meaning: (text: string, language: string) => call<{ meaning: string }>({ action: 'meaning', text, language }, 20_000),
   reply: (request: SpeakRequest, turns: Turn[]) =>
     call<{ reply: string }>({ action: 'reply', ...request, turns: turns.slice(-20).map((t) => ({ role: t.role, text: t.text })) }),
-  review: (situation: string, turns: Turn[], language: string) =>
+  review: (situation: string, turns: Turn[], language: string, mode: string) =>
     call<SpeakReview>({
       action: 'review',
       situation,
+      mode,
       language,
       turns: turns.map((t) => ({ role: t.role, text: t.text, typed: !!t.typed, meaning: !!t.meaning, helped: !!t.helped })),
     }, 60_000),

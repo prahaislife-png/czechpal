@@ -26,7 +26,7 @@ export function SpeakCard() {
       <View style={styles.flex}>
         <Text variant="headline">Speak Czech</Text>
         <Text variant="footnote" color="label2">
-          {sessions ? `${levelLabels[level]} · ${sessions} ${sessions === 1 ? 'conversation' : 'conversations'}` : 'Talk out loud with a patient Czech partner'}
+          {sessions ? `${levelLabels[level]} · ${sessions} ${sessions === 1 ? 'conversation' : 'conversations'}` : 'Talk out loud with a friendly Czech tutor'}
         </Text>
       </View>
       <Icon name="chevronRight" size={16} color={colors.label3} />
