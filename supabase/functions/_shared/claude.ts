@@ -120,7 +120,7 @@ export async function logCall(
   admin: SupabaseClient,
   row: {
     userId: string;
-    kind: 'analyze' | 'reply' | 'compose' | 'translate' | 'learn';
+    kind: 'analyze' | 'reply' | 'compose' | 'translate' | 'learn' | 'speak';
     ok: boolean;
     usage?: Usage;
     error?: string;

@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AcademyCard } from '@/components/academy/academy-card';
 import { Cover } from '@/components/learn/cover';
 import { MissionRow } from '@/components/learn/mission-row';
+import { SpeakCard } from '@/components/speak/speak-card';
 import { Button } from '@/components/ui/button';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { Chip } from '@/components/ui/chip';
@@ -70,6 +71,8 @@ export default function LearnScreen() {
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
       <AcademyCard />
+
+      <SpeakCard />
 
       <DailyCard focus={focus} minutes={minutes} preview={preview} doneToday={doneToday} streakDays={streak(days)} />
 

@@ -160,6 +160,7 @@ export default function AcademyScreen() {
       <List>
         <Row icon="flag" title="Exam practice" subtitle="Every exam task, one at a time" chevron onPress={() => router.push('/learn/practice')} />
         <Row icon="clock" title="Mock exam" subtitle={mockSubtitle} chevron onPress={() => router.push('/learn/mock')} />
+        <Row icon="mic" title="Speak Czech" subtitle="Talk with CzechPal, out loud" chevron onPress={() => router.push('/learn/speak')} />
         <Row icon="map" title="Topics" subtitle={`${started} of ${map.length} started`} chevron onPress={() => router.push('/learn/topics')} />
         <Row icon="book" title="Grammar" subtitle={`${grammar.length} short explanations`} chevron onPress={() => router.push('/learn/grammar')} />
         <Row icon="info" title="About the exam" subtitle={`Checked ${longDate(EXAM_CHECKED_ON)}`} chevron onPress={() => router.push('/learn/exam')} />

@@ -193,14 +193,78 @@ every speaker.
 
 | Item | Where | State |
 |---|---|---|
-| `learn-feedback` Edge Function: Claude (Sonnet 5.5) judges a form or e-mail against the exam's published requirements and returns an estimate of the points, each requirement judged, up to 8 corrections and a corrected version. Its own limits (3 a minute, 10 a day); doesn't use the 20 free explanations; the text isn't stored, only the call's size and result, as for every AI call | `supabase/functions/learn-feedback`, `_shared/feedback.ts` | Built; deploy pending |
+| `learn-feedback` Edge Function: Claude (Sonnet 5.5) judges a form or e-mail against the exam's published requirements and returns an estimate of the points, each requirement judged, up to 8 corrections and a corrected version. Its own limits (3 a minute, 10 a day); doesn't use the 20 free explanations; the text isn't stored, only the call's size and result, as for every AI call | `supabase/functions/learn-feedback`, `_shared/feedback.ts` | Live (deployed 2026-11-08) |
 | Hard rules in code, not left to the model: points kept whole and within 0–8 / 0–12; an e-mail under 35 words scores 0; one corrected text per answer | `_shared/feedback-rules.ts` | Done, tested |
-| `ai_calls.kind` allows `learn` | `supabase/migrations/20261107090000_learn_feedback_calls.sql` | Written; push pending |
+| `ai_calls.kind` allows `learn` | `supabase/migrations/20261107090000_learn_feedback_calls.sql` | Applied (2026-11-08) |
 | "Get feedback from AI" after the writing coach and the mock's writing: the same consent as explanations, labelled "an estimate, not an exam score" everywhere; saved on the phone with the attempt; the demo build says it needs the server instead of inventing feedback | `src/components/academy/writing-feedback.tsx`, `a2-writing/[id].tsx`, `a2-mock/[section].tsx`, `src/lib/ai` | Done |
 | Privacy policy: writing feedback added to what is sent to the AI and to the usage log | `docs/privacy.html` | Done |
 
 Also fixed while checking: `expo-asset`, a required peer of `expo-audio`, was missing (expo-doctor:
 the app could crash outside Expo Go). Installed; expo-doctor passes 20 of 20.
 
-To go live (needs the owner's terminal; the agent's production-deploy step was blocked):
-`npx supabase db push --remote`, then `npx supabase functions deploy learn-feedback`.
+Live since 2026-11-08: migration applied, function deployed. Checked with real requests: an e-mail
+with two case mistakes got about 10 of 12 with both caught; the fourth request in a minute was
+refused (rate limit works, so calls are logged).
+
+## Speak Czech, Phase 1: built (approved by the owner on 2026-11-08: GPT-Live, 5 minutes a day)
+
+A voice-first conversation coach in Learn → Speak Czech. Studied from Mural (MIT,
+github.com/Chuloo/mural): its teaching policy, learning engine and live transport. No code was
+copied; the rules that came from it are credited where they are used.
+
+| Item | Where | State |
+|---|---|---|
+| Free talk and one full situation, At the doctor's (U lékaře), with objectives and phrases | `src/lib/speak/situations.ts`, server side in `_shared/speak-policy.ts` | Built |
+| Teaching policy written on the server: Czech only, levels 0–5, one question per turn, thinking time, sparing recasts, a gloss of at most five words in the learner's language only when stuck, never a pronunciation claim | `_shared/speak-policy.ts` | Built, tested |
+| Voice: OpenAI GPT-Live over WebRTC; the server swaps the app's offer for the answer with its own key (never in the app) | `_shared/openai-live.ts`, `functions/speak`, `src/lib/speak/voice/` | Live; tested from the web app |
+| Provider seam: the screen only knows ready / transcript / closed / lost events, so the voice technology can change | `src/lib/speak/voice/provider.ts` | Built |
+| Limits on the server: 5 minutes a day (Prague day), one session at a time, at most 5 minutes each; a sweep every minute hangs up anything past its limit; each session's time is logged | `migrations/20261108090000_speak_sessions.sql`, `functions/speak-sweep` | Live; sweep runs every minute |
+| Ending on every way out: End, ×, time limit, 90 s of quiet (check-in after 25 s), leaving the app, a lost connection (Reconnect with the history, Type instead, or feedback) | `src/lib/speak/use-conversation.ts` | Built |
+| Typing as the fallback, the same teacher in writing (Claude), read aloud by the phone's Czech voice | `functions/speak` (reply), conversation screen | Built |
+| Meaning toggle, transcript, A little help, Type instead, End | `src/app/speak/[situation].tsx` | Built |
+| Feedback after the conversation, then evidence on the phone: turns, words, abilities (questions, past, future, reasons, descriptions), repeated grammar, what wasn't understood, help used | `_shared/speak-review*.ts`, `src/lib/speak/evidence.ts`, `src/store/speak.ts` | Built, tested |
+| Evidence rules: only unaided speech counts; a word is never known from one answer (steady needs 3 days, 2 conversations, a week); level up after two unaided successes, at most one step per conversation | `src/lib/speak/evidence.ts` | Tested |
+| Next conversation adapts: level, up to 6 due words, one goal from missing abilities | `use-conversation.ts` | Built |
+| Save words to Your words (spaced review) | conversation feedback | Built |
+| Consent before the first conversation; privacy policy (OpenAI added); microphone text updated | `docs/privacy.html`, `app.json` | Done |
+
+Not built (not shown in the app): Quick Speaking, A2 Examiner, more situations, teacher calibration.
+
+Live since 2026-11-08 (key, migration, both functions). Tested for real from the web app at phone size,
+with a silent stand-in microphone:
+- Voice: connected in under a second; the partner spoke first, in Czech, in role ("Dobrý den, co vás
+  trápí?" as the doctor; "Ahoj, jak se jmenuješ?" in free talk). The greeting is sent as
+  `session.commentary.append`: an `instructions.append` was accepted but the partner stayed silent,
+  and with no audio track at all the append never completed.
+- Countdown, Meaning ("Hi, what is your name?"), Type instead (voice ends, the conversation carries on
+  in writing), End, feedback (caught *v Praha → v Praze*, *v kancelář → v kanceláři*; the typed answer
+  with the meaning showing correctly counted as help), progress saved and shown in the hub.
+- Server: every session ended with the hang-up confirmed; time counted conservatively (OpenAI billed
+  15 s where the allowance counted 23 s); a refused key wasn't counted; the sweep job succeeds every
+  minute.
+
+Not tested: speaking with a real microphone (the browser pane has none), speech recognition of a
+learner's Czech, hearing the voice, anything on an iPhone. Needs a new build (react-native-webrtc is
+native).
+
+Known risks: expo-doctor says react-native-webrtc is untested on the New Architecture (it runs through
+the interop layer); on iPhone, sound may come from the earpiece if WebRTC overrides the speaker route.
+
+### Speak Czech becomes a tutor (owner's request, 2026-11-08)
+
+The owner found the Czech-only partner unhelpful: it should talk with the learner in any language,
+teach Czech and correct them in their own language. Now:
+- **Tutor (default):** talks and explains in the language the learner uses (or their explanation
+  language), teaches Czech as it goes, corrects one mistake at a time kindly in that language and
+  asks them to say it again, answers "how do I say…", and is conversational. Mostly the learner's
+  language at level 0, more Czech as the level rises. In the doctor role-play it steps out of the role
+  to help, then goes back in.
+- **Czech only:** a switch on the conversation screen keeps the earlier immersion partner.
+- **10 minutes a day** (was 5); one conversation can use all 10.
+- Feedback: a turn that is not an attempt at Czech (asking or chatting in another language) is
+  "other": it doesn't count against the learner, as help, or as Czech.
+
+Checked live: the voice greeting ("Hi! Ahoj! We'll chat and learn some Czech together… Try saying jak
+se máš."), a typed exchange that taught *Bydlím v Praze* and corrected *v Praha*, a Ukrainian question
+answered in Ukrainian, Czech-only staying in Czech, and the 10-minute limit. Older builds (no mode)
+get the tutor.
