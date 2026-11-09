@@ -9,9 +9,12 @@ import { writingTasks } from './tasks/writing';
 import { topicById, topics } from './topics';
 
 /**
- * Today's plan, by rules: the starting check first; then a check that is due again; the next
- * lesson; mistakes to go over; practice in the exam's own task formats; grammar the learner keeps
- * missing; words that are due; a story for the current topic.
+ * Learn's one daily plan, by rules. Before the A2 Academy is set up it is the everyday session:
+ * due words, phrases for what's coming up in the learner's life, and listening. After setup: the
+ * starting check first; then a check that is due again; the next lesson (and the everyday session
+ * straight after it when something real is coming up); mistakes to go over; practice in the
+ * exam's own task formats; grammar the learner keeps missing; the everyday session (which holds
+ * the due words and listening); a story for the current topic.
  * It fits the minutes chosen and links only to things that work today.
  */
 
@@ -26,7 +29,12 @@ export type PlanStep =
   | { kind: 'task'; id: string; minutes: number; title: string; why: string }
   | { kind: 'writing'; id: string; minutes: number; title: string; why: string }
   | { kind: 'speaking'; id: string; minutes: number; title: string; why: string }
-  | { kind: 'mistakes'; count: number; minutes: number; title: string; why: string };
+  | { kind: 'mistakes'; count: number; minutes: number; title: string; why: string }
+  /** The everyday session: due words, phrases for a situation, listening. */
+  | { kind: 'session'; situation: string; minutes: number; title: string; why: string };
+
+/** The situation the everyday session practises, and whether it is really coming up (a letter, a date) or just today's pick. */
+export type EverydayFocus = { situation: string; title: string; reason: string; soon: boolean };
 
 export type PlanInput = {
   minutes: DailyMinutes;
@@ -43,16 +51,26 @@ export type PlanInput = {
   tasksDone?: Record<string, number>;
   /** Items whose latest answer was wrong. */
   mistakes?: number;
+  /** False until the A2 Academy is set up: the plan is then the everyday session alone. */
+  academy?: boolean;
+  /** The everyday session's situation. Without it, words and listening are steps of their own. */
+  everyday?: EverydayFocus;
   now?: Date;
 };
 
-export const STEP_MINUTES = { diagnostic: 6, lesson: 6, retest: 3, grammar: 2, words: 3, story: 5, listen: 4, task: 6, writing: 8, speaking: 6, mistakes: 3 } as const;
+export const STEP_MINUTES = { diagnostic: 6, lesson: 6, retest: 3, grammar: 2, words: 3, story: 5, listen: 4, task: 6, writing: 8, speaking: 6, mistakes: 3, session: 5 } as const;
 
 /** Mistakes worth a step of their own. */
 export const MISTAKES_STEP = 3;
 
 export function dailyPlan(input: PlanInput): PlanStep[] {
-  const { minutes, difficulty, diagnosticDone, log, attempts, wordsDue, unread, storyTitle, canListen, tasksDone = {}, mistakes = 0, now = new Date() } = input;
+  const { minutes, difficulty, diagnosticDone, log, attempts, wordsDue, unread, storyTitle, canListen, tasksDone = {}, mistakes = 0, academy = true, everyday, now = new Date() } = input;
+  const session = (length: number): PlanStep | null =>
+    everyday ? { kind: 'session', situation: everyday.situation, minutes: length, title: everyday.title, why: everyday.reason } : null;
+
+  // Before the A2 setup, the everyday session is the whole plan.
+  if (!academy) return everyday ? [session(minutes)!] : [];
+
   const candidates: PlanStep[] = [];
 
   if (!diagnosticDone)
@@ -67,6 +85,10 @@ export function dailyPlan(input: PlanInput): PlanStep[] {
   const lesson = nextLesson(log);
   if (lesson) candidates.push({ kind: 'lesson', id: lesson.id, minutes: STEP_MINUTES.lesson, title: lesson.title, why: `Next in ${topicById(lesson.topic)?.title ?? 'your roadmap'}` });
 
+  // Something real coming up (a permit date, a letter) is practised early.
+  const everydayStep = session(STEP_MINUTES.session);
+  if (everydayStep && everyday?.soon) candidates.push(everydayStep);
+
   // Exam-format practice starts once there is a first lesson behind the learner.
   const task = diagnosticDone && Object.keys(log).some((id) => lessonDone(log, id)) ? examPractice(difficulty, canListen, tasksDone) : null;
 
@@ -75,14 +97,17 @@ export function dailyPlan(input: PlanInput): PlanStep[] {
     ? ({ kind: 'grammar', id: weakGrammar.objective.slice(2), minutes: STEP_MINUTES.grammar, title: weakGrammar.label, why: `${weakGrammar.right} of ${weakGrammar.total} right lately` } as const)
     : null;
 
-  const words = wordsDue > 0 ? ({ kind: 'words', count: wordsDue, minutes: STEP_MINUTES.words, title: 'Review your words', why: `${wordsDue} ${wordsDue === 1 ? 'word is' : 'words are'} due` } as const) : null;
+  const ownWords = wordsDue > 0 ? ({ kind: 'words', count: wordsDue, minutes: STEP_MINUTES.words, title: 'Review your words', why: `${wordsDue} ${wordsDue === 1 ? 'word is' : 'words are'} due` } as const) : null;
 
   // A story from the topic being learnt, else from the first topic with one unread.
   const topic = topicById(lesson?.topic) ?? topicById('personal');
   const storyId = [...(topic?.texts ?? []), ...topics.flatMap((t) => t.texts)].find((id) => unread(id) && storyTitle(id));
   const story = storyId ? ({ kind: 'story', id: storyId, minutes: STEP_MINUTES.story, title: storyTitle(storyId)!, why: 'Reading practice with a real text' } as const) : null;
 
-  const listen = canListen ? ({ kind: 'listen', minutes: STEP_MINUTES.listen, title: 'Listening practice', why: 'Short Czech sentences, heard and understood' } as const) : null;
+  const ownListen = canListen ? ({ kind: 'listen', minutes: STEP_MINUTES.listen, title: 'Listening practice', why: 'Short Czech sentences, heard and understood' } as const) : null;
+  // The everyday session already holds the due words and listening, so they aren't steps of their own.
+  const words = everydayStep ? (everyday?.soon ? null : everydayStep) : ownWords;
+  const listen = everydayStep ? null : ownListen;
 
   // What the learner finds hardest comes before the rest.
   const extras =
@@ -130,3 +155,45 @@ function examPractice(difficulty: Difficulty | undefined, canListen: boolean, do
 }
 
 export const planMinutes = (plan: PlanStep[]) => plan.reduce((n, s) => n + s.minutes, 0);
+
+/** What the learner did today, to tick off the plan's steps. */
+export type TodayEvidence = {
+  diagnostic: boolean;
+  /** Lessons and checks finished today. */
+  lessons: ReadonlySet<string>;
+  /** Exam-task, writing and speaking sets finished today. */
+  sets: ReadonlySet<string>;
+  grammar: ReadonlySet<string>;
+  reviews: number;
+  chapters: number;
+  listening: number;
+  sessions: number;
+  /** Mistakes answered again today. */
+  reviewed: number;
+};
+
+export function stepDoneToday(step: PlanStep, t: TodayEvidence): boolean {
+  switch (step.kind) {
+    case 'diagnostic':
+      return t.diagnostic;
+    case 'lesson':
+    case 'retest':
+      return t.lessons.has(step.id);
+    case 'task':
+    case 'writing':
+    case 'speaking':
+      return t.sets.has(step.id);
+    case 'grammar':
+      return t.grammar.has(step.id);
+    case 'words':
+      return t.reviews > 0;
+    case 'story':
+      return t.chapters > 0;
+    case 'listen':
+      return t.listening > 0;
+    case 'session':
+      return t.sessions > 0;
+    case 'mistakes':
+      return t.reviewed > 0;
+  }
+}

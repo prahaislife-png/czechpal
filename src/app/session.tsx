@@ -11,7 +11,7 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { announce } from '@/lib/a11y';
 import { dayKey, streak } from '@/lib/learn/activity';
-import { buildSession, situationProgress, type DailyMinutes, type SessionStep } from '@/lib/learn/session';
+import { buildSession, sessionSize, situationProgress, type DailyMinutes, type SessionStep } from '@/lib/learn/session';
 import { situationById } from '@/lib/learn/situations';
 import { useFocus } from '@/lib/learn/use-upcoming';
 import { speak, stopSpeaking, useCzechVoice } from '@/lib/learn/voice';
@@ -26,7 +26,9 @@ const SLOW = 0.55;
  * coming up in the learner's life, then hearing those phrases. One thing on screen at a time.
  */
 export default function SessionScreen() {
-  const { focus: focusParam } = useLocalSearchParams<{ focus?: string }>();
+  const { focus: focusParam, minutes: minutesParam } = useLocalSearchParams<{ focus?: string; minutes?: string }>();
+  // The daily plan asks for a shorter session when it has other steps too.
+  const length = Number(minutesParam) in sessionSize ? (Number(minutesParam) as DailyMinutes) : undefined;
   const coming = useFocus();
   const situation = situationById(focusParam) ?? coming.situation;
   const reason = situationById(focusParam) && focusParam !== coming.situation.id ? undefined : coming.reason;
@@ -36,19 +38,20 @@ export default function SessionScreen() {
     <>
       <Stack.Screen options={{ title: '', headerLeft: () => <HeaderCloseButton /> }} />
       {voice.state === 'checking' ? null : (
-        <Session key={situation.id} situationId={situation.id} reason={reason} canListen={voice.state === 'available'} voice={voice.voice} />
+        <Session key={situation.id} situationId={situation.id} reason={reason} length={length} canListen={voice.state === 'available'} voice={voice.voice} />
       )}
     </>
   );
 }
 
-function Session({ situationId, reason, canListen, voice }: { situationId: string; reason?: string; canListen: boolean; voice?: string }) {
+function Session({ situationId, reason, length, canListen, voice }: { situationId: string; reason?: string; length?: DailyMinutes; canListen: boolean; voice?: string }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const situation = situationById(situationId)!;
   const rate = useLearn((s) => s.rate);
   const direction = useLearn((s) => s.direction);
-  const minutes = (useLearn((s) => s.profile?.minutes) ?? 5) as DailyMinutes;
+  const chosen = (useLearn((s) => s.profile?.minutes) ?? 5) as DailyMinutes;
+  const minutes = length ?? chosen;
   // Built once: the deck changes as cards are answered, and the session must not reshuffle.
   const [steps] = useState<SessionStep[]>(() =>
     buildSession({

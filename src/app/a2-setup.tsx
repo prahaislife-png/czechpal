@@ -26,8 +26,9 @@ const levels: { id: StartLevel; label: string; detail: string }[] = [
 ];
 
 /**
- * A2 Academy setup: where you start, when the exam is, how long a day and what's hardest.
- * Kept as a draft until saved; saving makes the exam Learn's goal and offers the starting check.
+ * Setting up lessons: where you start, when the exam is, how long a day and what's hardest.
+ * Kept as a draft until saved; saving adds lessons to the daily plan and offers the starting check.
+ * Afterwards these answers are changed in Your plan.
  */
 export default function A2SetupScreen() {
   const { colors } = useTheme();
@@ -43,7 +44,8 @@ export default function A2SetupScreen() {
 
   const save = () => {
     useLearn.getState().setProfile({
-      goal: 'exam',
+      // Setting up lessons doesn't change why someone is learning; with no answer yet, it's the exam.
+      goal: saved?.goal ?? 'exam',
       level,
       minutes,
       topics: saved?.topics ?? [],
