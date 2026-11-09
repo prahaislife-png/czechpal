@@ -32,7 +32,7 @@ const skillNames: Record<Skill, string> = { reading: 'Reading', listening: 'List
 const skillIcons = { reading: 'book', listening: 'ear', writing: 'compose', speaking: 'message' } as const;
 
 /**
- * A2 Academy home: carry on, today's plan, readiness per exam skill, what needs work, then the
+ * A2 Academy home: carry on, today's plan (the same one as on Learn), readiness per exam skill, what needs work, then the
  * roadmap, grammar and the exam's verified facts.
  */
 export default function AcademyScreen() {
@@ -105,11 +105,18 @@ export default function AcademyScreen() {
       ) : null}
 
       <View>
-        <SectionHeader title={`Today · ${planMinutes(plan)} of ${minutesOf(profile)} min`} />
+        <SectionHeader title={`Today · ${plan.filter((s) => s.done).length} of ${plan.length} done · ${planMinutes(plan)} of ${minutesOf(profile)} min`} />
         {plan.length ? (
           <List>
             {plan.map((s) => (
-              <Row key={`${s.kind}-${'id' in s ? s.id : ''}`} icon={stepIcon[s.kind]} title={s.title} subtitle={`${s.minutes} min · ${s.why}`} chevron onPress={() => router.push(stepHref(s))} />
+              <Row
+                key={`${s.kind}-${'id' in s ? s.id : ''}`}
+                icon={s.done ? 'checkCircle' : stepIcon[s.kind]}
+                title={s.title}
+                subtitle={s.done ? 'Done today' : `${s.minutes} min · ${s.why}`}
+                chevron
+                onPress={() => router.push(stepHref(s))}
+              />
             ))}
           </List>
         ) : (

@@ -1,12 +1,12 @@
 import { router } from 'expo-router';
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { planMinutes } from '@/lib/academy/plan';
-import { stepHref, stepIcon, useTodayPlan } from '@/lib/academy/use-plan';
+import { roadmap } from '@/lib/academy/roadmap';
 import { daysToExam } from '@/lib/learn/exam';
 import { useAcademy } from '@/store/academy';
 import { useLearn } from '@/store/learn';
@@ -32,14 +32,16 @@ export function SetupCard() {
   );
 }
 
-/** Learn's top card: the A2 Academy's next step, or the way in. */
+/** The way into the A2 Academy: the countdown and the roadmap. Today's steps are in Learn's daily plan. */
 export function AcademyCard() {
   const { colors } = useTheme();
   const setupAt = useAcademy((s) => s.setupAt);
+  const lessons = useAcademy((s) => s.lessons);
+  const attempts = useAcademy((s) => s.attempts);
   const examDate = useLearn((s) => s.profile?.examDate);
-  const plan = useTodayPlan();
+  const map = useMemo(() => roadmap(lessons, attempts), [lessons, attempts]);
   if (!setupAt) return <SetupCard />;
-  const first = plan[0];
+  const started = map.filter((t) => t.state !== 'not-started').length;
   const left = examDate ? daysToExam(examDate) : null;
   return (
     <Card style={[styles.card, { backgroundColor: colors.lavender }]}>
@@ -58,30 +60,10 @@ export function AcademyCard() {
           </View>
         ) : null}
       </View>
-      {first ? (
-        <View style={[styles.next, { backgroundColor: colors.surface }]}>
-          <Icon name={stepIcon[first.kind]} size={22} color={colors.lavenderInk} />
-          <View style={styles.flex}>
-            <Text variant="callout" weight="600" numberOfLines={2}>
-              {first.title}
-            </Text>
-            <Text variant="footnote" color="label2" numberOfLines={2}>
-              {first.why}
-            </Text>
-          </View>
-        </View>
-      ) : (
-        <Text variant="footnote" color="label2">
-          Every lesson written so far is done. More topics are on the way.
-        </Text>
-      )}
       <Text variant="footnote" style={{ color: colors.lavenderInk }}>
-        {plan.length > 1 ? `Today: ${plan.length} things, about ${planMinutes(plan)} min.` : 'Your roadmap, readiness and grammar are inside.'}
+        {started} of {map.length} topics started. Your roadmap, readiness, exam practice, mock exams and everything about the exam.
       </Text>
-      <View style={styles.actions}>
-        {first ? <Button label="Start" icon="play" onPress={() => router.push(stepHref(first))} style={styles.flex} /> : null}
-        <Button label="Open" variant="secondary" onPress={() => router.push('/learn/academy')} style={styles.flex} />
-      </View>
+      <Button label="Open" variant="secondary" onPress={() => router.push('/learn/academy')} />
     </Card>
   );
 }
@@ -93,6 +75,4 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   pill: { paddingHorizontal: space.sm, paddingVertical: 4, borderRadius: radius.pill },
   well: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  next: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderRadius: radius.tile, padding: space.md },
-  actions: { flexDirection: 'row', gap: space.sm },
 });

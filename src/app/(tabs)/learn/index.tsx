@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AcademyCard } from '@/components/academy/academy-card';
 import { Cover } from '@/components/learn/cover';
 import { MissionRow } from '@/components/learn/mission-row';
+import { TodayCard } from '@/components/learn/today-card';
 import { SpeakCard } from '@/components/speak/speak-card';
 import { Button } from '@/components/ui/button';
 import { Card, SectionHeader } from '@/components/ui/card';
@@ -13,11 +14,10 @@ import { Icon } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
-import { streak, today } from '@/lib/learn/activity';
-import { buildSession, sessionSummary, situationProgress, type DailyMinutes } from '@/lib/learn/session';
+import { situationProgress } from '@/lib/learn/session';
 import { situations, type Situation } from '@/lib/learn/situations';
 import type { Upcoming } from '@/lib/learn/upcoming';
-import { useFocus, useUpcoming } from '@/lib/learn/use-upcoming';
+import { useUpcoming } from '@/lib/learn/use-upcoming';
 import { useStore } from '@/store/cases';
 import { contentById, filterLibrary, levelsInLibrary, topicsInLibrary } from '@/lib/learn/content';
 import { dueCards, nextDue } from '@/lib/learn/deck';
@@ -25,7 +25,6 @@ import { recommendMissions } from '@/lib/learn/missions';
 import { isFinished, quizScore, readShare } from '@/lib/learn/progress';
 import { untilLabel } from '@/lib/learn/srs';
 import { topicLabels, type LearningContent, type Level, type Topic } from '@/lib/learn/types';
-import { useCzechVoice } from '@/lib/learn/voice';
 import { useLearn } from '@/store/learn';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -33,8 +32,9 @@ import { useTheme } from '@/theme/use-theme';
 const kindLabels: Record<LearningContent['kind'], string> = { story: 'Story', dialogue: 'Dialogue', serial: 'Series' };
 
 /**
- * Learn: the A2 Academy's next step; today's few minutes, made from what's coming up in the learner's life; getting ready for
- * those situations; then missions, their words, progress and the library.
+ * Learn: one plan for today (the everyday session, and the A2 Academy's steps once it's set up);
+ * the way into the A2 Academy; getting ready for what's coming up; then missions, words, progress
+ * and the library.
  */
 export default function LearnScreen() {
   const { colors } = useTheme();
@@ -42,9 +42,7 @@ export default function LearnScreen() {
   const lastId = useLearn((s) => s.lastContentId);
   const deck = useLearn((s) => s.deck);
   const profile = useLearn((s) => s.profile);
-  const days = useLearn((s) => s.days);
   const listened = useLearn((s) => s.missionListening);
-  const voice = useCzechVoice();
   const [level, setLevel] = useState<Level | null>(null);
   const [topic, setTopic] = useState<Topic | null>(null);
 
@@ -57,16 +55,7 @@ export default function LearnScreen() {
   const items = filterLibrary(level, topic);
   const missionState = useMemo(() => ({ progress, deck, listened }), [progress, deck, listened]);
   const missions = useMemo(() => recommendMissions(profile, missionState).slice(0, 2), [profile, missionState]);
-  const focus = useFocus();
   const coming = useUpcoming();
-  const memory = useLearn((s) => s.phrases);
-  const minutes = (profile?.minutes ?? 5) as DailyMinutes;
-  // What today's session will hold, to say so before it starts.
-  const preview = useMemo(
-    () => sessionSummary(buildSession({ deck, focus: focus.situation, memory, minutes, canListen: voice.state === 'available', seed: 1 })),
-    [deck, focus.situation, memory, minutes, voice.state],
-  );
-  const doneToday = today(days).sessions > 0;
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
@@ -75,11 +64,11 @@ export default function LearnScreen() {
           A little Czech every day
         </Text>
         <Text variant="callout" color="label2">
-          Today’s practice, your A2 journey, speaking and your words. Everything else is further down.
+          Today’s plan first, then your A2 journey, speaking and your words. Everything else is further down.
         </Text>
       </View>
 
-      <DailyCard focus={focus} minutes={minutes} preview={preview} doneToday={doneToday} streakDays={streak(days)} />
+      <TodayCard />
 
       {showContinue && last && (
         <PressableScale
@@ -197,63 +186,6 @@ const goalNames = { exam: 'A2 exam', everyday: 'Day to day', work: 'At work' } a
 
 function planSummary(p: NonNullable<ReturnType<typeof useLearn.getState>['profile']>) {
   return `${goalNames[p.goal]} · ${p.minutes} min a day`;
-}
-
-function DailyCard({
-  focus,
-  minutes,
-  preview,
-  doneToday,
-  streakDays,
-}: {
-  focus: Upcoming;
-  minutes: DailyMinutes;
-  preview: string;
-  doneToday: boolean;
-  streakDays: number;
-}) {
-  const { colors } = useTheme();
-  const start = () => router.push('/session');
-  return (
-    <Card style={[styles.today, { backgroundColor: colors.sage }]}>
-      <Text variant="footnote" weight="600" style={[styles.eyebrow, { color: colors.sageInk }]}>
-        TODAY’S PRACTICE
-      </Text>
-      <View style={styles.todayHead}>
-        <Text variant="title2" accessibilityRole="header" style={[styles.flex, { color: colors.sageInk }]}>
-          {doneToday ? 'Done for today' : `Your ${minutes} minutes`}
-        </Text>
-        {streakDays > 0 && (
-          <View style={[styles.streak, { backgroundColor: colors.warningSoft }]} accessible accessibilityLabel={`${streakDays} ${streakDays === 1 ? 'day' : 'days'} in a row`}>
-            <Icon name="flame" size={14} color={colors.warning} />
-            <Text variant="footnote" weight="700" color="warning" tabular>
-              {streakDays}
-            </Text>
-          </View>
-        )}
-      </View>
-      <View style={[styles.focus, { backgroundColor: colors.surface }]}>
-        <Icon name={focus.situation.icon} size={22} color={colors.sageInk} />
-        <View style={styles.flex}>
-          <Text variant="callout" weight="600" numberOfLines={2}>
-            {focus.situation.title}
-          </Text>
-          <Text variant="footnote" color="label2" numberOfLines={2}>
-            {focus.reason}
-          </Text>
-        </View>
-      </View>
-      <Text variant="footnote" style={{ color: colors.sageInk }}>
-        {doneToday ? 'Come back tomorrow, or go round again.' : preview}
-      </Text>
-      <Button
-        label={doneToday ? 'Another round' : 'Start'}
-        icon={doneToday ? 'refresh' : 'play'}
-        variant={doneToday ? 'secondary' : 'primary'}
-        onPress={start}
-      />
-    </Card>
-  );
 }
 
 /** Situations coming up, soonest first, then the rest to pick from. */
@@ -382,13 +314,8 @@ function ProgressBar({ value }: { value: number }) {
 
 const styles = StyleSheet.create({
   heading: { gap: space.xs, paddingHorizontal: space.xs },
-  eyebrow: { letterSpacing: 0.8 },
   content: { padding: layout.gutter, paddingBottom: space.huge, gap: space.xxl },
   flex: { flex: 1 },
-  today: { gap: space.md },
-  todayHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  streak: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: space.sm, paddingVertical: 4, borderRadius: radius.pill },
-  focus: { flexDirection: 'row', alignItems: 'center', gap: space.md, borderRadius: radius.tile, padding: space.md },
   readyHint: { paddingHorizontal: space.xs, marginBottom: space.sm },
   readyLink: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.xs, paddingVertical: space.sm, alignSelf: 'flex-start' },
   tiles: { paddingHorizontal: layout.gutter, gap: space.md, paddingVertical: space.md },
