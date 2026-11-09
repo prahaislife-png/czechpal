@@ -1,5 +1,9 @@
 import { CONTENT_CHECKED_ON, exercise as ex, type ExerciseBase as Base } from './make';
 import { moreLessons } from './lessons-more';
+import { deepLessons } from './lessons-deep';
+import { deepLessons2 } from './lessons-deep-2';
+import { deepLessons3 } from './lessons-deep-3';
+import { deepLessons4 } from './lessons-deep-4';
 import type { Lesson } from './types';
 
 /**
@@ -1000,7 +1004,7 @@ const firstLessons: Lesson[] = [
 ];
 
 /** Every lesson, in the roadmap's order. */
-export const lessons: Lesson[] = [...firstLessons, ...moreLessons];
+export const lessons: Lesson[] = [...firstLessons, ...moreLessons, ...deepLessons, ...deepLessons2, ...deepLessons3, ...deepLessons4];
 
 export const lessonById = (id: string | undefined) => lessons.find((l) => l.id === id);
 

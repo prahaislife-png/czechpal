@@ -236,6 +236,113 @@ export const speakingTasks: SpeakingTask[] = [
     ],
     checklist: CHECKS[4],
   },
+  {
+    ...meta,
+    id: 's1-c',
+    task: 1,
+    title: 'Family and the weather',
+    instructionCs: 'Odpovězte na otázky celou větou.',
+    instruction: 'Answer each question straight away, in a full sentence, in the tense of the question.',
+    objectives: ['t:personal:family', 't:weather:today', 'g:present', 'g:past', 'g:future'],
+    parts: [
+      {
+        title: 'Rodina · Family',
+        prompts: [
+          { id: 's1-c.1', ask: 'Máte sourozence?', en: 'Do you have brothers or sisters?', model: 'Ano, mám jednoho bratra a dvě sestry.' },
+          { id: 's1-c.2', ask: 'Kde bydlí vaše rodina?', en: 'Where does your family live?', model: 'Moje rodina bydlí na Ukrajině ve Lvově.', tip: 'About them: bydlí, not bydlím.' },
+          { id: 's1-c.3', ask: 'Co jste dělal/a s rodinou naposledy?', en: 'What did you last do with your family?', model: 'Naposledy jsme byli spolu na večeři v restauraci.', tip: 'Past: jsme byli (we were).' },
+          { id: 's1-c.4', ask: 'Kdy uvidíte rodinu?', en: 'When will you see your family?', model: 'Rodinu uvidím v létě, pojedu domů na dovolenou.', tip: 'Future: uvidím, pojedu.' },
+        ],
+      },
+      {
+        title: 'Počasí · Weather',
+        prompts: [
+          { id: 's1-c.5', ask: 'Jaké je dnes počasí?', en: 'What’s the weather like today?', model: 'Dnes je hezky a svítí slunce.' },
+          { id: 's1-c.6', ask: 'Které roční období máte nejradši?', en: 'Which season do you like best?', model: 'Nejradši mám jaro, protože je teplo a všechno kvete.' },
+          { id: 's1-c.7', ask: 'Jaké počasí bylo včera?', en: 'What was the weather like yesterday?', model: 'Včera bylo chladno a celý den pršelo.', tip: 'Past: bylo, pršelo.' },
+          { id: 's1-c.8', ask: 'Co budete dělat, když bude pršet?', en: 'What will you do if it rains?', model: 'Když bude pršet, zůstanu doma a budu číst.', tip: 'Future: zůstanu, budu číst.' },
+        ],
+      },
+    ],
+    checklist: CHECKS[1],
+  },
+  {
+    ...meta,
+    id: 's2-c',
+    task: 2,
+    title: 'A gym and a flat to rent',
+    instructionCs: 'Zeptejte se na informace z kartičky a položte jednu vlastní otázku.',
+    instruction: 'Ask the questions on the card, then one of your own. You are talking to a stranger, so use vy.',
+    register: 'vy',
+    objectives: ['g:question-words', 'g:formal-informal', 't:free-time:sport', 't:housing:rent'],
+    parts: [
+      {
+        title: 'At a gym',
+        situation: 'Jste ve fitness centru. Chcete tam chodit cvičit.',
+        opening: 'Dobrý den, co pro vás můžu udělat?',
+        prompts: [
+          { id: 's2-c.1', cue: 'otevírací doba?', en: 'When is it open?', model: 'Kdy máte otevřeno?', reply: 'Máme otevřeno každý den od šesti do deseti večer.' },
+          { id: 's2-c.2', cue: 'cena za měsíc?', en: 'How much is a month?', model: 'Kolik stojí permanentka na měsíc?', reply: 'Měsíční permanentka stojí devět set korun.' },
+          { id: 's2-c.3', cue: 'sprchy?', en: 'Are there showers?', model: 'Jsou tady sprchy?', reply: 'Ano, sprchy a šatny jsou dole.' },
+          { id: 's2-c.4', cue: 'vaše otázka', en: 'A question of your own about the gym', model: 'Máte taky skupinové lekce?' },
+        ],
+      },
+      {
+        title: 'A flat to rent',
+        situation: 'Voláte majiteli bytu z inzerátu. Chcete si byt pronajmout.',
+        opening: 'Prosím, Dvořák.',
+        prompts: [
+          { id: 's2-c.5', cue: 'nájem?', en: 'How much is the rent?', model: 'Kolik je nájem?', reply: 'Nájem je osmnáct tisíc korun měsíčně.' },
+          { id: 's2-c.6', cue: 'energie?', en: 'How much are the bills?', model: 'Kolik se platí za energie?', reply: 'Energie jsou asi tři tisíce měsíčně.' },
+          { id: 's2-c.7', cue: 'prohlídka?', en: 'When can you see the flat?', model: 'Kdy si můžu byt prohlédnout?', reply: 'Můžete přijít zítra v pět.' },
+          { id: 's2-c.8', cue: 'vaše otázka', en: 'A question of your own about the flat', model: 'Můžu mít v bytě psa?' },
+        ],
+      },
+    ],
+    checklist: CHECKS[2],
+  },
+  {
+    ...meta,
+    id: 's3-c',
+    task: 3,
+    title: 'Lucie’s Sunday',
+    instructionCs: 'Co dělala Lucie v neděli? Vyprávějte podle obrázků. Ke každému obrázku řekněte alespoň jednu větu.',
+    instruction: 'Tell what Lucie did on Sunday, from the pictures, in the past tense. At least one sentence per picture.',
+    objectives: ['g:past', 't:free-time:weekend'],
+    parts: [
+      {
+        prompts: [
+          { id: 's3-c.1', icon: 'bike', cue: 'Obrázek 1', en: 'Cycled to the river in the morning', model: 'Ráno Lucie jela na kole k řece.', tip: 'About Lucie: jela, with -la for a woman.' },
+          { id: 's3-c.2', icon: 'food', cue: 'Obrázek 2', en: 'Had lunch at her parents’', model: 'V poledne obědvala u rodičů.' },
+          { id: 's3-c.3', icon: 'book', cue: 'Obrázek 3', en: 'Read a book in the afternoon', model: 'Odpoledne četla knihu na balkoně.' },
+          { id: 's3-c.4', icon: 'phone', cue: 'Obrázek 4', en: 'Called a friend in the evening', model: 'Večer volala kamarádce a potom šla spát.' },
+        ],
+      },
+    ],
+    checklist: CHECKS[3],
+  },
+  {
+    ...meta,
+    id: 's4-c',
+    task: 4,
+    title: 'Lunch with a colleague',
+    instructionCs: 'Domluvte se s kolegou, kam půjdete na oběd. Nabídněte všechny tři možnosti a jednu vyberte.',
+    instruction: 'Agree with a colleague where to go for lunch. Offer each picture, choose one and say why. Use ty.',
+    register: 'ty',
+    objectives: ['g:formal-informal', 'g:modals', 't:food:restaurant', 't:work:colleagues'],
+    parts: [
+      {
+        opening: 'Ahoj, půjdeme spolu na oběd?',
+        prompts: [
+          { id: 's4-c.1', icon: 'food', cue: 'Navrhněte restauraci.', en: 'Suggest the restaurant', model: 'Můžeme jít do restaurace naproti.', reply: 'Tam vaří dobře, ale vždycky dlouho čekáme.' },
+          { id: 's4-c.2', icon: 'cup', cue: 'Navrhněte kavárnu.', en: 'Suggest the café', model: 'Nebo můžeme jít do kavárny na bagetu.', reply: 'Bagetu jsem měl už včera.' },
+          { id: 's4-c.3', icon: 'tree', cue: 'Navrhněte park.', en: 'Suggest eating in the park', model: 'Tak si kupme jídlo a pojďme do parku.', reply: 'Do parku? Proč?' },
+          { id: 's4-c.4', cue: 'Řekněte proč.', en: 'Say why', model: 'Protože je hezky a celý den sedíme v kanceláři.', reply: 'Máš pravdu, jdeme do parku!' },
+        ],
+      },
+    ],
+    checklist: CHECKS[4],
+  },
 ];
 
 export const speakingTaskById = (id: string | undefined) => speakingTasks.find((t) => t.id === id);

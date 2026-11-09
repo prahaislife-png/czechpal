@@ -20,6 +20,7 @@
   "exclude": [
     "supabase/functions",
     "site",
-    "tests"
+    "tests",
+    "scripts"
   ]
 }

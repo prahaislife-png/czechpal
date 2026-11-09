@@ -15,7 +15,7 @@ export const topics: Topic[] = [
     grammar: ['pronunciation', 'present', 'pronouns', 'question-words'],
     texts: ['soused'],
     situations: [],
-    lessons: ['personal-1', 'personal-2'],
+    lessons: ['personal-1', 'personal-2', 'personal-3', 'personal-4'],
   },
   {
     id: 'housing',
@@ -25,7 +25,7 @@ export const topics: Topic[] = [
     grammar: ['gender', 'adjectives', 'numbers', 'question-words'],
     texts: ['novy-byt'],
     situations: ['flat', 'bills'],
-    lessons: ['housing-1', 'housing-2'],
+    lessons: ['housing-1', 'housing-2', 'housing-3', 'housing-4'],
   },
   {
     id: 'food',
@@ -35,7 +35,7 @@ export const topics: Topic[] = [
     grammar: ['cases', 'numbers', 'modals'],
     texts: ['v-kavarne', 'v-obchode'],
     situations: [],
-    lessons: ['food-1', 'food-2'],
+    lessons: ['food-1', 'food-2', 'food-3', 'food-4'],
   },
   {
     id: 'routine',
@@ -45,7 +45,7 @@ export const topics: Topic[] = [
     grammar: ['time', 'present', 'past'],
     texts: [],
     situations: [],
-    lessons: ['routine-1'],
+    lessons: ['routine-1', 'routine-2', 'routine-3', 'routine-4'],
   },
   {
     id: 'free-time',
@@ -55,7 +55,7 @@ export const topics: Topic[] = [
     grammar: ['modals', 'future', 'formal-informal'],
     texts: [],
     situations: [],
-    lessons: ['free-time-1'],
+    lessons: ['free-time-1', 'free-time-2', 'free-time-3', 'free-time-4'],
   },
   {
     id: 'work',
@@ -65,7 +65,7 @@ export const topics: Topic[] = [
     grammar: ['present', 'aspect', 'formal-informal'],
     texts: ['prvni-den-v-praci'],
     situations: ['work'],
-    lessons: ['work-1'],
+    lessons: ['work-1', 'work-2', 'work-3', 'work-4'],
   },
   {
     id: 'health',
@@ -75,7 +75,7 @@ export const topics: Topic[] = [
     grammar: ['cases', 'modals'],
     texts: ['u-lekare'],
     situations: ['doctor'],
-    lessons: ['health-1'],
+    lessons: ['health-1', 'health-2', 'health-3', 'health-4'],
   },
   {
     id: 'shopping',
@@ -85,7 +85,7 @@ export const topics: Topic[] = [
     grammar: ['numbers', 'cases', 'adjectives'],
     texts: ['v-obchode', 'na-poste'],
     situations: ['post', 'bills'],
-    lessons: ['shopping-1'],
+    lessons: ['shopping-1', 'shopping-2', 'shopping-3', 'shopping-4'],
   },
   {
     id: 'travel',
@@ -95,7 +95,7 @@ export const topics: Topic[] = [
     grammar: ['prepositions', 'time', 'future'],
     texts: ['vlakem-do-brna'],
     situations: [],
-    lessons: ['travel-1'],
+    lessons: ['travel-1', 'travel-2', 'travel-3', 'travel-4'],
   },
   {
     id: 'education',
@@ -105,7 +105,7 @@ export const topics: Topic[] = [
     grammar: ['past', 'formal-informal'],
     texts: [],
     situations: [],
-    lessons: ['education-1'],
+    lessons: ['education-1', 'education-2', 'education-3', 'education-4'],
   },
   {
     id: 'offices',
@@ -115,7 +115,7 @@ export const topics: Topic[] = [
     grammar: ['formal-informal', 'question-words', 'modals'],
     texts: ['zmena-terminu'],
     situations: ['permit', 'office'],
-    lessons: ['offices-1'],
+    lessons: ['offices-1', 'offices-2', 'offices-3', 'offices-4'],
   },
   {
     id: 'safety',
@@ -125,7 +125,7 @@ export const topics: Topic[] = [
     grammar: ['past', 'question-words', 'modals'],
     texts: [],
     situations: [],
-    lessons: ['safety-1'],
+    lessons: ['safety-1', 'safety-2', 'safety-3', 'safety-4'],
   },
   {
     id: 'weather',
@@ -135,7 +135,7 @@ export const topics: Topic[] = [
     grammar: ['past', 'future', 'time'],
     texts: [],
     situations: [],
-    lessons: ['weather-1'],
+    lessons: ['weather-1', 'weather-2', 'weather-3', 'weather-4'],
   },
   {
     id: 'social',
@@ -145,7 +145,7 @@ export const topics: Topic[] = [
     grammar: ['formal-informal', 'pronouns'],
     texts: ['soused'],
     situations: [],
-    lessons: ['social-1'],
+    lessons: ['social-1', 'social-2', 'social-3', 'social-4'],
   },
 ];
 

@@ -21,7 +21,7 @@ import { nextLesson, roadmap, type TopicProgress, type TopicState } from '@/lib/
 import { topicById } from '@/lib/academy/topics';
 import { stepHref, stepIcon, useTodayPlan } from '@/lib/academy/use-plan';
 import type { Skill } from '@/lib/academy/types';
-import { afterExam, daysToExam, EXAM_CHECKED_ON } from '@/lib/learn/exam';
+import { afterExam, daysToExam } from '@/lib/learn/exam';
 import { minutesOf } from '@/lib/learn/profile';
 import { useAcademy } from '@/store/academy';
 import { useLearn } from '@/store/learn';
@@ -64,7 +64,7 @@ export default function AcademyScreen() {
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
         <SetupCard />
         <List>
-          <Row icon="info" title="About the exam" subtitle="Parts, points and how to pass" chevron onPress={() => router.push('/learn/exam')} />
+          <Row icon="info" title="Everything about the A2 exam" subtitle="Who needs it, registering, dates, the fee, the day, how you pass" chevron onPress={() => router.push('/learn/exam')} />
         </List>
       </ScrollView>
     );
@@ -210,7 +210,7 @@ export default function AcademyScreen() {
         <Row icon="mic" title="Speak Czech" subtitle="Talk with CzechLocal, out loud" chevron onPress={() => router.push('/learn/speak')} />
         <Row icon="map" title="Topics" subtitle={`${started} of ${map.length} started`} chevron onPress={() => router.push('/learn/topics')} />
         <Row icon="book" title="Grammar" subtitle={`${grammar.length} short explanations`} chevron onPress={() => router.push('/learn/grammar')} />
-        <Row icon="info" title="About the exam" subtitle={`Checked ${longDate(EXAM_CHECKED_ON)}`} chevron onPress={() => router.push('/learn/exam')} />
+        <Row icon="info" title="Everything about the A2 exam" subtitle="Registering, dates, the fee, the day, every task" chevron onPress={() => router.push('/learn/exam')} />
         <Row icon="flag" title="Starting check" subtitle="Take it again any time" chevron onPress={() => router.push('/diagnostic')} />
         <Row icon="settings" title="Your A2 plan" subtitle="Level, exam date, minutes" chevron onPress={() => router.push('/a2-setup')} />
       </List>

@@ -30,7 +30,20 @@ export function Passage({ text }: { text: string }) {
   );
 }
 
-export function Recording({ label, playsUsed, mode, onPlay }: { label: string; playsUsed: number; mode: TaskMode; onPlay: (slow: boolean) => void }) {
+export function Recording({
+  label,
+  playsUsed,
+  mode,
+  onPlay,
+  recorded,
+}: {
+  label: string;
+  playsUsed: number;
+  mode: TaskMode;
+  onPlay: (slow: boolean) => void;
+  /** It plays from a recorded file (a computer-generated Czech voice), not the phone's voice. */
+  recorded?: boolean;
+}) {
   const { colors } = useTheme();
   const left = EXAM_PLAYS - playsUsed;
   const blocked = mode === 'exam' && left <= 0;
@@ -49,6 +62,7 @@ export function Recording({ label, playsUsed, mode, onPlay }: { label: string; p
         <Text variant="headline">{label}</Text>
         <Text variant="footnote" color="label2">
           {mode === 'exam' ? (left > 0 ? `${left} ${left === 1 ? 'play' : 'plays'} left` : 'Played twice') : 'Play as often as you like'}
+          {recorded ? ' · computer-generated voice' : ''}
         </Text>
       </View>
       {mode === 'learn' ? (

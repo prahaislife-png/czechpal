@@ -15,13 +15,13 @@ import { lessonById } from '@/lib/academy/lessons';
 import { lessonSecure, PASS, RETEST_DAYS } from '@/lib/academy/roadmap';
 import { topicById } from '@/lib/academy/topics';
 import type { Lesson } from '@/lib/academy/types';
-import { speak, stopSpeaking, useCzechVoice } from '@/lib/learn/voice';
+import { useRecordingPlayer } from '@/lib/academy/audio';
+import { useCzechVoice } from '@/lib/learn/voice';
 import { useAcademy } from '@/store/academy';
 import { useLearn } from '@/store/learn';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
-const SLOW = 0.55;
 
 /**
  * A lesson, in order: the goal and a little new Czech, a short scene, guided practice, then an
@@ -72,8 +72,10 @@ function Player({ lesson, retest, canListen, voice }: { lesson: Lesson; retest: 
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState({ right: 0, total: 0 });
   const done = index >= steps.length;
-  const say = useCallback<Say>((text, slow = false) => speak(text, { voice, rate: slow ? SLOW : rate }), [voice, rate]);
-  useFocusEffect(useCallback(() => stopSpeaking, []));
+  // A recorded voice when the text has one; the phone's Czech voice otherwise.
+  const recording = useRecordingPlayer({ voice, rate });
+  const say = useCallback<Say>((text, slow = false) => recording.play(text, slow), [recording]);
+  useFocusEffect(useCallback(() => recording.stop, [recording]));
 
   useEffect(() => {
     useAcademy.getState().startLesson(lesson.id);

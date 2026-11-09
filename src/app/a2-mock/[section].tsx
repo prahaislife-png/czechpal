@@ -18,7 +18,8 @@ import { EXAM_PLAYS, emailChecks, formChecks, gradeItem, itemMeta, LETTERS, type
 import type { TaskItem, TaskSet } from '@/lib/academy/types';
 import { confirm } from '@/lib/dialogs';
 import { countWords, EMAIL_MIN_WORDS, FORM_MIN_WORDS } from '@/lib/learn/exam';
-import { speak, stopSpeaking, useCzechVoice } from '@/lib/learn/voice';
+import { allRecorded, recordingFor, setTexts, useRecordingPlayer } from '@/lib/academy/audio';
+import { useCzechVoice } from '@/lib/learn/voice';
 import { useAcademy } from '@/store/academy';
 import { useLearn } from '@/store/learn';
 import { layout, radius, space, type as ramp } from '@/theme/tokens';
@@ -32,6 +33,8 @@ import { useTheme } from '@/theme/use-theme';
 export default function MockSectionScreen() {
   const { section, mock } = useLocalSearchParams<{ section: string; mock: string }>();
   const run = useAcademy((s) => s.mocks.find((m) => m.id === mock));
+  // With every recording in the app, listening doesn't need the phone's own Czech voice.
+  const recorded = section === 'listening' && !!run && allRecorded(mockSets('listening', run.variant ?? 1).flatMap(setTexts));
   const voice = useCzechVoice();
   const valid = section === 'reading' || section === 'listening' || section === 'writing';
   // Whether this part was already handed in when the screen opened; its own result still shows after hand-in.
@@ -65,7 +68,7 @@ export default function MockSectionScreen() {
       <Stack.Screen options={{ title, headerLeft: () => <HeaderCloseButton /> }} />
       {section === 'writing' ? (
         <WritingSection mockId={run.id} variant={run.variant ?? 1} />
-      ) : section === 'listening' && voice.state === 'checking' ? null : section === 'listening' && voice.state === 'missing' ? (
+      ) : section === 'listening' && !recorded && voice.state === 'checking' ? null : section === 'listening' && !recorded && voice.state === 'missing' ? (
         <View style={styles.centered}>
           <Text variant="title3" align="center">
             No Czech voice on this phone
@@ -149,7 +152,8 @@ function MarkedSection({ mockId, part, voice, variant }: { mockId: string; part:
   const [plays, setPlays] = useState<Record<string, number>>({});
   const [handedIn, setHandedIn] = useState<{ seconds: number } | null>(null);
   const now = useClock(startMs !== null && !handedIn);
-  useFocusEffect(useCallback(() => stopSpeaking, []));
+  const recording = useRecordingPlayer({ voice, rate });
+  useFocusEffect(useCallback(() => recording.stop, [recording]));
 
   if (startMs === null)
     return (
@@ -201,7 +205,7 @@ function MarkedSection({ mockId, part, voice, variant }: { mockId: string; part:
   const play = (key: string, text: string) => {
     if ((plays[key] ?? 0) >= EXAM_PLAYS) return;
     setPlays((p) => ({ ...p, [key]: (p[key] ?? 0) + 1 }));
-    speak(text, { voice, rate });
+    recording.play(text);
   };
 
   const handIn = async () => {
@@ -213,7 +217,7 @@ function MarkedSection({ mockId, part, voice, variant }: { mockId: string; part:
       });
       if (!ok) return;
     }
-    stopSpeaking();
+    recording.stop();
     const used = Math.min(seconds, limit ?? seconds);
     const store = useAcademy.getState();
     for (const e of entries) store.record(itemMeta(e.set, e.item), gradeItem(e.item, answers[e.item.id]).correct, 'mock');
@@ -237,9 +241,9 @@ function MarkedSection({ mockId, part, voice, variant }: { mockId: string; part:
             {set.instruction}
           </Text>
           {set.passage ? <Passage text={set.passage} /> : null}
-          {set.audio ? <Recording label="Voice message" playsUsed={plays[set.id] ?? 0} mode="exam" onPlay={() => play(set.id, set.audio!)} /> : null}
+          {set.audio ? <Recording label="Voice message" playsUsed={plays[set.id] ?? 0} mode="exam" recorded={recordingFor(set.audio) !== null} onPlay={() => play(set.id, set.audio!)} /> : null}
           {item.text ? <Passage text={item.text} /> : null}
-          {item.audio ? <Recording label="Recording" playsUsed={plays[item.id] ?? 0} mode="exam" onPlay={() => play(item.id, item.audio!)} /> : null}
+          {item.audio ? <Recording label="Recording" playsUsed={plays[item.id] ?? 0} mode="exam" recorded={recordingFor(item.audio) !== null} onPlay={() => play(item.id, item.audio!)} /> : null}
           <Text variant="title3" lang="cs" accessibilityRole="header">
             {item.prompt}
           </Text>
