@@ -6,6 +6,7 @@ import { listeningSets } from './listening';
 import { mockListeningSets, mockReadingSets } from './mock';
 import { mockListeningSets2, mockReadingSets2 } from './mock-2';
 import { listeningSetsB, readingSetsB } from './practice-b';
+import { listeningSetsC, readingSetsC } from './practice-c';
 import { readingSets } from './reading';
 
 /**
@@ -14,7 +15,7 @@ import { readingSets } from './reading';
  */
 
 /** Every set, the mock exam's included, so their items can come back as mistakes. */
-export const taskSets: TaskSet[] = [...readingSets, ...readingSetsB, ...listeningSets, ...listeningSetsB, ...mockReadingSets, ...mockListeningSets, ...mockReadingSets2, ...mockListeningSets2];
+export const taskSets: TaskSet[] = [...readingSets, ...readingSetsB, ...readingSetsC, ...listeningSets, ...listeningSetsB, ...listeningSetsC, ...mockReadingSets, ...mockListeningSets, ...mockReadingSets2, ...mockListeningSets2];
 /** The sets for everyday practice; the mock exam's are kept unseen. */
 export const practiceSets: TaskSet[] = taskSets.filter((s) => !s.pool).sort((a, b) => (a.part === b.part ? a.task - b.task || a.id.localeCompare(b.id) : a.part === 'reading' ? -1 : 1));
 export const taskSetById = (id: string | undefined) => taskSets.find((s) => s.id === id);

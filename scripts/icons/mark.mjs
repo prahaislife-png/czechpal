@@ -1,27 +1,20 @@
-// The CzechLocal mark: a bold "Č" inside viewfinder corner marks.
-// Glyphs come from open-licence fonts (SIL OFL) and are converted to outlines,
+// The CzechLocal mark: a Newsreader "Č" with a coral háček, on a soft sky disc.
+// The glyph comes from an open-licence font (Newsreader, SIL OFL) and is converted to outlines,
 // so the finished artwork has no font dependency.
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import opentype from 'opentype.js';
 import { Resvg } from '@resvg/resvg-js';
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const fontFile = (pkg, file) => path.join(here, 'node_modules', '@fontsource', pkg, 'files', file);
+let font = null;
+/** The font file to draw the Č from (a .ttf or .woff path). */
+export function useFont(file) {
+  font = opentype.parse(fs.readFileSync(file).buffer);
+}
 
-export const FONTS = {
-  jakarta: fontFile('plus-jakarta-sans', 'plus-jakarta-sans-latin-ext-800-normal.woff'),
-};
-
-const loaded = {};
-const font = (key) => (loaded[key] ??= opentype.parse(fs.readFileSync(FONTS[key]).buffer));
-
-/** Splits "Č" into the C and the háček, each as SVG path data in font units scaled to `size`. */
-function glyphParts(key, size) {
-  const f = font(key);
-  const p = f.getPath('Č', 0, 0, size);
-  // Split into contours at each moveTo.
+/** Splits "Č" into the C and the háček, each as SVG path data, with their bounding boxes. */
+function glyphParts(size) {
+  const p = font.getPath('Č', 0, 0, size);
   const contours = [];
   for (const cmd of p.commands) {
     if (cmd.type === 'M') contours.push([]);
@@ -43,46 +36,37 @@ function glyphParts(key, size) {
   };
   const body = withBox.filter((c) => !isCaron(c));
   const caron = withBox.filter(isCaron);
-  const all = bboxOf(withBox.flatMap((c) => c.cmds));
-  return { body: toD(body), caron: toD(caron), box: all, bodyBox: bboxOf(body.flatMap((c) => c.cmds)) };
-}
-
-/** Rounded viewfinder corners as one stroked path, around a square from `a` to `b`. */
-function corners(a, b, arm, r) {
-  const seg = (x, y, dx, dy) =>
-    // From the end of the vertical arm, round the corner, out along the horizontal arm.
-    `M${x} ${y + dy * arm} L${x} ${y + dy * r} Q${x} ${y} ${x + dx * r} ${y} L${x + dx * arm} ${y}`;
-  return [seg(a, a, 1, 1), seg(b, a, -1, 1), seg(a, b, 1, -1), seg(b, b, -1, -1)].join(' ');
+  return {
+    body: toD(body),
+    caron: toD(caron),
+    box: bboxOf(withBox.flatMap((c) => c.cmds)),
+    bodyBox: bboxOf(body.flatMap((c) => c.cmds)),
+  };
 }
 
 /**
  * The mark on a `size` canvas.
- * opts: fontKey, glyph (colour), caron (colour), bracket (colour), bracketOpacity, scale (0..1 of canvas the
- * bracket square takes), stroke, arm, radius (all relative to the bracket square), glyphHeight (relative).
+ * opts: glyphHeight (the whole Č, relative to the canvas), disc { r, cx, cy } (relative), shiftX
+ * (relative; serif C's are optically heavy on the left), glyph / caron / discColour.
  */
 export function markParts(size, o) {
-  const sq = size * o.scale; // bracket square side
-  const a = (size - sq) / 2;
-  const b = a + sq;
-  const stroke = sq * o.stroke;
-  const arm = sq * o.arm;
-  const r = sq * o.radius;
-  const g = glyphParts(o.fontKey, 1000);
-  // Fit the whole Č (with háček) to glyphHeight of the square, centred optically (a touch low,
-  // because the háček makes the top visually lighter).
-  const targetH = sq * o.glyphHeight;
+  const g = glyphParts(1000);
+  const targetH = size * o.glyphHeight;
   const k = targetH / (g.box.y2 - g.box.y1);
+  // Centre the whole Č (háček included) inside the disc, nudged by shiftX/dropY for optical balance.
   const w = (g.box.x2 - g.box.x1) * k;
-  const tx = size / 2 - w / 2 - g.box.x1 * k;
-  const ty = size / 2 - targetH / 2 - g.box.y1 * k + targetH * (o.drop ?? 0.02);
-  return { corners: corners(a + stroke / 2, b - stroke / 2, arm, r), stroke, tx, ty, k, body: g.body, caron: g.caron };
+  const cx = size * o.disc.cx;
+  const cy = size * o.disc.cy;
+  const tx = cx - w / 2 - g.box.x1 * k + size * (o.shiftX ?? 0);
+  const ty = cy - targetH / 2 - g.box.y1 * k + size * (o.dropY ?? 0);
+  return { tx, ty, k, body: g.body, caron: g.caron, disc: { cx, cy, r: size * o.disc.r } };
 }
 
 export function markSVG(size, o) {
   const m = markParts(size, o);
   return `
   <g>
-    <path d="${m.corners}" fill="none" stroke="${o.bracket}" stroke-opacity="${o.bracketOpacity}" stroke-width="${m.stroke}" stroke-linecap="round" stroke-linejoin="round"/>
+    ${o.discColour ? `<circle cx="${m.disc.cx}" cy="${m.disc.cy}" r="${m.disc.r}" fill="${o.discColour}" fill-opacity="${o.discOpacity ?? 1}"/>` : ''}
     <g transform="translate(${m.tx} ${m.ty}) scale(${m.k})">
       <path d="${m.body}" fill="${o.glyph}"/>
       <path d="${m.caron}" fill="${o.caron}"/>

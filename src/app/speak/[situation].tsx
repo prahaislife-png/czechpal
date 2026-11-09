@@ -5,7 +5,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Linking, Pressable, ScrollView
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Orb } from '@/components/speak/orb';
+import { Orb, type OrbState } from '@/components/speak/orb';
 import { Button } from '@/components/ui/button';
 import { HeaderCloseButton } from '@/components/ui/header-button';
 import { Icon, type IconName } from '@/components/ui/icon';
@@ -43,6 +43,17 @@ export default function SpeakScreen() {
   return <Conversation info={info} czechVoice={voice.state === 'available' ? (voice.voice ?? undefined) : null} />;
 }
 
+const orbWords: Record<OrbState, string> = {
+  idle: 'Ready when you are',
+  connecting: 'Connecting…',
+  listening: 'Listening… take your time',
+  'user-speaking': 'Listening to you',
+  thinking: 'CzechLocal is thinking',
+  speaking: 'CzechLocal is speaking',
+  muted: 'Microphone off',
+  error: 'Disconnected',
+};
+
 const clock = (s: number) => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.max(0, s) % 60).padStart(2, '0')}`;
 const haptic = () => {
   if (process.env.EXPO_OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -56,6 +67,24 @@ function Conversation({ info, czechVoice }: { info: SituationInfo; czechVoice: s
   const [showTranscript, setShowTranscript] = useState(false);
 
   const inSession = c.phase === 'connecting' || c.phase === 'live';
+  // The orb follows the real session: provider events, transcript timing and the mute switch.
+  const lastRole = c.turns[c.turns.length - 1]?.role;
+  const orbState: OrbState =
+    c.phase === 'connecting'
+      ? 'connecting'
+      : c.phase === 'lost'
+        ? 'error'
+        : c.phase !== 'live'
+          ? 'idle'
+          : c.partnerSpeaking
+            ? 'speaking'
+            : c.muted
+              ? 'muted'
+              : c.learnerSpeaking
+                ? 'user-speaking'
+                : lastRole === 'learner'
+                  ? 'thinking'
+                  : 'listening';
   const title = c.phase === 'review' || c.phase === 'reviewing' ? 'Feedback' : '';
   const close = () => {
     if (c.phase === 'live' || c.phase === 'typed' || c.phase === 'lost') void c.end();
@@ -114,18 +143,10 @@ function Conversation({ info, czechVoice }: { info: SituationInfo; czechVoice: s
                 size={200}
                 input={c.levels.input}
                 output={c.levels.output}
-                state={c.phase === 'connecting' ? 'connecting' : c.phase === 'lost' ? 'idle' : c.muted ? 'muted' : c.partnerSpeaking ? 'speaking' : 'listening'}
+                state={orbState}
               />
-              <Text variant="footnote" color="label3" accessibilityLiveRegion="polite">
-                {c.phase === 'connecting'
-                  ? 'Connecting…'
-                  : c.phase === 'lost'
-                    ? 'Disconnected'
-                    : c.partnerSpeaking
-                      ? 'CzechLocal is speaking'
-                      : c.muted
-                        ? 'Microphone off'
-                        : 'Listening… take your time'}
+              <Text variant="footnote" color={orbState === 'error' ? 'danger' : 'label3'} accessibilityLiveRegion="polite">
+                {orbWords[orbState]}
               </Text>
               <LastLines turns={c.turns} meanings={c.meanings} meaningOn={meaningOn} />
             </View>

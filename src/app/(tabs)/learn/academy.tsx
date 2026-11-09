@@ -1,8 +1,10 @@
 import { router } from 'expo-router';
 import { useMemo } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { SetupCard } from '@/components/academy/academy-card';
+import { LearningCard } from '@/components/design/cards';
+import { toneColors, type Tone } from '@/components/design/tone';
 import { Button } from '@/components/ui/button';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
@@ -15,11 +17,11 @@ import { grammar } from '@/lib/academy/grammar';
 import { lessonById } from '@/lib/academy/lessons';
 import { mockFinished } from '@/lib/academy/mock';
 import { planMinutes } from '@/lib/academy/plan';
-import { roadmap } from '@/lib/academy/roadmap';
+import { nextLesson, roadmap, type TopicProgress, type TopicState } from '@/lib/academy/roadmap';
 import { topicById } from '@/lib/academy/topics';
 import { stepHref, stepIcon, useTodayPlan } from '@/lib/academy/use-plan';
 import type { Skill } from '@/lib/academy/types';
-import { afterExam, daysToExam, EXAM_CHECKED_ON } from '@/lib/learn/exam';
+import { afterExam, daysToExam } from '@/lib/learn/exam';
 import { minutesOf } from '@/lib/learn/profile';
 import { useAcademy } from '@/store/academy';
 import { useLearn } from '@/store/learn';
@@ -45,6 +47,9 @@ export default function AcademyScreen() {
   const weak = useMemo(() => weakObjectives(attempts), [attempts]);
   const map = useMemo(() => roadmap(lessons, attempts), [lessons, attempts]);
   const started = map.filter((t) => t.state !== 'not-started').length;
+  const mastered = map.filter((t) => t.state === 'mastered').length;
+  const next = nextLesson(lessons);
+  const nextTopic = next ? topicById(next.topic) : undefined;
   const left = profile?.examDate ? daysToExam(profile.examDate) : null;
   const mocks = useAcademy((s) => s.mocks);
   const lastMock = mocks[mocks.length - 1];
@@ -59,7 +64,7 @@ export default function AcademyScreen() {
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
         <SetupCard />
         <List>
-          <Row icon="info" title="About the exam" subtitle="Parts, points and how to pass" chevron onPress={() => router.push('/learn/exam')} />
+          <Row icon="info" title="Everything about the A2 exam" subtitle="Who needs it, registering, dates, the fee, the day, how you pass" chevron onPress={() => router.push('/learn/exam')} />
         </List>
       </ScrollView>
     );
@@ -114,6 +119,50 @@ export default function AcademyScreen() {
         )}
       </View>
 
+      {next && next.id !== current?.id ? (
+        <LearningCard
+          eyebrow="Next recommended lesson"
+          title={next.title}
+          detail={nextTopic ? `${nextTopic.title} · ${nextTopic.cs}` : undefined}
+          icon="play"
+          tone="lavender"
+          onPress={() => router.push({ pathname: '/a2-lesson/[id]', params: { id: next.id } })}
+        />
+      ) : null}
+
+      <View>
+        <SectionHeader
+          title="Topic roadmap"
+          action={
+            <Pressable onPress={() => router.push('/learn/topics')} hitSlop={10} accessibilityRole="link" accessibilityLabel="See all topics">
+              <Text variant="subhead" weight="600" color="accent" chrome>
+                See all
+              </Text>
+            </Pressable>
+          }
+        />
+        <Text variant="footnote" color="label2" style={styles.note}>
+          {started} of {map.length} topics started{mastered ? ` · ${mastered} secure` : ''}. Topics follow the exam’s order.
+        </Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bleed} contentContainerStyle={styles.roadmap}>
+          {map.map((t, i) => (
+            <RoadmapTile key={t.topic.id} t={t} n={i + 1} />
+          ))}
+        </ScrollView>
+      </View>
+
+      <View style={styles.modes}>
+        <LearningCard
+          eyebrow="Practice mode"
+          title="Exam practice"
+          detail="Every exam task, one at a time, marked at once"
+          icon="flag"
+          tone="sky"
+          onPress={() => router.push('/learn/practice')}
+        />
+        <LearningCard eyebrow="Exam mode" title="Mock exam" detail={mockSubtitle} icon="clock" tone="coral" onPress={() => router.push('/learn/mock')} />
+      </View>
+
       <View>
         <SectionHeader title="Your readiness" />
         <Card style={styles.readiness}>
@@ -158,12 +207,10 @@ export default function AcademyScreen() {
       </View>
 
       <List>
-        <Row icon="flag" title="Exam practice" subtitle="Every exam task, one at a time" chevron onPress={() => router.push('/learn/practice')} />
-        <Row icon="clock" title="Mock exam" subtitle={mockSubtitle} chevron onPress={() => router.push('/learn/mock')} />
         <Row icon="mic" title="Speak Czech" subtitle="Talk with CzechLocal, out loud" chevron onPress={() => router.push('/learn/speak')} />
         <Row icon="map" title="Topics" subtitle={`${started} of ${map.length} started`} chevron onPress={() => router.push('/learn/topics')} />
         <Row icon="book" title="Grammar" subtitle={`${grammar.length} short explanations`} chevron onPress={() => router.push('/learn/grammar')} />
-        <Row icon="info" title="About the exam" subtitle={`Checked ${longDate(EXAM_CHECKED_ON)}`} chevron onPress={() => router.push('/learn/exam')} />
+        <Row icon="info" title="Everything about the A2 exam" subtitle="Registering, dates, the fee, the day, every task" chevron onPress={() => router.push('/learn/exam')} />
         <Row icon="flag" title="Starting check" subtitle="Take it again any time" chevron onPress={() => router.push('/diagnostic')} />
         <Row icon="settings" title="Your A2 plan" subtitle="Level, exam date, minutes" chevron onPress={() => router.push('/a2-setup')} />
       </List>
@@ -234,6 +281,32 @@ function ExamCheckIn({ examDate }: { examDate: string }) {
   );
 }
 
+const stateTone: Record<TopicState, Tone> = { 'not-started': 'neutral', learning: 'sky', practised: 'lavender', mastered: 'sage' };
+const stateWords: Record<TopicState, string> = { 'not-started': 'Not started', learning: 'Learning', practised: 'Practised', mastered: 'Secure' };
+
+/** One topic on the roadmap: its number, name, state and lessons done, from real progress. */
+function RoadmapTile({ t, n }: { t: TopicProgress; n: number }) {
+  const { colors } = useTheme();
+  const { tint, ink } = toneColors(colors, stateTone[t.state]);
+  return (
+    <PressableScale
+      onPress={() => router.push({ pathname: '/learn/topic/[id]', params: { id: t.topic.id } })}
+      accessibilityRole="button"
+      accessibilityLabel={`Topic ${n}, ${t.topic.title}. ${stateWords[t.state]}. ${t.done} of ${t.total} lessons done.`}
+      style={[styles.tile, { backgroundColor: tint }]}>
+      <Text variant="title2" style={{ color: ink }}>
+        {n}
+      </Text>
+      <Text variant="subhead" weight="600" numberOfLines={2} style={{ color: ink }}>
+        {t.topic.title}
+      </Text>
+      <Text variant="caption" style={{ color: ink, opacity: 0.85 }}>
+        {stateWords[t.state]} · {t.done}/{t.total}
+      </Text>
+    </PressableScale>
+  );
+}
+
 function ReadinessRow({ r }: { r: SkillReadiness }) {
   const { colors } = useTheme();
   const status =
@@ -277,4 +350,8 @@ const styles = StyleSheet.create({
   skill: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 48 },
   meter: { width: 56, height: 6, borderRadius: 3, overflow: 'hidden' },
   meterFill: { height: 6, borderRadius: 3 },
+  bleed: { marginHorizontal: -layout.gutter, marginTop: space.sm },
+  roadmap: { paddingHorizontal: layout.gutter, gap: space.sm },
+  tile: { width: 138, minHeight: 128, borderRadius: radius.card, borderCurve: 'continuous', padding: space.md, gap: space.xxs, justifyContent: 'space-between' },
+  modes: { gap: space.md },
 });

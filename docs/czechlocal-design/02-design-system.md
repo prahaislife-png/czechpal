@@ -21,7 +21,12 @@ coral `#FF986E`, lavender `#DCD4F5`.
 
 Rules: pastels are surfaces, never text. Charcoal pills carry the one primary action per screen.
 Increase Contrast darkens label2/label3/separator/accent. The camera keeps its own black chrome.
-The app icon (brand mark) is unchanged in this phase.
+The app icon and in-app mark (2026-11-08): a Newsreader "Č" in charcoal with a coral háček
+(`#F2784B`, a step deeper than the brief's coral so it holds at 29 pt) on a sky disc, on paper; the
+dark icon is paper on charcoal with a deep-sky disc, the tinted icon a white Č on a faint disc. One
+definition builds every file: `scripts/icons/build.mjs` (iOS light/dark/tinted, Android adaptive and
+monochrome, splash, favicon, `src/components/ui/brand-mark-data.ts`); the website's `docs/icon.png`
+and `docs/favicon.png` come from the same art.
 
 Tones (`src/components/design/tone.ts`): sky (understanding, maps, Explore chips), sage (progress,
 nature), coral (warmth, Speak Czech), lavender (writing, words), neutral.

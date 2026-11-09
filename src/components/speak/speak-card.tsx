@@ -19,17 +19,19 @@ export function SpeakCard() {
       onPress={() => router.push('/learn/speak')}
       accessibilityRole="button"
       accessibilityLabel="Speak Czech: talk with CzechLocal out loud"
-      style={[styles.card, { backgroundColor: colors.surface, boxShadow: colors.shadow }]}>
-      <View style={[styles.well, { backgroundColor: colors.accentFill }]}>
-        <Icon name="mic" size={22} color={colors.onAccent} />
+      style={[styles.card, { backgroundColor: colors.coralSoft }]}>
+      <View style={[styles.well, { backgroundColor: colors.coral }]}>
+        <Icon name="mic" size={22} color={colors.coralInk} />
       </View>
       <View style={styles.flex}>
-        <Text variant="headline">Speak Czech</Text>
-        <Text variant="footnote" color="label2">
+        <Text variant="title3" style={{ color: colors.coralInk }}>
+          Speak Czech
+        </Text>
+        <Text variant="footnote" style={{ color: colors.coralInk, opacity: 0.85 }}>
           {sessions ? `${levelLabels[level]} · ${sessions} ${sessions === 1 ? 'conversation' : 'conversations'}` : 'Talk out loud with a friendly Czech tutor'}
         </Text>
       </View>
-      <Icon name="chevronRight" size={16} color={colors.label3} />
+      <Icon name="chevronRight" size={16} color={colors.coralInk} />
     </PressableScale>
   );
 }

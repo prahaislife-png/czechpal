@@ -260,7 +260,8 @@ describe('roadmap and mastery', () => {
   });
 
   it('topic states go not started → learning → practised → mastered', () => {
-    const personal = topicById('personal')!;
+    // Two of the topic's lessons, so the states are easy to reach.
+    const personal = { ...topicById('personal')!, lessons: ['personal-1', 'personal-2'] };
     assert.equal(topicProgress(personal, {}, []).state, 'not-started');
     assert.equal(topicProgress(personal, { 'personal-1': [pass(0)] }, []).state, 'learning');
     assert.equal(topicProgress(personal, { 'personal-1': [pass(0)], 'personal-2': [fail(0)] }, []).state, 'practised');

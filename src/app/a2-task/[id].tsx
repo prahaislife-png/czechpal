@@ -15,13 +15,13 @@ import { announce } from '@/lib/a11y';
 import { EXAM_PLAYS, gradeItem, itemMeta, scoreSet, taskSetById, type Answers } from '@/lib/academy/tasks';
 import type { TaskSet } from '@/lib/academy/types';
 import { examTasks } from '@/lib/learn/exam';
-import { speak, stopSpeaking, useCzechVoice } from '@/lib/learn/voice';
+import { allRecorded, recordingFor, setTexts, useRecordingPlayer } from '@/lib/academy/audio';
+import { useCzechVoice } from '@/lib/learn/voice';
 import { useAcademy } from '@/store/academy';
 import { useLearn } from '@/store/learn';
 import { layout, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
-const SLOW = 0.55;
 type Mode = TaskMode;
 
 /**
@@ -44,10 +44,12 @@ export default function TaskScreen() {
     );
 
   const title = `${set.part === 'reading' ? 'Reading' : 'Listening'} ${set.task}`;
+  // With every recording in the app, listening doesn't need the phone's own Czech voice.
+  const recorded = set.part === 'listening' && allRecorded(setTexts(set));
   return (
     <>
       <Stack.Screen options={{ title, headerLeft: () => <HeaderCloseButton /> }} />
-      {set.part === 'listening' && voice.state === 'checking' ? null : set.part === 'listening' && voice.state === 'missing' ? (
+      {set.part === 'listening' && !recorded && voice.state === 'checking' ? null : set.part === 'listening' && !recorded && voice.state === 'missing' ? (
         <Centered>
           <NoVoice />
           <Text variant="title3" align="center">
@@ -82,8 +84,9 @@ function Player({ set, voice }: { set: TaskSet; voice?: string }) {
   const [answers, setAnswers] = useState<Answers>({});
   const [plays, setPlays] = useState<Record<string, number>>({});
   const done = index >= set.items.length;
-  const say = useCallback((text: string, slow = false) => speak(text, { voice, rate: slow ? SLOW : rate }), [voice, rate]);
-  useFocusEffect(useCallback(() => stopSpeaking, []));
+  const recording = useRecordingPlayer({ voice, rate });
+  const say = useCallback((text: string, slow = false) => recording.play(text, slow), [recording]);
+  useFocusEffect(useCallback(() => recording.stop, [recording]));
 
   const play = (key: string, text: string, slow = false) => {
     if (mode === 'exam' && (plays[key] ?? 0) >= EXAM_PLAYS) return;
@@ -128,9 +131,9 @@ function Player({ set, voice }: { set: TaskSet; voice?: string }) {
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Animated.View key={item.id} entering={FadeInRight.duration(200)} style={styles.stage}>
           {set.passage ? <Passage text={set.passage} /> : null}
-          {set.audio ? <Recording label="Voice message" playsUsed={plays.set ?? 0} mode={mode} onPlay={(slow) => play('set', set.audio!, slow)} /> : null}
+          {set.audio ? <Recording label="Voice message" playsUsed={plays.set ?? 0} mode={mode} recorded={recordingFor(set.audio) !== null} onPlay={(slow) => play('set', set.audio!, slow)} /> : null}
           {item.text ? <Passage text={item.text} /> : null}
-          {item.audio ? <Recording label="Recording" playsUsed={plays[item.id] ?? 0} mode={mode} onPlay={(slow) => play(item.id, item.audio!, slow)} /> : null}
+          {item.audio ? <Recording label="Recording" playsUsed={plays[item.id] ?? 0} mode={mode} recorded={recordingFor(item.audio) !== null} onPlay={(slow) => play(item.id, item.audio!, slow)} /> : null}
           <Text variant="title3" lang="cs" accessibilityRole="header">
             {item.prompt}
           </Text>

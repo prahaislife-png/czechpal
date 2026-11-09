@@ -59,6 +59,7 @@ export function useConversation(situation: SpeakSituation, czechVoice?: string |
   const [limit, setLimit] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [partnerSpeaking, setPartnerSpeaking] = useState(false);
+  const [learnerSpeaking, setLearnerSpeaking] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const [review, setReview] = useState<SpeakReview | null>(null);
   const [reviewError, setReviewError] = useState<string | null>(null);
@@ -73,6 +74,7 @@ export function useConversation(situation: SpeakSituation, czechVoice?: string |
   const usedTyping = useRef(false);
   const lastSound = useRef(0);
   const lastPartner = useRef(0);
+  const lastLearner = useRef(0);
   const checkedIn = useRef(false);
   const helpPending = useRef(false);
   const meaningRef = useRef(meaningOn);
@@ -124,6 +126,7 @@ export function useConversation(situation: SpeakSituation, czechVoice?: string |
     input.value = 0;
     output.value = 0;
     setPartnerSpeaking(false);
+    setLearnerSpeaking(false);
     setAudioModeAsync({ allowsRecording: false }).catch(() => {});
     const id = sessionId.current;
     sessionId.current = null;
@@ -146,6 +149,10 @@ export function useConversation(situation: SpeakSituation, czechVoice?: string |
             lastPartner.current = Date.now();
             checkedIn.current = false;
             setPartnerSpeaking(true);
+            setLearnerSpeaking(false);
+          } else {
+            lastLearner.current = Date.now();
+            setLearnerSpeaking(true);
           }
           addDelta(e.speaker, e.delta);
         } else if (e.type === 'closed' && live.current) {
@@ -217,6 +224,7 @@ export function useConversation(situation: SpeakSituation, czechVoice?: string |
       const secs = Math.floor((now - startedAt.current) / 1000);
       setElapsed(secs);
       if (now - lastPartner.current > PARTNER_DONE_MS) setPartnerSpeaking(false);
+      if (now - lastLearner.current > PARTNER_DONE_MS) setLearnerSpeaking(false);
       if (limit && secs >= limit) {
         void finishVoice('time limit', 'That’s the end of this conversation’s time.');
         return;
@@ -365,6 +373,7 @@ export function useConversation(situation: SpeakSituation, czechVoice?: string |
     limit,
     elapsed,
     partnerSpeaking,
+    learnerSpeaking,
     waiting,
     review,
     reviewError,

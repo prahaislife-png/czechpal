@@ -84,9 +84,9 @@ describe('two mocks and two practice sets per task', () => {
     assert.equal(nextVariant([{ variant: 1 }, { variant: 2 }]), 1);
   });
 
-  it('practice has two sets for every reading and listening task', () => {
+  it('practice has three sets for every reading and listening task', () => {
     for (const part of ['reading', 'listening'] as const)
-      for (const n of [1, 2, 3, 4, 5]) assert.equal(practiceSets.filter((s) => s.part === part && s.task === n).length, 2, `${part} ${n}`);
+      for (const n of [1, 2, 3, 4, 5]) assert.equal(practiceSets.filter((s) => s.part === part && s.task === n).length, 3, `${part} ${n}`);
   });
 });
 

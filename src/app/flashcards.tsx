@@ -4,10 +4,12 @@ import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { toneColors, type Tone } from '@/components/design/tone';
 import { Flashcard } from '@/components/learn/flashcard';
 import { Button } from '@/components/ui/button';
 import { HeaderCloseButton } from '@/components/ui/header-button';
 import { Icon } from '@/components/ui/icon';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { announce } from '@/lib/a11y';
 import { dueCards, nextDue } from '@/lib/learn/deck';
@@ -17,11 +19,12 @@ import { useLearn } from '@/store/learn';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
-const ANSWERS: { answer: Answer; label: string; tone: 'danger' | 'warning' | 'accent' | 'success' }[] = [
-  { answer: 'again', label: 'Again', tone: 'danger' },
-  { answer: 'hard', label: 'Hard', tone: 'warning' },
-  { answer: 'good', label: 'Good', tone: 'accent' },
-  { answer: 'easy', label: 'Easy', tone: 'success' },
+/** Each answer has its pastel: again coral, hard lavender, good sky, easy sage. */
+const ANSWERS: { answer: Answer; label: string; tone: Tone }[] = [
+  { answer: 'again', label: 'Again', tone: 'coral' },
+  { answer: 'hard', label: 'Hard', tone: 'lavender' },
+  { answer: 'good', label: 'Good', tone: 'sky' },
+  { answer: 'easy', label: 'Easy', tone: 'sage' },
 ];
 
 /**
@@ -108,21 +111,25 @@ export default function FlashcardsScreen() {
 
           {revealed && intervals ? (
             <View style={styles.answers}>
-              {ANSWERS.map(({ answer: a, label, tone }) => (
-                <Pressable
-                  key={a}
-                  onPress={() => answer(a)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${label}, again in ${untilLabel(intervals[a])}`}
-                  style={({ pressed }) => [styles.answer, { backgroundColor: colors.surface, opacity: pressed ? 0.7 : 1 }]}>
-                  <Text variant="callout" weight="700" color={tone}>
-                    {label}
-                  </Text>
-                  <Text variant="caption" color="label3">
-                    {untilLabel(intervals[a])}
-                  </Text>
-                </Pressable>
-              ))}
+              {ANSWERS.map(({ answer: a, label, tone }) => {
+                const { tint, ink } = toneColors(colors, tone);
+                return (
+                  <PressableScale
+                    key={a}
+                    onPress={() => answer(a)}
+                    pressedScale={0.94}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${label}, again in ${untilLabel(intervals[a])}`}
+                    style={[styles.answer, { backgroundColor: tint }]}>
+                    <Text variant="callout" weight="700" style={{ color: ink }}>
+                      {label}
+                    </Text>
+                    <Text variant="caption" style={{ color: ink, opacity: 0.8 }}>
+                      {untilLabel(intervals[a])}
+                    </Text>
+                  </PressableScale>
+                );
+              })}
             </View>
           ) : (
             <Button label="Show answer" onPress={() => setRevealed(true)} />
