@@ -95,8 +95,8 @@ export default function ProgressScreen() {
             title="Listening"
             subtitle={stats.listening.heard ? `${pct(stats.listening.right, stats.listening.heard)} right in the last 30 days` : 'Do a listening session to start'}
           />
-          <Row icon="compose" title="Writing" subtitle={written ? `${written} ${written === 1 ? 'piece' : 'pieces'} written in A2 Academy · not scored` : 'Try the writing coach in A2 Academy'} />
-          <Row icon="message" title="Speaking" subtitle={spokenTasks ? `${spokenTasks} speaking ${spokenTasks === 1 ? 'task' : 'tasks'} recorded · not scored` : 'Record yourself in A2 Academy'} />
+          <Row icon="compose" title="Writing" subtitle={written ? `${written} ${written === 1 ? 'piece' : 'pieces'} written in Exam practice · not scored` : 'Try the writing coach in Exam practice'} />
+          <Row icon="message" title="Speaking" subtitle={spokenTasks ? `${spokenTasks} speaking ${spokenTasks === 1 ? 'task' : 'tasks'} recorded · not scored` : 'Record yourself in Exam practice'} />
         </List>
         <Text variant="footnote" color="label2" style={styles.note}>
           Words help with all four: {stats.words.known} known, {stats.words.learning} still being learnt. A word counts as known once its next review is three weeks away.

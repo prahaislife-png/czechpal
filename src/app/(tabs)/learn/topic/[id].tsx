@@ -2,6 +2,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { MissionRow } from '@/components/learn/mission-row';
 import { Badge } from '@/components/ui/badge';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
@@ -12,12 +13,14 @@ import { lessonById } from '@/lib/academy/lessons';
 import { lessonDone, lessonSecure, passed, retestDue, topicProgress, topicStateLabels } from '@/lib/academy/roadmap';
 import { topicById } from '@/lib/academy/topics';
 import { contentById } from '@/lib/learn/content';
+import { missions } from '@/lib/learn/missions';
 import { situationById } from '@/lib/learn/situations';
 import { useAcademy } from '@/store/academy';
+import { useLearn } from '@/store/learn';
 import { layout, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
-/** One topic: what you'll be able to do, its lessons, grammar, texts to read and phrases. */
+/** One topic: what you'll be able to do, its lessons, real-life missions, phrases, texts to read and grammar. */
 export default function TopicScreen() {
   const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,6 +28,10 @@ export default function TopicScreen() {
   const log = useAcademy((s) => s.lessons);
   const attempts = useAcademy((s) => s.attempts);
   const progress = useMemo(() => (topic ? topicProgress(topic, log, attempts) : null), [topic, log, attempts]);
+  const reading = useLearn((s) => s.progress);
+  const deck = useLearn((s) => s.deck);
+  const listened = useLearn((s) => s.missionListening);
+  const missionState = useMemo(() => ({ progress: reading, deck, listened }), [reading, deck, listened]);
 
   if (!topic || !progress)
     return (
@@ -35,7 +42,12 @@ export default function TopicScreen() {
       </View>
     );
 
-  const texts = topic.texts.map((t) => contentById(t)).filter((c) => !!c);
+  // A text with a mission is practised through the mission; the rest are just to read.
+  const topicMissions = missions.filter((m) => topic.texts.includes(m.contentId));
+  const texts = topic.texts
+    .filter((t) => !topicMissions.some((m) => m.contentId === t))
+    .map((t) => contentById(t))
+    .filter((c) => !!c);
   const situations = topic.situations.map((s) => situationById(s)).filter((s) => !!s);
 
   return (
@@ -94,20 +106,21 @@ export default function TopicScreen() {
           </List>
         ) : (
           <Text variant="footnote" color="label2" style={styles.note}>
-            Lessons for this topic are being written. The grammar, texts and phrases below are ready now.
+            Lessons for this topic are being written. The missions, phrases and grammar below are ready now.
           </Text>
         )}
       </View>
 
-      <View>
-        <SectionHeader title="Grammar" />
-        <List>
-          {topic.grammar.map((g) => {
-            const item = grammarById(g);
-            return item ? <Row key={g} icon="book" title={item.title} chevron onPress={() => router.push({ pathname: '/learn/grammar/[id]', params: { id: g } })} /> : null;
-          })}
-        </List>
-      </View>
+      {topicMissions.length ? (
+        <View>
+          <SectionHeader title="Real-life missions" />
+          <View style={styles.missions}>
+            {topicMissions.map((m) => (
+              <MissionRow key={m.id} mission={m} state={missionState} />
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       {texts.length ? (
         <View>
@@ -132,11 +145,27 @@ export default function TopicScreen() {
           <SectionHeader title="Phrases for real life" />
           <List>
             {situations.map((s) => (
-              <Row key={s.id} icon={s.icon} title={s.title} chevron onPress={() => router.push({ pathname: '/prepare/[id]', params: { id: s.id } })} />
+              <Row
+                key={s.id}
+                icon={s.icon}
+                title={s.title}
+                subtitle={`${s.phrases.length} phrases to say and understand`}
+                chevron
+                onPress={() => router.push({ pathname: '/prepare/[id]', params: { id: s.id } })}
+              />
             ))}
           </List>
         </View>
       ) : null}
+      <View>
+        <SectionHeader title="Grammar" />
+        <List>
+          {topic.grammar.map((g) => {
+            const item = grammarById(g);
+            return item ? <Row key={g} icon="book" title={item.title} chevron onPress={() => router.push({ pathname: '/learn/grammar/[id]', params: { id: g } })} /> : null;
+          })}
+        </List>
+      </View>
     </ScrollView>
   );
 }
@@ -148,5 +177,6 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', gap: space.md, flexWrap: 'wrap', paddingHorizontal: space.xs },
   goals: { gap: space.sm },
   goal: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
+  missions: { gap: space.md },
   note: { paddingHorizontal: space.xs },
 });

@@ -156,7 +156,7 @@ function Result({ tally, canListen }: { tally: Tally; canListen: boolean }) {
       <Text variant="footnote" color="label3" align="center">
         A few questions per skill aren’t enough to judge it. Your readiness builds up from the checks in each lesson.
       </Text>
-      <Button label="See today’s plan" onPress={() => (router.canGoBack() ? router.back() : router.replace('/learn/academy'))} />
+      <Button label="See today’s plan" onPress={() => (router.canGoBack() ? router.back() : router.replace('/learn'))} />
     </ScrollView>
   );
 }

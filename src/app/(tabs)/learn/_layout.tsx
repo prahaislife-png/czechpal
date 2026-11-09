@@ -14,7 +14,8 @@ export default function LearnStack() {
       <Stack.Screen name="words" options={{ title: 'Your words' }} />
       <Stack.Screen name="missions" options={{ title: 'Missions' }} />
       <Stack.Screen name="progress" options={{ title: 'Progress' }} />
-      <Stack.Screen name="academy" options={{ title: 'A2 Academy' }} />
+      {/* Old links to the A2 Academy redirect to Learn. */}
+      <Stack.Screen name="academy" options={{ title: '' }} />
       <Stack.Screen name="topics" options={{ title: 'Topics' }} />
       <Stack.Screen name="topic/[id]" options={{ title: '' }} />
       <Stack.Screen name="grammar/index" options={{ title: 'Grammar' }} />
