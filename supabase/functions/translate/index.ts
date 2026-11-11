@@ -1,7 +1,7 @@
 import { withSupabase } from 'npm:@supabase/server@1';
 
 import { translateOutputSchema, validateTranslateOutput } from '../_shared/analysis-schema.ts';
-import { AiError, callStructured, fail, isRateLimited, logCall, type ModelConfig, type Usage } from '../_shared/claude.ts';
+import { AiError, callStructured, claimCall, fail, logCall, type Claim, type ModelConfig, type Usage } from '../_shared/claude.ts';
 import { languageName } from '../_shared/languages.ts';
 import { TRANSLATE_SYSTEM } from '../_shared/prompts.ts';
 
@@ -40,13 +40,15 @@ export default {
 
     const admin = ctx.supabaseAdmin;
     let usage: Usage | undefined;
+    let claim: Claim | undefined;
     try {
-      if (await isRateLimited(admin, userId, PER_MINUTE, 'translate')) {
-        return fail(429, 'rate_limited', 'That’s a lot of quick looks. Wait a minute and try again.');
+      const claimed = await claimCall(admin, userId, 'translate', { perMinute: PER_MINUTE, perDay: PER_DAY, config: QUICK });
+      if ('limited' in claimed) {
+        return claimed.limited === 'minute'
+          ? fail(429, 'rate_limited', 'That’s a lot of quick looks. Wait a minute and try again.')
+          : fail(429, 'rate_limited', 'That’s today’s quick translations. Explaining a photo still works.');
       }
-      if (await isRateLimited(admin, userId, PER_DAY, 'translate', 24 * 60 * 60_000)) {
-        return fail(429, 'rate_limited', 'That’s today’s quick translations. Explaining a photo still works.');
-      }
+      claim = claimed;
 
       const result = await callStructured({
         system: TRANSLATE_SYSTEM,
@@ -60,18 +62,22 @@ export default {
       });
       usage = result.usage;
       const out = validateTranslateOutput(result.json);
-      await logCall(admin, { userId, kind: 'translate', ok: true, usage, config: QUICK, error: out.status === 'no_text' ? 'no_text' : undefined });
+      await logCall(admin, { userId, kind: 'translate', ok: true, usage, config: QUICK, error: out.status === 'no_text' ? 'no_text' : undefined, claim });
       return Response.json(out);
     } catch (e) {
       const known = e instanceof AiError;
-      await logCall(admin, {
-        userId,
-        kind: 'translate',
-        ok: false,
-        usage: (e as { usage?: Usage }).usage ?? usage,
-        config: QUICK,
-        error: known ? (e.detail ? `${e.code}: ${e.detail}` : e.code) : 'invalid_output',
-      });
+      // A request turned away before it was claimed has nothing to log.
+      if (claim) {
+        await logCall(admin, {
+          userId,
+          kind: 'translate',
+          ok: false,
+          usage: (e as { usage?: Usage }).usage ?? usage,
+          config: QUICK,
+          error: known ? (e.detail ? `${e.code}: ${e.detail}` : e.code) : 'invalid_output',
+          claim,
+        });
+      }
       if (known) return fail(e.status, e.code, e.message);
       console.error('translate failed', e);
       return fail(502, 'ai_error', 'Couldn’t read that. Try again, a little closer.');

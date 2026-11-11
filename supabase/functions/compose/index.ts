@@ -1,7 +1,7 @@
 import { withSupabase } from 'npm:@supabase/server@1';
 
 import { composeOutputSchema, validateComposeOutput } from '../_shared/analysis-schema.ts';
-import { AiError, callStructured, fail, isRateLimited, logCall, type Usage } from '../_shared/claude.ts';
+import { AiError, callStructured, claimCall, fail, logCall, type Claim, type Usage } from '../_shared/claude.ts';
 import { genderedForms } from '../_shared/gender.ts';
 import { languageName } from '../_shared/languages.ts';
 import { COMPOSE_SYSTEM } from '../_shared/prompts.ts';
@@ -10,8 +10,12 @@ import { COMPOSE_SYSTEM } from '../_shared/prompts.ts';
  * POST /compose
  * { request, to?, about?, details?: { name?, address?, insurer? }, language? }
  * A new Czech message from what the reader typed in their own words, plus a call script.
- * Like replies, it doesn't use up the free allowance; it is rate-limited only.
+ * Like replies, it doesn't use up the free allowance; it has per-minute and per-day limits.
  */
+
+/** Explanations, replies and new messages together, per minute. */
+const PER_MINUTE = 6;
+const PER_DAY = 40;
 
 const clip = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
@@ -59,8 +63,15 @@ export default {
 
     const admin = ctx.supabaseAdmin;
     let usage: Usage | undefined;
+    let claim: Claim | undefined;
     try {
-      if (await isRateLimited(admin, userId)) return fail(429, 'rate_limited', 'Too many requests. Wait a minute and try again.');
+      const claimed = await claimCall(admin, userId, 'compose', { perMinute: PER_MINUTE, perDay: PER_DAY });
+      if ('limited' in claimed) {
+        return claimed.limited === 'minute'
+          ? fail(429, 'rate_limited', 'Too many requests. Wait a minute and try again.')
+          : fail(429, 'rate_limited', `That’s today’s ${PER_DAY} messages. More tomorrow.`);
+      }
+      claim = claimed;
 
       const brief = [
         to ? `Writing to: ${to}${about ? ` (${about})` : ''}.` : about ? `Writing to: ${about}.` : null,
@@ -104,11 +115,12 @@ export default {
         if (still.length < gendered.length) out = rewritten;
       }
 
-      await logCall(admin, { userId, kind: 'compose', ok: true, usage, error: note });
+      await logCall(admin, { userId, kind: 'compose', ok: true, usage, error: note, claim });
       return Response.json(littleCzechBeforeClosing(out));
     } catch (e) {
       const known = e instanceof AiError;
-      await logCall(admin, { userId, kind: 'compose', ok: false, usage: (e as { usage?: Usage }).usage ?? usage, error: known ? (e.detail ? `${e.code}: ${e.detail}` : e.code) : 'invalid_output' });
+      // A request turned away before it was claimed has nothing to log.
+      if (claim) await logCall(admin, { userId, kind: 'compose', ok: false, usage: (e as { usage?: Usage }).usage ?? usage, error: known ? (e.detail ? `${e.code}: ${e.detail}` : e.code) : 'invalid_output', claim });
       if (known) return fail(e.status, e.code, e.message);
       console.error('compose failed', e);
       return fail(502, 'ai_error', 'The message didn’t come out right. Please try again.');

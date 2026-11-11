@@ -1,6 +1,6 @@
 import { withSupabase } from 'npm:@supabase/server@1';
 
-import { AiError, callStructured, fail, isRateLimited, logCall, type ModelConfig, type Usage } from '../_shared/claude.ts';
+import { AiError, callStructured, claimCall, fail, logCall, type Claim, type ModelConfig, type Usage } from '../_shared/claude.ts';
 import { FEEDBACK_SYSTEM, feedbackOutputSchema, finishFeedback, type FeedbackKind } from '../_shared/feedback.ts';
 import { languageName } from '../_shared/languages.ts';
 
@@ -49,13 +49,15 @@ export default {
 
     const admin = ctx.supabaseAdmin;
     let usage: Usage | undefined;
+    let claim: Claim | undefined;
     try {
-      if (await isRateLimited(admin, userId, PER_MINUTE, 'learn')) {
-        return fail(429, 'rate_limited', 'Give it a minute, then ask again.');
+      const claimed = await claimCall(admin, userId, 'learn', { perMinute: PER_MINUTE, perDay: PER_DAY, config: FEEDBACK });
+      if ('limited' in claimed) {
+        return claimed.limited === 'minute'
+          ? fail(429, 'rate_limited', 'Give it a minute, then ask again.')
+          : fail(429, 'rate_limited', `That’s today’s ${PER_DAY} pieces of feedback. More tomorrow.`);
       }
-      if (await isRateLimited(admin, userId, PER_DAY, 'learn', 24 * 60 * 60_000)) {
-        return fail(429, 'rate_limited', `That’s today’s ${PER_DAY} pieces of feedback. More tomorrow.`);
-      }
+      claim = claimed;
 
       const result = await callStructured({
         system: FEEDBACK_SYSTEM,
@@ -66,18 +68,22 @@ export default {
       });
       usage = result.usage;
       const out = finishFeedback(result.json, kind, texts);
-      await logCall(admin, { userId, kind: 'learn', ok: true, usage, config: FEEDBACK });
+      await logCall(admin, { userId, kind: 'learn', ok: true, usage, config: FEEDBACK, claim });
       return Response.json(out);
     } catch (e) {
       const known = e instanceof AiError;
-      await logCall(admin, {
-        userId,
-        kind: 'learn',
-        ok: false,
-        usage: (e as { usage?: Usage }).usage ?? usage,
-        config: FEEDBACK,
-        error: known ? (e.detail ? `${e.code}: ${e.detail}` : e.code) : 'invalid_output',
-      });
+      // A request turned away before it was claimed has nothing to log.
+      if (claim) {
+        await logCall(admin, {
+          userId,
+          kind: 'learn',
+          ok: false,
+          usage: (e as { usage?: Usage }).usage ?? usage,
+          config: FEEDBACK,
+          error: known ? (e.detail ? `${e.code}: ${e.detail}` : e.code) : 'invalid_output',
+          claim,
+        });
+      }
       if (known) return fail(e.status, e.code, e.message);
       console.error('learn-feedback failed', e);
       return fail(502, 'ai_error', 'Feedback didn’t come through. Try again.');

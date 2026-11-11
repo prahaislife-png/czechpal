@@ -48,6 +48,22 @@ describe('daily activity', () => {
     assert.equal(streak(days, dayAt(5)), 0);
   });
 
+  it('course work counts for the streak, and older days without that count still add up', () => {
+    // A day with only a lesson check or exam practice is a day of practice.
+    let days = logDay({}, { study: 1 }, dayAt(1));
+    days = logDay(days, { study: 2 }, dayAt(2));
+    assert.equal(streak(days, dayAt(2)), 2);
+    assert.ok(lastWeek(days, dayAt(2))[6].active);
+    // A day saved by an older build has no `study`, `phrases` or `sessions`: totals stay numbers.
+    const old = { reviews: 3, chapters: 1, listening: 0, heard: 0, heardRight: 0 } as unknown as Days[string];
+    const mixed: Days = { ...days, [dayKey(dayAt(3))]: old };
+    const sum = totals(mixed, 3, dayAt(3));
+    assert.equal(sum.reviews, 3);
+    assert.equal(sum.study, 3);
+    assert.equal(sum.sessions, 0);
+    assert.equal(streak(mixed, dayAt(3)), 3);
+  });
+
   it('shows the last seven days ending today', () => {
     const days = logDay({}, { listening: 1 }, t0);
     const week = lastWeek(days, t0);

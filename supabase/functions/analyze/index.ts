@@ -3,7 +3,7 @@ import { withSupabase } from 'npm:@supabase/server@1';
 import { analyzeOutputSchema, CATEGORIES, validateAnalyzeOutput } from '../_shared/analysis-schema.ts';
 import { FREE_LIMIT, LIMIT_REACHED_MESSAGE } from '../_shared/allowance.ts';
 import { aboutReader, parseInput, userContent, type Input } from '../_shared/analyze-input.ts';
-import { AiError, callStructured, fail, isRateLimited, logCall, type Usage } from '../_shared/claude.ts';
+import { AiError, callStructured, claimCall, fail, logCall, type Claim, type Usage } from '../_shared/claude.ts';
 import { languageName } from '../_shared/languages.ts';
 import { ANALYZE_SYSTEM } from '../_shared/prompts.ts';
 
@@ -16,6 +16,10 @@ import { ANALYZE_SYSTEM } from '../_shared/prompts.ts';
  * Reserves one free explanation first and refunds it if the explanation fails.
  */
 
+/** Explanations, replies and new messages together, per minute. */
+const PER_MINUTE = 6;
+/** Attempts a day, failed ones included: a refunded attempt still costs a call to Claude. */
+const PER_DAY = 40;
 
 export default {
   fetch: withSupabase({ auth: 'user' }, async (req, ctx) => {
@@ -37,8 +41,15 @@ export default {
     const about = aboutReader(body.about);
 
     const admin = ctx.supabaseAdmin;
+    let claim: Claim;
     try {
-      if (await isRateLimited(admin, userId)) return fail(429, 'rate_limited', 'Too many requests. Wait a minute and try again.');
+      const claimed = await claimCall(admin, userId, 'analyze', { perMinute: PER_MINUTE, perDay: PER_DAY });
+      if ('limited' in claimed) {
+        return claimed.limited === 'minute'
+          ? fail(429, 'rate_limited', 'Too many requests. Wait a minute and try again.')
+          : fail(429, 'rate_limited', 'That’s a lot of explanations for one day. Try again tomorrow.');
+      }
+      claim = claimed;
     } catch (e) {
       if (e instanceof AiError) return fail(e.status, e.code, e.message);
       throw e;
@@ -60,9 +71,11 @@ export default {
       : await admin.rpc('reserve_analysis', { p_user: userId, p_limit: FREE_LIMIT });
     if (reserveError) {
       console.error('reserving an explanation failed', reserveError.message);
+      await logCall(admin, { userId, kind: 'analyze', ok: false, error: 'reserve_failed', claim });
       return fail(500, 'server', 'Something went wrong. Please try again.');
     }
     if (remaining < 0) {
+      await logCall(admin, { userId, kind: 'analyze', ok: false, error: 'limit_reached', claim });
       return fail(402, 'limit_reached', LIMIT_REACHED_MESSAGE);
     }
 
@@ -92,13 +105,13 @@ export default {
 
         if (out.status !== 'ok' || !out.analysis) {
           await refund(); // an unreadable photo doesn't use up an explanation
-          await logCall(admin, { userId, kind: 'analyze', ok: false, usage, error: out.status });
+          await logCall(admin, { userId, kind: 'analyze', ok: false, usage, error: out.status, claim });
           return out.status === 'not_czech'
             ? { error: { status: 422, code: 'not_czech', message: 'This doesn’t look like Czech. CzechLocal explains text written in Czech.' } }
             : { error: { status: 422, code: 'unreadable', message: 'The photo is hard to read. Try again closer, in good light, with the whole text in the frame.' } };
         }
 
-        await logCall(admin, { userId, kind: 'analyze', ok: true, usage, error: free ? 'free_retry' : undefined });
+        await logCall(admin, { userId, kind: 'analyze', ok: true, usage, error: free ? 'free_retry' : undefined, claim });
         if (requestId && inputHash && !free) {
           await admin.rpc('record_charge', { p_user: userId, p_request: requestId, p_hash: inputHash });
         }
@@ -114,6 +127,7 @@ export default {
           ok: false,
           usage: (e as { usage?: Usage }).usage ?? usage,
           error: known ? (e.detail ? `${e.code}: ${e.detail}` : e.code) : 'invalid_output',
+          claim,
         });
         if (known) return { error: { status: e.status, code: e.code, message: e.message } };
         console.error('analyze failed', e);

@@ -115,36 +115,84 @@ export async function callStructured(opts: {
   }
 }
 
+export type CallKind = 'analyze' | 'reply' | 'compose' | 'translate' | 'learn' | 'speak';
+
+const modelLabel = (config: ModelConfig) => `${config.model} ${config.effort}${config.thinking === 'off' ? ' no-thinking' : ''}`;
+
+/** Explanations, replies and new messages share one per-minute limit: they use the largest model. */
+export const SHARED_KINDS: CallKind[] = ['analyze', 'reply', 'compose'];
+
+/** A call that may go ahead: `id` is its row in ai_calls (null when it was allowed the older way). */
+export type Claim = { id: number | null };
+
+/**
+ * Checks the limits and counts the call in one step, before Claude is asked: requests sent
+ * together can't all slip under a limit. Returns the claim, or which limit was hit.
+ * See migrations/…_claim_ai_calls.sql. Until that migration is applied, the older check runs
+ * instead, so functions and database can be updated in either order.
+ */
+export async function claimCall(
+  admin: SupabaseClient,
+  userId: string,
+  kind: CallKind,
+  limits: { perMinute: number; perDay?: number; config?: ModelConfig },
+): Promise<Claim | { limited: 'minute' | 'day' }> {
+  const shared = SHARED_KINDS.includes(kind);
+  const { data, error } = await admin.rpc('claim_ai_call', {
+    p_user: userId,
+    p_kind: kind,
+    p_model: modelLabel(limits.config ?? DEFAULT_CONFIG),
+    p_per_minute: limits.perMinute,
+    p_minute_kinds: shared ? SHARED_KINDS : [kind],
+    p_per_day: limits.perDay ?? null,
+  });
+  if (error) {
+    console.error('claim_ai_call failed; using the older check', error.message);
+    if (await isRateLimited(admin, userId, limits.perMinute, shared ? undefined : kind)) return { limited: 'minute' };
+    if (limits.perDay && (await isRateLimited(admin, userId, limits.perDay, kind, 24 * 60 * 60_000))) return { limited: 'day' };
+    return { id: null };
+  }
+  const id = Number(data);
+  if (id === -1) return { limited: 'minute' };
+  if (id === -2) return { limited: 'day' };
+  return { id };
+}
+
 /** Cost and rate-limit log. Never stores document content. */
 export async function logCall(
   admin: SupabaseClient,
   row: {
     userId: string;
-    kind: 'analyze' | 'reply' | 'compose' | 'translate' | 'learn' | 'speak';
+    kind: CallKind;
     ok: boolean;
     usage?: Usage;
     error?: string;
     /** The model this call used, when it isn't the default. */
     config?: ModelConfig;
+    /** The call's claim: its row is filled in rather than a new one added. */
+    claim?: Claim;
   },
 ) {
   const config = row.config ?? DEFAULT_CONFIG;
-  const { error } = await admin.from('ai_calls').insert({
-    user_id: row.userId,
-    kind: row.kind,
-    model: `${config.model} ${config.effort}${config.thinking === 'off' ? ' no-thinking' : ''}`,
+  const result = {
+    model: modelLabel(config),
     ok: row.ok,
     input_tokens: row.usage?.input ?? null,
     output_tokens: row.usage?.output ?? null,
     cache_read_tokens: row.usage?.cacheRead ?? null,
     error: row.error ?? null,
-  });
-  if (error) console.error('ai_calls insert failed', error.message);
+  };
+  const { error } =
+    row.claim?.id != null
+      ? await admin.from('ai_calls').update(result).eq('id', row.claim.id)
+      : await admin.from('ai_calls').insert({ user_id: row.userId, kind: row.kind, ...result });
+  if (error) console.error('ai_calls write failed', error.message);
 }
 
 /**
- * At most `limit` AI calls per user per minute, across explanations and replies; or, with `kind`
- * and `windowMs`, of one kind over another window (quick translations have their own budget).
+ * The older check, kept for a database that doesn't have claim_ai_call yet: at most `limit` logged
+ * calls per user per minute, or, with `kind` and `windowMs`, of one kind over another window.
+ * It counts finished calls only, so it can't stop requests sent together; claimCall can.
  */
 export async function isRateLimited(admin: SupabaseClient, userId: string, limit = 6, kind?: string, windowMs = 60_000) {
   const since = new Date(Date.now() - windowMs).toISOString();

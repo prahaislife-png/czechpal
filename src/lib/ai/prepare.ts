@@ -11,12 +11,14 @@ const stripDataUrl = (b64: string) => b64.replace(/^data:[^,]*,/, '');
 
 /** `maxEdge` and `compress` go lower for a quick translation, where speed matters more than detail. */
 export async function imageForUpload(uri: string, maxEdge = MAX_EDGE, compress = 0.8): Promise<{ data: string; mediaType: 'image/jpeg' }> {
+  // The photo is decoded once: this render gives its size, and the resize starts from it.
   const original = await ImageManipulator.manipulate(uri).renderAsync();
-  const context = ImageManipulator.manipulate(uri);
-  if (Math.max(original.width, original.height) > maxEdge) {
-    context.resize(original.width >= original.height ? { width: maxEdge } : { height: maxEdge });
-  }
-  const rendered = await context.renderAsync();
+  const rendered =
+    Math.max(original.width, original.height) > maxEdge
+      ? await ImageManipulator.manipulate(original)
+          .resize(original.width >= original.height ? { width: maxEdge } : { height: maxEdge })
+          .renderAsync()
+      : original;
   const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress, base64: true });
   if (!saved.base64) throw new Error('Image could not be encoded');
   return { data: stripDataUrl(saved.base64), mediaType: 'image/jpeg' };

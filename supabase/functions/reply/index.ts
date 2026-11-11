@@ -1,7 +1,7 @@
 import { withSupabase } from 'npm:@supabase/server@1';
 
 import { replyOutputSchema, validateReplyOutput } from '../_shared/analysis-schema.ts';
-import { AiError, callStructured, fail, isRateLimited, logCall, type Usage } from '../_shared/claude.ts';
+import { AiError, callStructured, claimCall, fail, logCall, type Claim, type Usage } from '../_shared/claude.ts';
 import { genderedForms } from '../_shared/gender.ts';
 import { languageName } from '../_shared/languages.ts';
 import { REPLY_SYSTEM } from '../_shared/prompts.ts';
@@ -10,8 +10,12 @@ import { REPLY_SYSTEM } from '../_shared/prompts.ts';
  * POST /reply
  * { originalText, summary: { kind, sender?, inShort }, intent?: { label, description }, ownWords?, name?, language? }
  * Either a suggested intent or the reader's own words (any language). The tone follows the original.
- * Replies don't use up the free allowance; they are rate-limited only.
+ * Replies don't use up the free allowance; they have per-minute and per-day limits.
  */
+
+/** Explanations, replies and new messages together, per minute. */
+const PER_MINUTE = 6;
+const PER_DAY = 40;
 
 const clip = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
@@ -37,8 +41,15 @@ export default {
 
     const admin = ctx.supabaseAdmin;
     let usage: Usage | undefined;
+    let claim: Claim | undefined;
     try {
-      if (await isRateLimited(admin, userId)) return fail(429, 'rate_limited', 'Too many requests. Wait a minute and try again.');
+      const claimed = await claimCall(admin, userId, 'reply', { perMinute: PER_MINUTE, perDay: PER_DAY });
+      if ('limited' in claimed) {
+        return claimed.limited === 'minute'
+          ? fail(429, 'rate_limited', 'Too many requests. Wait a minute and try again.')
+          : fail(429, 'rate_limited', `That’s today’s ${PER_DAY} replies. More tomorrow.`);
+      }
+      claim = claimed;
 
       const request = [
         `What it is: ${clip(summary.kind, 20) || 'message'}${clip(summary.sender, 200) ? `, from ${clip(summary.sender, 200)}` : ''}.`,
@@ -86,11 +97,12 @@ ${ownWords}
         if (still.length < gendered.length) reply = rewritten;
       }
 
-      await logCall(admin, { userId, kind: 'reply', ok: true, usage, error: note });
+      await logCall(admin, { userId, kind: 'reply', ok: true, usage, error: note, claim });
       return Response.json(reply);
     } catch (e) {
       const known = e instanceof AiError;
-      await logCall(admin, { userId, kind: 'reply', ok: false, usage: (e as { usage?: Usage }).usage ?? usage, error: known ? (e.detail ? `${e.code}: ${e.detail}` : e.code) : 'invalid_output' });
+      // A request turned away before it was claimed has nothing to log.
+      if (claim) await logCall(admin, { userId, kind: 'reply', ok: false, usage: (e as { usage?: Usage }).usage ?? usage, error: known ? (e.detail ? `${e.code}: ${e.detail}` : e.code) : 'invalid_output', claim });
       if (known) return fail(e.status, e.code, e.message);
       console.error('reply failed', e);
       return fail(502, 'ai_error', 'The reply didn’t come out right. Please try again.');

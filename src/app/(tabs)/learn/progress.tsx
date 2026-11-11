@@ -2,15 +2,20 @@ import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { ReadinessRow } from '@/components/academy/academy-parts';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
-import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
 import { longDate } from '@/lib/about';
+import { skillReadiness } from '@/lib/academy/evidence';
+import { roadmap } from '@/lib/academy/roadmap';
+import { practiceSets } from '@/lib/academy/tasks';
+import { speakingTasks } from '@/lib/academy/tasks/speaking';
+import { writingTasks } from '@/lib/academy/tasks/writing';
+import type { Skill } from '@/lib/academy/types';
 import { lastWeek, streak } from '@/lib/learn/activity';
 import { daysToExam, EXAM_CHECKED_ON, EXAM_SOURCES, examParts, NEW_FORMAT_FROM, passMarks } from '@/lib/learn/exam';
 import { learnStats } from '@/lib/learn/stats';
-import { topicLabels } from '@/lib/learn/types';
 import { useAcademy } from '@/store/academy';
 import { useLearn } from '@/store/learn';
 import { layout, radius, space } from '@/theme/tokens';
@@ -19,18 +24,27 @@ import { useTheme } from '@/theme/use-theme';
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-const pct = (right: number, of: number) => (of ? `${Math.round((right / of) * 100)}%` : '–');
-
 /**
- * Progress: the streak, what's been read, heard and learnt, mapped onto the four parts of the A2
- * exam, and (for exam learners) the exam's checked facts. Writing and speaking are practised in
- * A2 Academy but not scored, so the screen counts them rather than showing a score.
+ * Progress: the streak, the course (lessons and topics), words, exam practice, readiness for the
+ * four parts of the A2 exam from the learner's own answers, and (for exam learners) the exam's
+ * checked facts.
  */
 export default function ProgressScreen() {
   const { colors } = useTheme();
   const progress = useLearn((s) => s.progress);
-  const written = useAcademy((s) => Object.values(s.writing).reduce((n, runs) => n + runs.length, 0));
-  const spokenTasks = useAcademy((s) => Object.values(s.speaking).reduce((n, runs) => n + runs.length, 0));
+  const attempts = useAcademy((s) => s.attempts);
+  const lessons = useAcademy((s) => s.lessons);
+  const tasks = useAcademy((s) => s.tasks);
+  const writing = useAcademy((s) => s.writing);
+  const speaking = useAcademy((s) => s.speaking);
+  const course = useMemo(() => roadmap(lessons, attempts), [lessons, attempts]);
+  const lessonsDone = course.reduce((n, t) => n + t.done, 0);
+  const lessonsTotal = course.reduce((n, t) => n + t.total, 0);
+  const readiness = useMemo(() => (['reading', 'listening', 'writing', 'speaking'] as Skill[]).map((s) => skillReadiness(attempts, s)), [attempts]);
+  // Exam practice done at least once, of everything there is to practise.
+  const setIds = [...practiceSets.map((s) => s.id), ...writingTasks.map((w) => w.id), ...speakingTasks.map((t) => t.id)];
+  const done = { ...tasks, ...writing, ...speaking } as Record<string, unknown[]>;
+  const setsDone = setIds.filter((id) => done[id]?.length).length;
   const deck = useLearn((s) => s.deck);
   const days = useLearn((s) => s.days);
   const profile = useLearn((s) => s.profile);
@@ -48,7 +62,7 @@ export default function ProgressScreen() {
               {run} {run === 1 ? 'day' : 'days'} in a row
             </Text>
             <Text variant="footnote" color="label2">
-              {run === 0 ? 'Any review, chapter or listening starts a streak.' : 'A little every day is what makes it stick.'}
+              {run === 0 ? 'A lesson, some exam practice or a word review starts a streak.' : 'A little every day is what makes it stick.'}
             </Text>
           </View>
         </View>
@@ -76,52 +90,50 @@ export default function ProgressScreen() {
       </Card>
 
       <View style={styles.grid}>
-        <Stat value={`${stats.texts.read}`} of={`of ${stats.texts.total}`} label="texts read" />
+        <Stat value={`${lessonsDone}`} of={`of ${lessonsTotal}`} label="lessons done" />
+        <Stat value={`${setsDone}`} of={`of ${setIds.length}`} label="exam tasks practised" />
         <Stat value={`${stats.words.known}`} of={`of ${stats.words.saved}`} label="words known" />
-        <Stat value={`${stats.month.reviews}`} label="reviews, 30 days" />
-        <Stat value={pct(stats.listening.right, stats.listening.heard)} label="heard right, 30 days" />
+        <Stat value={`${stats.month.reviews}`} label="word reviews, 30 days" />
       </View>
 
       <View>
         <SectionHeader title="The four parts of the A2 exam" />
-        <List>
-          <Row
-            icon="book"
-            title="Reading"
-            subtitle={stats.texts.read ? `${stats.texts.read} texts read · ${pct(stats.quiz.right, stats.quiz.answered)} of questions right` : 'Read a story and answer its questions'}
-          />
-          <Row
-            icon="ear"
-            title="Listening"
-            subtitle={stats.listening.heard ? `${pct(stats.listening.right, stats.listening.heard)} right in the last 30 days` : 'Do a listening session to start'}
-          />
-          <Row icon="compose" title="Writing" subtitle={written ? `${written} ${written === 1 ? 'piece' : 'pieces'} written in Exam practice · not scored` : 'Try the writing coach in Exam practice'} />
-          <Row icon="message" title="Speaking" subtitle={spokenTasks ? `${spokenTasks} speaking ${spokenTasks === 1 ? 'task' : 'tasks'} recorded · not scored` : 'Record yourself in Exam practice'} />
-        </List>
+        <Card style={styles.readiness}>
+          {readiness.map((r, i) => (
+            <View key={r.skill}>
+              {i > 0 ? <View style={[styles.rule, { backgroundColor: colors.separator }]} /> : null}
+              <ReadinessRow r={r} />
+            </View>
+          ))}
+        </Card>
         <Text variant="footnote" color="label2" style={styles.note}>
-          Words help with all four: {stats.words.known} known, {stats.words.learning} still being learnt. A word counts as known once its next review is three weeks away.
+          From your own first-try answers in lesson checks, exam practice and mocks. Words help with all four: {stats.words.known} known,{' '}
+          {stats.words.learning} still being learnt.
         </Text>
       </View>
 
       <View>
-        <SectionHeader title="Topics read" />
+        <SectionHeader title="Your course" />
         <View style={[styles.topics, { backgroundColor: colors.surface }]}>
-          {stats.topics.map((t, i) => (
-            <View
-              key={t.topic}
+          {course.map((t, i) => (
+            <Pressable
+              key={t.topic.id}
+              onPress={() => router.push({ pathname: '/learn/topic/[id]', params: { id: t.topic.id } })}
               style={[styles.topic, i > 0 && { borderTopColor: colors.separator, borderTopWidth: StyleSheet.hairlineWidth }]}
-              accessible
-              accessibilityLabel={`${topicLabels[t.topic]}: ${t.read} of ${t.total} read`}>
-              <Text variant="callout" style={styles.topicName}>
-                {topicLabels[t.topic]}
+              accessibilityRole="button"
+              accessibilityLabel={`${t.topic.title}: ${t.done} of ${t.total} lessons done`}>
+              <Text variant="callout" numberOfLines={1} style={styles.topicName}>
+                {t.topic.title}
               </Text>
               <View style={[styles.track, { backgroundColor: colors.fill }]}>
-                <View style={[styles.fill, { backgroundColor: t.read === t.total ? colors.success : colors.accentFill, width: `${(t.read / t.total) * 100}%` }]} />
+                <View
+                  style={[styles.fill, { backgroundColor: t.total && t.done === t.total ? colors.success : colors.accentFill, width: `${t.total ? (t.done / t.total) * 100 : 0}%` }]}
+                />
               </View>
               <Text variant="footnote" color="label2" tabular style={styles.topicCount}>
-                {t.read}/{t.total}
+                {t.done}/{t.total}
               </Text>
-            </View>
+            </Pressable>
           ))}
         </View>
       </View>
@@ -223,7 +235,9 @@ const styles = StyleSheet.create({
   note: { paddingHorizontal: space.xs, marginTop: space.sm },
   topics: { borderRadius: radius.card, borderCurve: 'continuous', paddingHorizontal: space.lg },
   topic: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 48 },
-  topicName: { width: 120 },
+  topicName: { width: 150 },
+  readiness: { paddingVertical: space.xs },
+  rule: { height: StyleSheet.hairlineWidth, marginVertical: space.sm },
   topicCount: { minWidth: 32, textAlign: 'right' },
   track: { flex: 1, height: 6, borderRadius: 3, overflow: 'hidden' },
   fill: { height: 6, borderRadius: 3 },
