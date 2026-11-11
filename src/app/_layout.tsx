@@ -109,6 +109,7 @@ export default function RootLayout() {
                 <Stack.Screen name="mission/[id]" options={{ title: '' }} />
                 <Stack.Screen name="session" options={{ presentation: 'fullScreenModal', title: '' }} />
                 <Stack.Screen name="prepare/[id]" options={{ title: '' }} />
+                <Stack.Screen name="slovicka" options={{ headerShown: false }} />
                 <Stack.Screen name="a2-setup" options={{ presentation: 'modal', title: 'Set up lessons' }} />
                 <Stack.Screen name="diagnostic" options={{ presentation: 'fullScreenModal', title: 'Starting check' }} />
                 <Stack.Screen name="a2-lesson/[id]" options={{ presentation: 'fullScreenModal', title: '' }} />

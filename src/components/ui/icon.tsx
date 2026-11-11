@@ -115,6 +115,10 @@ const glyphs = {
   swim: ['figure.pool.swim', 'pool'],
   cup: ['cup.and.saucer', 'local_cafe'],
   tram: ['tram', 'tram'],
+  eye: ['eye', 'visibility'],
+  eyeOff: ['eye.slash', 'visibility_off'],
+  starOutline: ['star', 'star_border'],
+  shuffle: ['shuffle', 'shuffle'],
 } as const satisfies Record<string, readonly [string, string]>;
 
 export type IconName = keyof typeof glyphs;

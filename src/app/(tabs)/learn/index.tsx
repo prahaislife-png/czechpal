@@ -16,6 +16,7 @@ import { lessonById } from '@/lib/academy/lessons';
 import { topicById } from '@/lib/academy/topics';
 import { contentById } from '@/lib/learn/content';
 import { dueCards, nextDue } from '@/lib/learn/deck';
+import { formatCount, WORD_COUNT } from '@/lib/words';
 import { isFinished, readShare } from '@/lib/learn/progress';
 import { untilLabel } from '@/lib/learn/srs';
 import { useAcademy } from '@/store/academy';
@@ -84,6 +85,13 @@ export default function LearnScreen() {
             }
             chevron
             onPress={() => router.push(due > 0 ? '/flashcards' : '/learn/words')}
+          />
+          <Row
+            icon="text"
+            title="Slovíčka"
+            subtitle={`${formatCount(WORD_COUNT)} Czech words to scroll through, with meanings and examples`}
+            chevron
+            onPress={() => router.push('/slovicka')}
           />
           <Row icon="book" title="Grammar" subtitle={`${grammar.length} short explanations`} chevron onPress={() => router.push('/learn/grammar')} />
           <Row icon="chart" title="Progress" subtitle="Your streak, words known and the exam parts" chevron onPress={() => router.push('/learn/progress')} />
