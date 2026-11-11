@@ -11,6 +11,7 @@ import { useCallback, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { CrashScreen } from '@/components/crash-screen';
 import { reminderHref, useReminderTap } from '@/lib/reminders';
 import { useStore } from '@/store/cases';
 import { stackOptions } from '@/theme/navigation';
@@ -21,6 +22,9 @@ SplashScreen.preventAutoHideAsync();
 
 // Deep links to a case, review or reply land with Home underneath, so back always has somewhere to go.
 export const unstable_settings = { anchor: '(tabs)' };
+
+// Any screen without its own: a crash while drawing shows this instead of a blank screen.
+export { CrashScreen as ErrorBoundary };
 
 export default function RootLayout() {
   const { scheme, colors } = useTheme();

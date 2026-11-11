@@ -15,6 +15,7 @@ import {
   type PartialAnalysis,
 } from '@/lib/ai';
 import type { AboutMe } from '@/lib/about';
+import { currentFiles, deleteAllCaseFiles, deleteCaseFiles, keepCaseFiles } from '@/lib/case-files';
 import type { Insurer } from '@/lib/compose/templates';
 import { cancelReminder, type Reminder } from '@/lib/reminders';
 
@@ -187,11 +188,19 @@ export const useStore = create<State & Actions>()(
           const language = item.source === 'example' || isDemoMode ? DEFAULT_LANGUAGE : (item.language ?? get().language);
           patch(id, { status: 'analyzing', error: undefined, errorCode: undefined, language });
           try {
+            // From here the letter is saved, so its pages (or PDF) move out of the phone's cache.
+            const kept = await keepCaseFiles(id, item);
+            const files = { ...item, ...kept };
+            if (!get().cases.some((c) => c.id === id)) {
+              deleteCaseFiles(id); // deleted while its files were being copied
+              return;
+            }
+            if (Object.keys(kept).length) patch(id, kept);
             const result = await analyzerFor(item).analyzeDocument({
               kind: item.source === 'text' || item.source === 'example' ? 'text' : item.source === 'pdf' ? 'pdf' : 'image',
               text: item.text,
-              uri: item.imageUri ?? item.fileUri,
-              uris: item.imageUri ? pagesOf(item) : undefined,
+              uri: files.imageUri ?? files.fileUri,
+              uris: files.imageUri ? pagesOf(files) : undefined,
               language,
               requestId: id,
               sampleId: item.source === 'example' ? item.sampleId : undefined,
@@ -233,9 +242,11 @@ export const useStore = create<State & Actions>()(
             .reminders.filter((r) => r.caseId === id)
             .forEach((r) => get().dropReminder(r.id));
           set((s) => ({ cases: s.cases.filter((c) => c.id !== id) }));
+          deleteCaseFiles(id);
         },
         clearAll: () => {
           get().reminders.forEach((r) => cancelReminder(r));
+          deleteAllCaseFiles();
           set({ cases: [], details: { name: '', address: '' }, about: {}, reminders: [] });
         },
         resetUsage: () => set((s) => ({ usage: { month: thisMonth(), used: 0, limit: s.usage.limit } })),
@@ -312,10 +323,25 @@ export const useStore = create<State & Actions>()(
         }
         return state as State & Actions;
       },
-      onRehydrateStorage: () => () => useStore.setState({ hydrated: true }),
+      onRehydrateStorage: () => () => {
+        // An app update can move the documents folder: point saved pages at where it is today.
+        useStore.setState((s) => ({ hydrated: true, cases: s.cases.map(currentFiles) }));
+        void adoptCaseFiles();
+      },
     },
   ),
 );
+
+/** Letters saved before their files were kept: copy whatever the phone still has, one at a time. */
+async function adoptCaseFiles() {
+  for (const item of useStore.getState().cases) {
+    if (item.source === 'example' || (!item.imageUri && !item.fileUri)) continue;
+    const kept = await keepCaseFiles(item.id, item);
+    if (Object.keys(kept).length) {
+      useStore.setState((s) => ({ cases: s.cases.map((c) => (c.id === item.id ? { ...c, ...kept } : c)) }));
+    }
+  }
+}
 
 export const useCase = (id: string | undefined) => useStore((s) => s.cases.find((c) => c.id === id));
 

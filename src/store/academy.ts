@@ -7,6 +7,9 @@ import type { WritingFeedback } from '@/lib/ai/types';
 import type { MarkedSection, MockRun, WritingSection } from '@/lib/academy/mock';
 import type { LessonLog, LessonRun } from '@/lib/academy/roadmap';
 import type { ContentMeta } from '@/lib/academy/types';
+import { today } from '@/lib/learn/activity';
+
+import { useLearn } from './learn';
 
 /**
  * A2 Academy's private progress: every answer as evidence, finished lessons and the starting
@@ -68,6 +71,9 @@ type Actions = {
   clear: () => void;
 };
 
+/** Course work counts for the streak, which Learn keeps by day. */
+const studied = () => useLearn.getState().logStudy();
+
 const initial: State = { setupAt: undefined, diagnostic: undefined, attempts: [], lessons: {}, current: undefined, grammarSeen: {}, tasks: {}, writing: {}, speaking: {}, mocks: [], examResult: undefined };
 
 export const useAcademy = create<State & Actions>()(
@@ -75,34 +81,55 @@ export const useAcademy = create<State & Actions>()(
     (set) => ({
       ...initial,
       finishSetup: () => set((s) => ({ setupAt: s.setupAt ?? new Date().toISOString() })),
-      record: (item, correct, source) => set((s) => ({ attempts: addAttempts(s.attempts, [makeAttempt(item, correct, source, s.attempts)]) })),
-      finishDiagnostic: (right, total) => set({ diagnostic: { at: new Date().toISOString(), right, total } }),
+      record: (item, correct, source) => {
+        set((s) => ({ attempts: addAttempts(s.attempts, [makeAttempt(item, correct, source, s.attempts)]) }));
+        // The day's first answer starts it; finished lessons and sets add to it below.
+        if (!today(useLearn.getState().days).study) studied();
+      },
+      finishDiagnostic: (right, total) => {
+        set({ diagnostic: { at: new Date().toISOString(), right, total } });
+        studied();
+      },
       startLesson: (id) => set({ current: id }),
-      finishLesson: (id, right, total) =>
+      finishLesson: (id, right, total) => {
         set((s) => {
           const run: LessonRun = { at: new Date().toISOString(), right, total };
           return { lessons: { ...s.lessons, [id]: [...(s.lessons[id] ?? []), run].slice(-20) }, current: s.current === id ? undefined : s.current };
-        }),
+        });
+        studied();
+      },
       seeGrammar: (id) => set((s) => ({ grammarSeen: { ...s.grammarSeen, [id]: new Date().toISOString() } })),
-      finishTask: (id, right, total, mode) =>
-        set((s) => ({ tasks: { ...s.tasks, [id]: [...(s.tasks[id] ?? []), { at: new Date().toISOString(), right, total, mode }].slice(-20) } })),
-      saveWriting: (id, texts) =>
-        set((s) => ({ writing: { ...s.writing, [id]: [...(s.writing[id] ?? []), { at: new Date().toISOString(), texts }].slice(-10) } })),
+      finishTask: (id, right, total, mode) => {
+        set((s) => ({ tasks: { ...s.tasks, [id]: [...(s.tasks[id] ?? []), { at: new Date().toISOString(), right, total, mode }].slice(-20) } }));
+        studied();
+      },
+      saveWriting: (id, texts) => {
+        set((s) => ({ writing: { ...s.writing, [id]: [...(s.writing[id] ?? []), { at: new Date().toISOString(), texts }].slice(-10) } }));
+        studied();
+      },
       setWritingFeedback: (id, feedback) =>
         set((s) => {
           const runs = s.writing[id];
           if (!runs?.length) return {};
           return { writing: { ...s.writing, [id]: [...runs.slice(0, -1), { ...runs[runs.length - 1], feedback }] } };
         }),
-      finishSpeaking: (id, run) =>
-        set((s) => ({ speaking: { ...s.speaking, [id]: [...(s.speaking[id] ?? []), { at: new Date().toISOString(), ...run }].slice(-20) } })),
+      finishSpeaking: (id, run) => {
+        set((s) => ({ speaking: { ...s.speaking, [id]: [...(s.speaking[id] ?? []), { at: new Date().toISOString(), ...run }].slice(-20) } }));
+        studied();
+      },
       startMock: (speakingTasks, variant) => {
         const id = `mock-${Date.now().toString(36)}`;
         set((s) => ({ mocks: [...s.mocks, { id, startedAt: new Date().toISOString(), variant, speakingTasks }].slice(-10) }));
         return id;
       },
-      saveMockSection: (id, section, result) => set((s) => ({ mocks: s.mocks.map((m) => (m.id === id ? { ...m, [section]: result } : m)) })),
-      saveMockWriting: (id, result) => set((s) => ({ mocks: s.mocks.map((m) => (m.id === id ? { ...m, writing: result } : m)) })),
+      saveMockSection: (id, section, result) => {
+        set((s) => ({ mocks: s.mocks.map((m) => (m.id === id ? { ...m, [section]: result } : m)) }));
+        studied();
+      },
+      saveMockWriting: (id, result) => {
+        set((s) => ({ mocks: s.mocks.map((m) => (m.id === id ? { ...m, writing: result } : m)) }));
+        studied();
+      },
       saveMockSpeaking: (id, task, recorded, prompts) =>
         set((s) => ({
           mocks: s.mocks.map((m) =>

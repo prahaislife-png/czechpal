@@ -71,6 +71,8 @@ type Actions = {
   savePhrases: (situation: Situation) => number;
   /** The daily session reached its end. */
   finishSession: () => void;
+  /** Course work was done today (a lesson check, exam practice, writing, speaking): it counts for the streak. */
+  logStudy: () => void;
   /** Settings → Delete everything. */
   clear: () => void;
 };
@@ -156,6 +158,7 @@ export const useLearn = create<State & Actions>()(
           return added;
         },
         finishSession: () => set((s) => ({ days: logDay(s.days, { sessions: 1 }) })),
+        logStudy: () => set((s) => ({ days: logDay(s.days, { study: 1 }) })),
         clear: () => set({ ...initial }),
       };
     },
