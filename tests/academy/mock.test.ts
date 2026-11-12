@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { makeAttempt } from '../../src/lib/academy/evidence';
+import { lessons } from '../../src/lib/academy/lessons';
 import { checkWriting, clock, MOCK_VARIANTS, nextVariant, markSection, mockSets, mockWriting, mockSpeakingTasks, sectionDone, weakTasks, writtenOutlook, type MockRun } from '../../src/lib/academy/mock';
 import { dailyPlan } from '../../src/lib/academy/plan';
 import { emailChecks, formChecks, practiceSets, taskSets } from '../../src/lib/academy/tasks';
 import { speakingTaskById } from '../../src/lib/academy/tasks/speaking';
-import { contentById } from '../../src/lib/learn/content';
 import { examTasks, passMarks } from '../../src/lib/learn/exam';
 
 const { form: mockForm, email: mockEmail } = mockWriting(1);
@@ -30,18 +30,15 @@ describe('mock exam content', () => {
   it('keeps mock sets out of everyday practice and the plan, but known for mistakes', () => {
     assert.ok(practiceSets.every((s) => !s.pool));
     assert.ok(taskSets.some((s) => s.id === 'r1-m'));
+    // With every lesson done, the plan is exam practice: never a set kept for the mock.
     const plan = dailyPlan({
       minutes: 30,
-      difficulty: 'reading',
-      diagnosticDone: true,
-      log: { 'personal-1': [{ at: new Date(2026, 10, 6, 9).toISOString(), right: 3, total: 3 }] },
+      log: Object.fromEntries(lessons.map((l) => [l.id, [{ at: new Date(2026, 10, 6, 9).toISOString(), right: 3, total: 3 }]])),
       attempts: [],
       wordsDue: 0,
-      unread: () => true,
-      storyTitle: (id) => contentById(id)?.title,
       canListen: true,
-      tasksDone: Object.fromEntries(practiceSets.map((s) => [s.id, 5])),
     });
+    assert.ok(plan.length > 0);
     for (const s of plan) assert.ok(!('id' in s) || !(s.id.endsWith('-m') || s.id.endsWith('-n')), s.kind);
   });
 

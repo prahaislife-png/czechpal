@@ -47,9 +47,12 @@ export const difficulties: { id: Difficulty; label: string }[] = [
   { id: 'unsure', label: 'Not sure yet' },
 ];
 
-/** Minutes saved by an older version, or anything unexpected, read as 5. */
+/** A day's minutes before the learner has chosen: room for a lesson and something to go over. */
+export const DEFAULT_MINUTES: DailyMinutes = 10;
+
+/** Nothing chosen yet reads as the default; minutes saved by an older version, or anything unexpected, as 5. */
 export const minutesOf = (p: { minutes?: number } | undefined): DailyMinutes =>
-  minuteOptions.includes(p?.minutes as DailyMinutes) ? (p!.minutes as DailyMinutes) : 5;
+  p?.minutes === undefined ? DEFAULT_MINUTES : minuteOptions.includes(p.minutes as DailyMinutes) ? (p.minutes as DailyMinutes) : 5;
 
 /** Topics a goal starts with; the learner can change them. */
 export const goalTopics: Record<Goal, Topic[]> = {
