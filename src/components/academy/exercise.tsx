@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
@@ -8,6 +8,7 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { announce } from '@/lib/a11y';
 import { checkWrite, gradeChoice, gradeType, optionOrder } from '@/lib/academy/grade';
+import { tilesFor } from '@/lib/academy/lesson-steps';
 import type { ChoiceExercise, Exercise, TypeExercise, WriteExercise } from '@/lib/academy/types';
 import { radius, space, type as ramp } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -27,6 +28,8 @@ type Props = {
   onAnswered: (correct: boolean | null) => void;
   onNext: () => void;
   nextLabel?: string;
+  /** Words the lesson teaches: a few are mixed into the tiles of an answer that is built from words. */
+  words?: readonly string[];
 };
 
 const haptic = (ok: boolean) => {
@@ -176,74 +179,149 @@ function Choice({ exercise: e, mode, canListen, say, onAnswered, onNext, nextLab
   );
 }
 
-function Typed({ exercise: e, mode, canListen, say, onAnswered, onNext, nextLabel = 'Next' }: Props & { exercise: TypeExercise }) {
+/**
+ * A sentence to put into Czech. By default it is built from word tiles, so nobody has to hunt for
+ * háčky and čárky on a phone keyboard; "Type it instead" brings the keyboard for those who want
+ * it. Typed answers that differ only in their accents count as right, with the spelling shown.
+ */
+function Typed({ exercise: e, mode, canListen, say, onAnswered, onNext, nextLabel = 'Next', words }: Props & { exercise: TypeExercise }) {
   const { colors } = useTheme();
+  const tiles = useMemo(() => tilesFor(e.accept[0], words ?? [], e.id), [e, words]);
+  const [picked, setPicked] = useState<number[]>([]);
+  const [keyboard, setKeyboard] = useState(false);
   const [value, setValue] = useState('');
   const [result, setResult] = useState<ReturnType<typeof gradeType> | null>(null);
   const [tries, setTries] = useState(0);
   const [revealed, setRevealed] = useState(false);
-  const settled = !!result && (result.correct || mode === 'check' || revealed);
+  const answer = keyboard ? value : picked.map((i) => tiles[i]).join(' ');
+  const right = !!result && (result.correct || result.accentsOnly);
+  const settled = !!result && (right || mode === 'check' || revealed);
 
   const submit = () => {
-    if (!value.trim() || settled) return;
-    const r = gradeType(e, value);
-    if (tries === 0) onAnswered(r.correct);
+    if (!answer.trim() || settled) return;
+    const r = gradeType(e, answer);
+    const ok = r.correct || r.accentsOnly;
+    if (tries === 0) onAnswered(ok);
     setTries((t) => t + 1);
     setResult(r);
-    haptic(r.correct);
-    announce(r.correct ? 'Right' : r.accentsOnly ? 'Almost: check the accents' : 'Not quite');
+    haptic(ok);
+    announce(ok ? 'Right' : 'Not quite');
+  };
+  const change = () => {
+    if (!settled) setResult(null);
   };
 
   return (
     <View style={styles.body}>
       <Prompt text={e.prompt} czech={e.text} canListen={canListen} say={say} />
-      <TextInput
-        value={value}
-        onChangeText={(t) => {
-          setValue(t);
-          if (!settled) setResult(null);
-        }}
-        editable={!settled}
-        placeholder="Type in Czech"
-        autoCapitalize="sentences"
-        autoCorrect={false}
-        spellCheck={false}
-        returnKeyType="done"
-        onSubmitEditing={submit}
-        accessibilityLabel="Your answer in Czech"
-        placeholderTextColor={colors.label3}
-        style={[
-          styles.input,
-          ramp.body,
-          {
-            color: colors.label,
-            backgroundColor: colors.surface,
-            borderColor: result ? (result.correct ? colors.success : colors.danger) : colors.separator,
-          },
-        ]}
-      />
+      {keyboard ? (
+        <TextInput
+          value={value}
+          onChangeText={(t) => {
+            setValue(t);
+            change();
+          }}
+          editable={!settled}
+          autoFocus
+          placeholder="Type in Czech"
+          autoCapitalize="sentences"
+          autoCorrect={false}
+          spellCheck={false}
+          returnKeyType="done"
+          onSubmitEditing={submit}
+          accessibilityLabel="Your answer in Czech"
+          placeholderTextColor={colors.label3}
+          style={[styles.input, ramp.body, { color: colors.label, backgroundColor: colors.surface, borderColor: result ? (right ? colors.success : colors.danger) : colors.separator }]}
+        />
+      ) : (
+        <>
+          <View
+            style={[styles.built, { backgroundColor: colors.surface, borderColor: result ? (right ? colors.success : colors.danger) : colors.separator }]}
+            accessibilityLabel={picked.length ? `Your answer: ${answer}` : 'Your answer: empty. Tap the words below in order.'}>
+            {picked.length === 0 ? (
+              <Text variant="callout" color="label3">
+                Tap the words in order
+              </Text>
+            ) : (
+              picked.map((i, at) => (
+                <Pressable
+                  key={`${i}`}
+                  onPress={() => {
+                    if (settled) return;
+                    setPicked((p) => p.filter((_, k) => k !== at));
+                    change();
+                  }}
+                  disabled={settled}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${tiles[i]}, remove`}
+                  style={[styles.tile, { backgroundColor: colors.accentSoft, borderColor: colors.accentSoft }]}>
+                  <Text variant="callout" weight="600" lang="cs" style={{ color: colors.accent }}>
+                    {tiles[i]}
+                  </Text>
+                </Pressable>
+              ))
+            )}
+          </View>
+          <View style={styles.pool}>
+            {tiles.map((w, i) => {
+              const used = picked.includes(i);
+              return (
+                <Pressable
+                  key={`${i}`}
+                  onPress={() => {
+                    if (settled || used) return;
+                    setPicked((p) => [...p, i]);
+                    change();
+                  }}
+                  disabled={settled || used}
+                  accessibilityRole="button"
+                  accessibilityLabel={w}
+                  accessibilityState={{ disabled: settled || used }}
+                  style={({ pressed }) => [styles.tile, { backgroundColor: pressed ? colors.fill : colors.surface, borderColor: colors.separator, opacity: used ? 0.25 : 1 }]}>
+                  <Text variant="callout" weight="600" lang="cs">
+                    {w}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </>
+      )}
       {settled ? (
         <>
           <Feedback
-            ok={result!.correct}
-            title={result!.correct ? 'Right' : `It’s “${e.accept[0]}”`}
-            body={result!.accentsOnly ? `Only the accents differ. They count in the exam. ${e.explain}` : e.explain}
+            ok={right}
+            title={right ? 'Right' : `It’s “${e.accept[0]}”`}
+            body={result!.accentsOnly ? `Written with its accents: “${e.accept[0]}”. ${e.explain}` : e.explain}
           />
           {canListen ? <SpeakRow text={e.accept[0]} say={say} canListen compact /> : null}
           <Button label={nextLabel} onPress={onNext} />
         </>
-      ) : result ? (
-        <>
-          <Text variant="footnote" color="danger">
-            {result.accentsOnly ? 'Almost: check the accents (háček, čárka).' : 'Not quite. Try again.'}
-          </Text>
-          <View style={styles.row}>
-            <Button label="Show the answer" variant="secondary" onPress={() => setRevealed(true)} style={styles.flex} />
-            <Button label="Check" onPress={submit} disabled={!value.trim()} style={styles.flex} />
-          </View>
-        </>
       ) : (
-        <Button label="Check" onPress={submit} disabled={!value.trim()} />
+        <>
+          {result ? (
+            <Text variant="footnote" color="danger">
+              Not quite. Change it and try again.
+            </Text>
+          ) : null}
+          <View style={styles.row}>
+            {result ? <Button label="Show the answer" variant="secondary" onPress={() => setRevealed(true)} style={styles.flex} /> : null}
+            <Button label="Check" onPress={submit} disabled={!answer.trim()} style={styles.flex} />
+          </View>
+          <Pressable
+            onPress={() => {
+              setKeyboard((k) => !k);
+              setResult(null);
+            }}
+            accessibilityRole="button"
+            hitSlop={8}
+            style={styles.switch}>
+            <Icon name={keyboard ? 'text' : 'keyboard'} size={16} color={colors.accent} />
+            <Text variant="subhead" weight="600" color="accent" chrome>
+              {keyboard ? 'Use word tiles' : 'Type it instead'}
+            </Text>
+          </Pressable>
+        </>
       )}
     </View>
   );
@@ -253,6 +331,7 @@ function Written({ exercise: e, canListen, say, onAnswered, onNext, nextLabel = 
   const { colors } = useTheme();
   const [value, setValue] = useState('');
   const [sent, setSent] = useState(false);
+  const [example, setExample] = useState(false);
   const [ticks, setTicks] = useState<boolean[]>(() => e.selfCheck.map(() => false));
   const check = checkWrite(e, value);
 
@@ -311,7 +390,28 @@ function Written({ exercise: e, canListen, say, onAnswered, onNext, nextLabel = 
           <Button label={nextLabel} onPress={onNext} />
         </>
       ) : (
-        <Button label="Done" onPress={submit} disabled={!value.trim()} />
+        <>
+          {example ? (
+            <Feedback ok={null} title="An example" body={e.sample} />
+          ) : (
+            <Pressable onPress={() => setExample(true)} accessibilityRole="button" hitSlop={8} style={styles.switch}>
+              <Icon name="info" size={16} color={colors.accent} />
+              <Text variant="subhead" weight="600" color="accent" chrome>
+                Show me an example first
+              </Text>
+            </Pressable>
+          )}
+          <Button label="Done" onPress={submit} disabled={!value.trim()} />
+          {/* Writing is the hardest part for a beginner: it can wait, and nothing is lost by leaving it. */}
+          <Button
+            label="Skip the writing for now"
+            variant="plain"
+            onPress={() => {
+              onAnswered(null);
+              onNext();
+            }}
+          />
+        </>
       )}
     </View>
   );
@@ -351,6 +451,10 @@ const styles = StyleSheet.create({
   },
   feedback: { borderRadius: radius.tile, padding: space.lg, gap: space.sm },
   feedbackHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  built: { minHeight: 64, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space.sm, borderWidth: 1.5, borderRadius: radius.tile, borderCurve: 'continuous', padding: space.md },
+  pool: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  tile: { minHeight: 44, justifyContent: 'center', paddingHorizontal: space.md, paddingVertical: space.sm, borderRadius: radius.well, borderCurve: 'continuous', borderWidth: 1.5 },
+  switch: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.xs, minHeight: 36 },
   input: { minHeight: 52, borderWidth: 1.5, borderRadius: radius.tile, paddingHorizontal: space.lg, paddingVertical: space.md },
   multi: { minHeight: 120, textAlignVertical: 'top' },
   row: { flexDirection: 'row', gap: space.sm },

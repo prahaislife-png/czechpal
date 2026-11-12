@@ -17,7 +17,7 @@ taken from the code, not from targets.
 | Writing tasks | 10 (5 forms, 5 e-mails) + 2 per mock | 150–250 | AI-checked |
 | Speaking tasks | 12 (3 per exam task) + Speak Czech tutor | 500+ prompts | AI-checked |
 | Mock exams | 2 complete forms (100 items, 2 forms, 2 e-mails) | 10–15 | AI-checked |
-| Diagnostic | 1 starting check | 1 | AI-checked |
+| Diagnostic | 1 starting check (written, no longer shown in the app) | 1 | AI-checked |
 | Library stories and dialogues | 9 | — | Teacher-reviewed (2026-11-03) |
 
 Nothing is shown as teacher-reviewed unless it was. No audio is claimed that doesn't exist.
@@ -28,10 +28,11 @@ Nothing is shown as teacher-reviewed unless it was. No audio is claimed that doe
 |---|---|
 | Verified exam specification (format + practical) | **Done** (`docs/a2/exam-specification-2026.md`) |
 | In-app "Everything about the A2 exam" guide | **Done** 2026-11-09: who needs it, exemptions, registering with deadlines, bookable dates, fee, exam day, tasks, passing, after the exam, official links |
-| Setup and starting check | Done |
-| Daily plan from evidence | Done (A2 plan); a second, older daily session also exists in Learn: to be merged |
+| Setup and starting check | **Removed** 2026-11-11: nothing to set up, no test first; the journey starts at lesson one |
+| The A2 journey | **Done** 2026-11-11: 14 units; each has its 4 lessons, then one exam task from each part (108 steps), with mock exams after units 5, 10 and 14. Learn is built around it |
+| Daily plan | Done: the journey's next steps plus what needs going over (due checks, mistakes, words, weak grammar), sized to the day's minutes, ticked off as done |
 | Readiness by skill, weak areas, topic roadmap | Done, from real answers only |
-| Lessons with exercises, retests | Done: 4 lessons in every topic |
+| Lessons with exercises, retests | Done: 4 lessons in every topic. Since 2026-11-12 each is taught in small steps: one phrase at a time with audio, a quick pick, a matching game, the dialogue as chat bubbles, practice, then a short check. Answers are built from word tiles (the keyboard is optional; a missing accent isn't marked wrong). One slip passes the check, and it can be retried straight away |
 | Exam practice: learn mode and exam mode | Done |
 | Mistake memory and review | Done (objective-level, no full error taxonomy yet) |
 | Writing coach with AI feedback (estimate) | Done, live |
@@ -40,7 +41,7 @@ Nothing is shown as teacher-reviewed unless it was. No audio is claimed that doe
 | After-exam check-in | Done |
 | Real audio for listening | **Built, waiting for the owner's Azure key**: generator (`scripts/audio/generate.ps1`), 161 recordings with every speaker's voice checked against the Czech, playback with the phone voice as fallback; no audio files yet |
 | Pictures for picture tasks | **Not done**: icons with captions |
-| Week-by-week study plan to the exam date | **Not done** |
+| Week-by-week study plan to the exam date | **Not done**: the journey shows steps left and days to the exam, but doesn't pace one against the other yet |
 | Full mistake taxonomy with scheduled retests | Partial |
 | Content pipeline with review states | Partial: every item carries version, author, licence, review; no draft → publish tooling |
 | Teacher-calibrated writing/speaking scores | **Not done** (no teacher review planned); AI scores are labelled estimates |

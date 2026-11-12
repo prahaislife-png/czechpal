@@ -96,6 +96,13 @@ const firstLessons: Lesson[] = [
         answer: 0,
         explain: 'Kde = where. Only “Bydlím v Ostravě” says where you live.',
       }),
+      ex('personal-1.c5', p1, 'reading', ['g:question-words', 't:personal:introduce'], {
+        kind: 'choice',
+        prompt: 'Someone asks “Jak se jmenujete?”. You answer:',
+        options: ['Bydlím v Praze.', 'Jmenuju se Tomáš.', 'Jsem z Polska.'],
+        answer: 1,
+        explain: 'Jak se jmenujete? = what’s your name? Jmenuju se… = my name is…',
+      }),
       ex('personal-1.c2', p1, 'writing', ['t:personal:introduce'], {
         kind: 'type',
         prompt: 'Write in Czech: I’m from Vietnam.',
@@ -177,6 +184,13 @@ const firstLessons: Lesson[] = [
         options: ['Můj sestra je doktorka.', 'Moje sestra je doktorka.', 'Moje sestra jsou doktorka.'],
         answer: 1,
         explain: 'Sestra is feminine (moje), and one person takes je.',
+      }),
+      ex('personal-2.c5', p2, 'reading', ['t:personal:family', 'g:numbers'], {
+        kind: 'choice',
+        prompt: '“Můj syn má šest let” means:',
+        options: ['My son is six', 'I have six sons', 'My son is at school'],
+        answer: 0,
+        explain: 'Mít + let = to be … years old: má šest let.',
       }),
       ex('personal-2.c2', p2, 'listening', ['t:personal:family', 'g:numbers'], {
         kind: 'choice',
@@ -265,6 +279,13 @@ const firstLessons: Lesson[] = [
         answer: 0,
         explain: 'Kdy = when. Kde = where, proč = why.',
       }),
+      ex('housing-1.c5', h1, 'reading', ['t:housing:viewing', 'g:question-words'], {
+        kind: 'choice',
+        prompt: 'You want to know the monthly rent. You ask:',
+        options: ['Kdy se můžu nastěhovat?', 'Jak vysoká je kauce?', 'Kolik je nájem?'],
+        answer: 2,
+        explain: 'Nájem = rent; kauce = deposit.',
+      }),
       ex('housing-1.c2', h1, 'listening', ['t:housing:viewing', 'g:numbers'], {
         kind: 'choice',
         prompt: 'Listen. How much is the deposit?',
@@ -341,6 +362,13 @@ const firstLessons: Lesson[] = [
         options: ['A repair person comes tomorrow', 'The landlord comes today', 'Nothing will be repaired'],
         answer: 0,
         explain: 'Pošlu = I’ll send (a completing verb in the present form means the future).',
+      }),
+      ex('housing-2.c5', h2, 'reading', ['t:housing:repairs'], {
+        kind: 'choice',
+        prompt: '“Je to naléhavé” tells the landlord that:',
+        options: ['it can wait', 'it’s urgent', 'it’s already repaired'],
+        answer: 1,
+        explain: 'Naléhavé = urgent.',
       }),
       ex('housing-2.c2', h2, 'listening', ['t:housing:repairs'], {
         kind: 'choice',
@@ -431,6 +459,13 @@ const firstLessons: Lesson[] = [
         answer: 0,
         explain: 'Bez = without; s masem = with meat.',
       }),
+      ex('food-1.c5', f1, 'reading', ['t:food:ordering'], {
+        kind: 'choice',
+        prompt: 'You’ve finished and want to pay. You say:',
+        options: ['Dám si kávu.', 'Máte něco bez masa?', 'Zaplatím, prosím.'],
+        answer: 2,
+        explain: 'Zaplatím, prosím = I’d like to pay, please.',
+      }),
       ex('food-1.c2', f1, 'listening', ['t:food:ordering', 'g:numbers'], {
         kind: 'choice',
         prompt: 'Listen. What does the guest order?',
@@ -507,6 +542,13 @@ const firstLessons: Lesson[] = [
         options: ['Ano, chutná mi to.', 'Ano, chutnám.', 'Ano, mám chuť.'],
         answer: 0,
         explain: 'The food “chutná” to you: chutná mi to.',
+      }),
+      ex('food-2.c5', f2, 'reading', ['t:food:likes', 'g:gender'], {
+        kind: 'choice',
+        prompt: 'A man says he likes tea:',
+        options: ['Mám ráda čaj.', 'Mám rád čaj.', 'Mám rádi čaj.'],
+        answer: 1,
+        explain: 'A man: mám rád; a woman: mám ráda.',
       }),
       ex('food-2.c2', f2, 'listening', ['t:food:likes'], {
         kind: 'choice',

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { HeaderCloseButton } from '@/components/ui/header-button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { exerciseById } from '@/lib/academy/catalog';
+import { exerciseById, wordsForExercise } from '@/lib/academy/catalog';
 import { mistakeIds } from '@/lib/academy/evidence';
 import type { Exercise } from '@/lib/academy/types';
 import { speak, stopSpeaking, useCzechVoice } from '@/lib/learn/voice';
@@ -21,8 +21,7 @@ import { useTheme } from '@/theme/use-theme';
 const ROUND = 10;
 
 /**
- * Mistake memory: the items whose latest answer was wrong, from lessons, the starting check and
- * exam practice. Get one right and it leaves the list. Going over them never counts as new evidence.
+ * Mistake memory: the items whose latest answer was wrong, from lessons and exam practice. Get one right and it leaves the list. Going over them never counts as new evidence.
  */
 export default function MistakesScreen() {
   const voice = useCzechVoice();
@@ -86,6 +85,7 @@ function Review({ canListen, voice }: { canListen: boolean; voice?: string }) {
             mode="practise"
             canListen={canListen}
             say={say}
+            words={wordsForExercise(e.id)}
             onAnswered={(correct) => {
               useAcademy.getState().record(e, correct, 'review');
               if (correct) setFixed((n) => n + 1);

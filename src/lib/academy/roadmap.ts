@@ -13,8 +13,11 @@ import type { Lesson, Topic } from './types';
 export type LessonRun = { at: string; right: number; total: number };
 export type LessonLog = Record<string, LessonRun[]>;
 
-/** A check passes at 80%. */
-export const PASS = 0.8;
+/**
+ * A check passes at about two thirds: with three or four marked questions, one slip still passes
+ * and two don't. (At 80% a single wrong answer failed the lesson.)
+ */
+export const PASS = 0.65;
 /** Days between two passing checks for a lesson to count as secure. */
 export const RETEST_DAYS = 2;
 
