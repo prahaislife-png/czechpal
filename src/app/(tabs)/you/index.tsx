@@ -157,7 +157,7 @@ export default function YouScreen() {
         <SectionHeader title="Open the app in" />
         <ChipGroup options={startOptions} value={startTab} onChange={(v) => useStore.getState().setStartTab(v)} />
         <Text variant="footnote" color="label3" style={styles.note}>
-          Automatic opens Explore, or Learn when your plan is the A2 exam.
+          Automatic opens Learn once you’ve started a lesson, and Explore until then.
         </Text>
       </View>
 
