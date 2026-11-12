@@ -132,7 +132,7 @@ export type AnalyzeResult = {
 };
 
 /** The user's free explanations this month, as the server counts them. */
-export type Allowance = { limit: number; remaining: number };
+export type Allowance = { limit: number; remaining: number; plus?: boolean };
 
 export type ReplyInput = {
   analysis: Analysis;
@@ -184,6 +184,8 @@ export interface AIClient {
   composeMessage(input: ComposeInput): Promise<ComposeResult>;
   /** Live only: the server decides the free allowance. */
   getAllowance?(): Promise<Allowance>;
+  /** A Czech form, field by field: what each asks and what to write. Counts as one explanation. */
+  formGuide(input: FormGuideInput): Promise<FormGuideResult>;
   /** A quick look at a camera frame: the Czech lines and their translation. */
   quickTranslate(input: QuickTranslateInput): Promise<QuickTranslation>;
   /** Feedback on A2 Academy writing practice: an estimate, the task's requirements, corrections. */
@@ -223,3 +225,52 @@ export type WritingFeedback = {
 export type QuickTranslateInput = { uri: string; language?: LanguageCode };
 /** `no_text`: nothing Czech could be read. */
 export type QuickTranslation = { status: 'ok' | 'no_text'; lines: { cs: string; translated: string }[] };
+
+/* ───────────── Form filling ───────────── */
+
+/** Which of the reader's own saved details belongs in a field. The details never leave the phone. */
+export type YoursKey = 'full_name' | 'given_name' | 'surname' | 'address' | 'insurer' | 'today';
+
+export type FormField = {
+  id: string;
+  /** The Czech label, as printed. */
+  label: string;
+  /** What it asks, in the reader's language. */
+  meaning: string;
+  /** What to write or tick. */
+  write: string;
+  /** How a filled-in answer looks, with made-up values. */
+  example?: string;
+  yours?: YoursKey;
+  need: 'required' | 'if_applies' | 'optional' | 'leave_empty';
+  /** A trap worth knowing. */
+  note?: string;
+};
+
+export type FormSection = { title: string; titleCs?: string; fields: FormField[] };
+
+/** A Czech form walked through in the order it is printed. Must stay in step with supabase/functions/_shared/form-guide.ts. */
+export type FormGuide = {
+  title: string;
+  titleCs?: string;
+  purpose: string;
+  /** Rules for the whole form: language, capitals, dates. */
+  howToFill: string[];
+  sections: FormSection[];
+  /** What the form itself says to enclose. */
+  attach: { title: string; detail?: string }[];
+  /** Where and how to hand it in, only as printed on the form. */
+  handIn?: string;
+  watchOut: string[];
+  /** What the reader will need but the form doesn't say. */
+  notStated: string[];
+  /** The form had more fields than the guide covers. */
+  cut?: boolean;
+};
+
+export type FormGuideInput = Pick<AnalyzeInput, 'kind' | 'text' | 'uri' | 'uris' | 'language' | 'about'> & {
+  /** Called as the guide is written, with the number of fields so far. */
+  onProgress?: (fields: number) => void;
+};
+
+export type FormGuideResult = { guide: FormGuide; remaining?: number; limit?: number; plus?: boolean; demo?: boolean };

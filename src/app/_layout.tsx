@@ -12,6 +12,7 @@ import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { CrashScreen } from '@/components/crash-screen';
+import { initPlus } from '@/lib/plus';
 import { reminderHref, useReminderTap } from '@/lib/reminders';
 import { useStore } from '@/store/cases';
 import { stackOptions } from '@/theme/navigation';
@@ -42,6 +43,11 @@ export default function RootLayout() {
   // The server decides the free allowance; refresh the app's copy once per launch.
   useEffect(() => {
     if (hydrated && onboarded) useStore.getState().syncAllowance();
+  }, [hydrated, onboarded]);
+
+  // CzechLocal Plus: ask the store once per launch whether this person has it.
+  useEffect(() => {
+    if (hydrated && onboarded) void initPlus();
   }, [hydrated, onboarded]);
 
   // A tapped reminder opens its letter, or About you for the permit. Waits until the app is ready.
@@ -106,6 +112,9 @@ export default function RootLayout() {
                 <Stack.Screen name="flashcards" options={{ presentation: 'fullScreenModal', title: 'Review' }} />
                 <Stack.Screen name="listen" options={{ presentation: 'fullScreenModal', title: 'Listening' }} />
                 <Stack.Screen name="learn-plan" options={{ presentation: 'modal', title: 'Your plan' }} />
+                <Stack.Screen name="plus" options={{ presentation: 'modal', title: '' }} />
+                <Stack.Screen name="form/index" options={{ title: 'Fill in a form' }} />
+                <Stack.Screen name="form/[id]" options={{ title: 'Fill in the form' }} />
                 <Stack.Screen name="mission/[id]" options={{ title: '' }} />
                 <Stack.Screen name="session" options={{ presentation: 'fullScreenModal', title: '' }} />
                 <Stack.Screen name="prepare/[id]" options={{ title: '' }} />

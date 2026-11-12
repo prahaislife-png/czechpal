@@ -3,9 +3,10 @@ import type { Href } from 'expo-router';
 import type { IconName } from '@/components/ui/icon';
 
 /**
- * The Find tab: five areas, each opening its own list of places to look. Keywords let the search
- * box find an entry by what people type ("leak", "passport", "zubař"), in English or Czech,
- * matched without diacritics.
+ * Help's five areas, named for what is going on in someone's life. Each holds the places to look,
+ * what CzechLocal can do about it there and then (explain a letter, write a message), and the
+ * phrases worth knowing. Keywords let the search box find an entry by what people type ("leak",
+ * "passport", "zubař"), in English or Czech, matched without diacritics.
  */
 
 export type AreaId = 'health' | 'visa' | 'offices' | 'legal' | 'home';
@@ -19,7 +20,35 @@ export type AreaEntry = {
   keywords: string[];
 };
 
-export type Area = { id: AreaId; title: string; short: string; icon: IconName; entries: AreaEntry[] };
+/** Something CzechLocal does for the person in this area: explaining or writing, one tap away. */
+export type AreaAction = { id: string; title: string; subtitle: string; icon: IconName; href: Href };
+
+export type AreaTone = 'sky' | 'sage' | 'coral' | 'lavender' | 'neutral';
+
+export type Area = {
+  id: AreaId;
+  title: string;
+  short: string;
+  /** One line on what this area is for, shown at its top. */
+  intro: string;
+  icon: IconName;
+  tone: AreaTone;
+  entries: AreaEntry[];
+  actions: AreaAction[];
+  /** The Learn phrase pack that goes with it. */
+  phrases?: { situation: string; title: string };
+};
+
+const explain = (id: string, title: string, subtitle: string): AreaAction => ({ id, title, subtitle, icon: 'camera', href: '/camera' });
+const write = (id: string, title: string, subtitle: string, recipient?: 'doctor' | 'landlord' | 'trades'): AreaAction => ({
+  id,
+  title,
+  subtitle,
+  icon: 'compose',
+  href: recipient ? { pathname: '/compose', params: { recipient } } : '/compose',
+});
+
+const fillForm = (id: string, title: string, subtitle: string): AreaAction => ({ id, title, subtitle, icon: 'document', href: '/form' });
 
 const doctors: AreaEntry = {
   id: 'doctors',
@@ -127,11 +156,79 @@ const trades: AreaEntry = {
 };
 
 export const areas: Area[] = [
-  { id: 'health', title: 'Health', short: 'Doctors, pharmacies, after hours', icon: 'health', entries: [doctors, pharmacies, afterHours] },
-  { id: 'visa', title: 'Visa and residence', short: 'Offices, checklists, embassies', icon: 'government', entries: [immigration, checklists, embassies, translators] },
-  { id: 'offices', title: 'Offices', short: 'Town halls, tax, labour, social security', icon: 'work', entries: [townHalls, letterOffices, immigration] },
-  { id: 'legal', title: 'Legal and money', short: 'Notaries, translators, lawyers, accountants', icon: 'legal', entries: [notaries, translators, lawyers, accountants] },
-  { id: 'home', title: 'Home and repairs', short: 'Plumbers, electricians, handymen', icon: 'trades', entries: [trades] },
+  {
+    id: 'health',
+    title: 'Health',
+    short: 'Doctors, pharmacies, after hours',
+    intro: 'Find a doctor who takes new patients, care tonight or at the weekend, and a pharmacy near you.',
+    icon: 'health',
+    tone: 'coral',
+    entries: [afterHours, doctors, pharmacies],
+    actions: [
+      write('write-doctor', 'Write to a doctor in Czech', 'Ask for an appointment or whether they take new patients', 'doctor'),
+      explain('explain-medical', 'Explain a report or a prescription', 'Photograph it: what it says and what to do'),
+    ],
+    phrases: { situation: 'doctor', title: 'Phrases for the doctor' },
+  },
+  {
+    id: 'visa',
+    title: 'Visa and residence',
+    short: 'Offices, checklists, embassies',
+    intro: 'Your immigration office and today’s waits, what to bring for each change, and your embassy.',
+    icon: 'government',
+    tone: 'sky',
+    entries: [immigration, checklists, embassies, translators],
+    actions: [
+      explain('explain-ministry', 'Explain a letter from the Ministry', 'What it asks for, and by when'),
+      fillForm('form-residence', 'Fill in a residence form', 'Field by field: what it asks and what to write'),
+      write('write-office', 'Write to the immigration office', 'In correct, polite Czech'),
+    ],
+    phrases: { situation: 'permit', title: 'Phrases for your permit' },
+  },
+  {
+    id: 'offices',
+    title: 'Offices and paperwork',
+    short: 'Town halls, tax, labour, social security',
+    intro: 'Your town hall, and the offices that letters about tax, work and insurance come from.',
+    icon: 'work',
+    tone: 'sage',
+    entries: [townHalls, letterOffices, immigration],
+    actions: [
+      explain('explain-official', 'Explain an official letter', 'What it means, what to do, the deadline'),
+      fillForm('form-office', 'Fill in a form', 'Field by field: what it asks and what to write'),
+      write('reply-office', 'Reply to an office in Czech', 'Say what you need in your own words'),
+    ],
+    phrases: { situation: 'office', title: 'Phrases for an office' },
+  },
+  {
+    id: 'legal',
+    title: 'Legal and money',
+    short: 'Notaries, translators, lawyers, accountants',
+    intro: 'Certified copies and translations, a lawyer for residence or contracts, and help with tax.',
+    icon: 'legal',
+    tone: 'lavender',
+    entries: [notaries, translators, lawyers, accountants],
+    actions: [
+      explain('explain-contract', 'Explain a contract or a bill', 'The amounts, the dates and what you agree to'),
+      write('write-formal', 'Write a formal message', 'To a bank, an insurer or a company'),
+    ],
+    phrases: { situation: 'bills', title: 'Phrases for bills and payments' },
+  },
+  {
+    id: 'home',
+    title: 'Home and repairs',
+    short: 'Landlord, plumbers, electricians',
+    intro: 'Something broken at home: who to call, and how to say it in Czech.',
+    icon: 'trades',
+    tone: 'neutral',
+    entries: [trades],
+    actions: [
+      write('write-landlord', 'Write to your landlord', 'A repair, the rent, moving out', 'landlord'),
+      write('write-trades', 'Write to a plumber or electrician', 'Describe the problem and ask the price', 'trades'),
+      explain('explain-notice', 'Explain a notice in your building', 'Water off, repairs, building rules'),
+    ],
+    phrases: { situation: 'flat', title: 'Phrases for your flat and landlord' },
+  },
 ];
 
 export const areaById = (id: string | undefined) => areas.find((a) => a.id === id);

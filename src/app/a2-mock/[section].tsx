@@ -1,3 +1,4 @@
+import { gatedMock } from '@/components/plus/gate';
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -30,7 +31,7 @@ import { useTheme } from '@/theme/use-theme';
  * time; listening follows its recordings, each played twice. Answers can change until you hand in.
  * When the time is up the answers are locked, as they would be collected in the exam.
  */
-export default function MockSectionScreen() {
+function MockSectionScreen() {
   const { section, mock } = useLocalSearchParams<{ section: string; mock: string }>();
   const run = useAcademy((s) => s.mocks.find((m) => m.id === mock));
   // With every recording in the app, listening doesn't need the phone's own Czech voice.
@@ -380,7 +381,7 @@ function WritingSection({ mockId, variant }: { mockId: string; variant: number }
     setHandedIn({ seconds: used });
   };
 
-  if (handedIn) return <WritingResult form={form} email={email} seconds={handedIn.seconds} bottom={insets.bottom} variant={variant} />;
+  if (handedIn) return <WritingResult mock={mockId} form={form} email={email} seconds={handedIn.seconds} bottom={insets.bottom} variant={variant} />;
 
   return (
     <View style={[styles.root, { paddingBottom: insets.bottom }]}>
@@ -477,7 +478,8 @@ function Check({ ok, label }: { ok: boolean; label: string }) {
   );
 }
 
-function WritingResult({ form, email, seconds, bottom, variant }: { form: string[]; email: string; seconds: number; bottom: number; variant: number }) {
+function WritingResult({ mock, form, email, seconds, bottom, variant }: { mock: string; form: string[]; email: string; seconds: number; bottom: number; variant: number }) {
+  const estimate = (task: 'form' | 'email') => (f: { estimate: { points: number } }) => useAcademy.getState().setMockWritingEstimate(mock, task, f.estimate.points);
   const { form: mockForm, email: mockEmail } = mockWriting(variant);
   const { colors } = useTheme();
   const f = formChecks(form);
@@ -488,7 +490,7 @@ function WritingResult({ form, email, seconds, bottom, variant }: { form: string
         Writing handed in
       </Text>
       <Text variant="callout" color="label2" align="center">
-        Handed in after {clock(seconds)} of {sectionInfo.writing.minutes}:00. Here is how it does against the exam’s own rules. For an estimate and corrections, ask for AI feedback below.
+        Handed in after {clock(seconds)} of {sectionInfo.writing.minutes}:00. Here is how it does against the exam’s own rules. Ask for AI feedback below: its estimate becomes your writing points in this mock’s result.
       </Text>
       <View>
         <SectionHeader title="Task 1 · form (8 points in the exam)" />
@@ -522,8 +524,8 @@ function WritingResult({ form, email, seconds, bottom, variant }: { form: string
       <View>
         <SectionHeader title="AI feedback" />
         <View style={styles.feedback}>
-          <WritingFeedbackCard task={mockForm} texts={form} />
-          <WritingFeedbackCard task={mockEmail} texts={[email]} />
+          <WritingFeedbackCard task={mockForm} texts={form} onFeedback={estimate('form')} />
+          <WritingFeedbackCard task={mockEmail} texts={[email]} onFeedback={estimate('email')} />
         </View>
       </View>
       <View style={[styles.sample, { backgroundColor: colors.accentSoft }]}>
@@ -572,3 +574,5 @@ const styles = StyleSheet.create({
   sample: { borderRadius: radius.tile, padding: space.lg, gap: space.xs },
   feedback: { gap: space.lg },
 });
+
+export default gatedMock(MockSectionScreen);

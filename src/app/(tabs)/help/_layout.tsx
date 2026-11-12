@@ -11,7 +11,8 @@ export default function HelpStack() {
   return (
     <Stack screenOptions={stackOptions(colors)}>
       <Stack.Screen name="index" options={{ ...largeTitleOptions(colors), title: 'Help' }} />
-      <Stack.Screen name="services" options={{ title: 'Services' }} />
+      <Stack.Screen name="services" options={{ title: '' }} />
+      <Stack.Screen name="emergency" options={{ title: 'Emergency' }} />
       <Stack.Screen name="area/[area]" options={{ title: '' }} />
       <Stack.Screen name="places/[kind]" options={{ title: '' }} />
       <Stack.Screen name="place/[id]" options={{ title: '' }} />

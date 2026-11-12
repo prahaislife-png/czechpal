@@ -1,3 +1,4 @@
+import { useAccess } from '@/store/plus';
 import * as Haptics from 'expo-haptics';
 import { router, useFocusEffect } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
@@ -49,6 +50,7 @@ export default function CameraScreen() {
   const height = areaHeight || windowHeight;
   const reduceMotion = useReducedMotion();
   const remaining = useRemainingAnalyses();
+  const { plus } = useAccess();
   const largeText = useLargeText();
 
   // A full-screen modal: no tab bar, only the home indicator to keep clear of.
@@ -182,10 +184,10 @@ export default function CameraScreen() {
             </GlassSurface>
           )}
         </Pressable>
-        <View accessible accessibilityLabel={`${remaining} free explanations left this month`}>
+        <View accessible accessibilityLabel={plus ? 'CzechLocal Plus: unlimited explanations' : `${remaining} free explanations left this month`}>
           <GlassSurface style={styles.settings}>
             <Text variant="footnote" weight="600" color="onInk" chrome>
-              {remaining} free
+              {plus ? 'Plus' : `${remaining} free`}
             </Text>
           </GlassSurface>
         </View>

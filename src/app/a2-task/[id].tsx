@@ -1,3 +1,4 @@
+import { gatedStep } from '@/components/plus/gate';
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -28,7 +29,7 @@ type Mode = TaskMode;
  * Practice in the exam's own format. Learn mode marks each answer at once and lets you replay and
  * slow a recording down; exam mode plays each recording twice, as in the exam, and marks at the end.
  */
-export default function TaskScreen() {
+function TaskScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const set = taskSetById(id);
   const voice = useCzechVoice();
@@ -228,3 +229,5 @@ const styles = StyleSheet.create({
   intro: { padding: layout.gutter, paddingTop: space.xxl, gap: space.lg },
   badge: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', alignSelf: 'center' },
 });
+
+export default gatedStep(TaskScreen);

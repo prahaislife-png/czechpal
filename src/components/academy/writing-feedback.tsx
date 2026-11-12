@@ -19,7 +19,7 @@ import { useTheme } from '@/theme/use-theme';
  * estimate everywhere: the exam's marking scale isn't published. The text goes to the AI after
  * the same consent as explanations; it doesn't use the free explanations.
  */
-export function WritingFeedbackCard({ task, texts }: { task: WritingTask; texts: string[] }) {
+export function WritingFeedbackCard({ task, texts, onFeedback }: { task: WritingTask; texts: string[]; onFeedback?: (feedback: WritingFeedback) => void }) {
   const { colors } = useTheme();
   const aiConsent = useStore((s) => s.aiConsent);
   const language = useStore((s) => s.language);
@@ -55,6 +55,7 @@ export function WritingFeedbackCard({ task, texts }: { task: WritingTask; texts:
         language,
       });
       useAcademy.getState().setWritingFeedback(task.id, out);
+      onFeedback?.(out);
       if (!alive.current) return;
       setFeedback(out);
       announce(`Feedback ready. About ${out.estimate.points} of ${out.estimate.of} points, an estimate.`);

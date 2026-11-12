@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { openPlus } from '@/components/plus/gate';
 import { Icon } from '@/components/ui/icon';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
@@ -8,7 +9,9 @@ import { nodeHref, stepHref, stepIcon, useJourney, useTodayPlan, type TodayStep 
 import { streak } from '@/lib/learn/activity';
 import { daysToExam } from '@/lib/learn/exam';
 import { minutesOf } from '@/lib/learn/profile';
+import { stepLocked, type Access } from '@/lib/plus/access';
 import { useLearn } from '@/store/learn';
+import { useAccess } from '@/store/plus';
 import { radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
@@ -21,6 +24,7 @@ export function TodayCard() {
   const { colors } = useTheme();
   const plan = useTodayPlan();
   const journey = useJourney();
+  const access = useAccess();
   const profile = useLearn((s) => s.profile);
   const streakDays = streak(useLearn((s) => s.days));
   const minutes = minutesOf(profile);
@@ -31,8 +35,12 @@ export function TodayCard() {
   const share = journey.total ? journey.done / journey.total : 0;
   const left = profile?.examDate ? daysToExam(profile.examDate) : null;
 
+  // The step the button opens, when it is one that needs Plus.
+  const nextLocked = next ? isLocked(next, access) : !!journey.next && stepLocked(journey.next.node.id, access);
+
   const go = () => {
-    if (next) router.push(stepHref(next));
+    if (nextLocked) openPlus('course');
+    else if (next) router.push(stepHref(next));
     else if (journey.next) router.push(nodeHref(journey.next.node));
     else router.push('/learn/practice');
   };
@@ -59,14 +67,14 @@ export function TodayCard() {
 
       <View style={styles.steps}>
         {plan.map((s) => (
-          <StepRow key={`${s.kind}-${'id' in s ? s.id : ''}`} step={s} />
+          <StepRow key={`${s.kind}-${'id' in s ? s.id : ''}`} step={s} locked={isLocked(s, access)} />
         ))}
       </View>
 
       <PressableScale onPress={go} accessibilityRole="button" style={[styles.button, { backgroundColor: colors.onInk }]}>
-        <Icon name={allDone ? 'arrowRight' : 'play'} size={18} color={colors.ink} />
+        <Icon name={nextLocked ? 'lock' : allDone ? 'arrowRight' : 'play'} size={18} color={colors.ink} />
         <Text variant="headline" weight="600" chrome style={{ color: colors.ink }}>
-          {allDone ? 'Keep going' : doneCount > 0 ? 'Carry on' : 'Start'}
+          {nextLocked ? 'Unlock the next step' : allDone ? 'Keep going' : doneCount > 0 ? 'Carry on' : 'Start'}
         </Text>
       </PressableScale>
 
@@ -89,23 +97,26 @@ export function TodayCard() {
   );
 }
 
-function StepRow({ step }: { step: TodayStep }) {
+/** A step of today's plan that is a locked step of the journey. */
+const isLocked = (step: TodayStep, access: Access) => !step.done && 'id' in step && stepLocked(step.id, access);
+
+function StepRow({ step, locked }: { step: TodayStep; locked: boolean }) {
   const { colors } = useTheme();
   return (
     <PressableScale
-      onPress={() => router.push(stepHref(step))}
+      onPress={() => (locked ? openPlus('course') : router.push(stepHref(step)))}
       accessibilityRole="button"
-      accessibilityLabel={`${step.title}, ${step.minutes} minutes${step.done ? ', done' : `, ${step.why}`}`}
+      accessibilityLabel={`${step.title}, ${step.minutes} minutes${step.done ? ', done' : locked ? ', part of Plus' : `, ${step.why}`}`}
       style={styles.step}>
       <View style={[styles.stepIcon, { backgroundColor: step.done ? colors.sage : 'rgba(255,255,255,0.1)' }]}>
-        <Icon name={step.done ? 'check' : stepIcon[step.kind]} size={16} color={step.done ? colors.sageInk : colors.onInk} />
+        <Icon name={step.done ? 'check' : locked ? 'lock' : stepIcon[step.kind]} size={16} color={step.done ? colors.sageInk : colors.onInk} />
       </View>
       <View style={styles.flex}>
         <Text variant="callout" weight="600" numberOfLines={1} style={{ color: colors.onInk, opacity: step.done ? 0.6 : 1 }}>
           {step.title}
         </Text>
         <Text variant="footnote" numberOfLines={1} style={{ color: colors.onInk2 }}>
-          {step.done ? 'Done today' : `${step.minutes} min · ${step.why}`}
+          {step.done ? 'Done today' : locked ? `${step.minutes} min · part of Plus` : `${step.minutes} min · ${step.why}`}
         </Text>
       </View>
     </PressableScale>

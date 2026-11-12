@@ -1,3 +1,5 @@
+import { openPlus } from '@/components/plus/gate';
+import { useAccess } from '@/store/plus';
 import { Image } from 'expo-image';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
@@ -30,6 +32,7 @@ export default function ReviewScreen() {
   const limit = useFreeLimit();
   const aiConsent = useStore((s) => s.aiConsent);
   const language = useStore((s) => s.language);
+  const access = useAccess();
   const { analyze, discardDraft, resetUsage, setAiConsent } = useStore.getState();
 
   // Leaving without explaining discards the draft; a started analysis is no longer a draft.
@@ -45,7 +48,7 @@ export default function ReviewScreen() {
   const isExample = item.source === 'example';
   // Apple requires explicit permission before personal data goes to a third-party AI.
   const needsConsent = !isDemoMode && !isExample && !aiConsent;
-  const outOfAllowance = !isExample && remaining === 0;
+  const outOfAllowance = !isExample && !access.plus && remaining === 0;
 
   const explain = () => {
     analyze(item.id);
@@ -80,6 +83,7 @@ export default function ReviewScreen() {
               You’ve used all {limit} free explanations for this month. They renew on {allowanceRenewsOn()}. Built-in
               examples are still free.
             </Text>
+            {access.live ? <Button label="Explain everything with Plus" onPress={() => openPlus('explain')} /> : null}
             {isDemoMode && <Button label="Reset demo allowance" variant="secondary" onPress={resetUsage} />}
           </>
         ) : needsConsent ? (

@@ -1,3 +1,4 @@
+import { gatedStep } from '@/components/plus/gate';
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -32,7 +33,7 @@ import { useTheme } from '@/theme/use-theme';
  * are built from word tiles, so nothing depends on finding accents on a keyboard. With ?retest=1,
  * or after "Try the check again", only the check runs.
  */
-export default function A2LessonScreen() {
+function A2LessonScreen() {
   const { id, retest } = useLocalSearchParams<{ id: string; retest?: string }>();
   const lesson = lessonById(id);
   const voice = useCzechVoice();
@@ -287,3 +288,5 @@ const styles = StyleSheet.create({
   learntRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.md },
   finishedActions: { alignSelf: 'stretch', gap: space.sm, marginTop: space.md },
 });
+
+export default gatedStep(A2LessonScreen);

@@ -4,7 +4,7 @@ import { fetch as streamingFetch } from 'expo/fetch';
 import { ensureSession, functionHeaders, functionsUrl, supabase } from '@/lib/supabase';
 
 import { DEFAULT_LANGUAGE } from './languages';
-import { partialAnalysis, type PartialAnalysis } from './partial-analysis';
+import { partialAnalysis } from './partial-analysis';
 import { fileAsBase64, imageForUpload } from './prepare';
 import {
   AnalyzeError,
@@ -15,6 +15,8 @@ import {
   type AnalyzeResult,
   type ComposeInput,
   type ComposeResult,
+  type FormGuideInput,
+  type FormGuideResult,
   type ReplyDraft,
   type ReplyInput,
   type QuickTranslateInput,
@@ -46,6 +48,7 @@ const codeFor = (server: string | undefined): AnalyzeError['code'] => {
       return 'too_short';
     case 'unreadable':
     case 'not_czech':
+    case 'not_a_form':
     case 'refused':
     case 'too_long':
       return 'unreadable';
@@ -112,14 +115,15 @@ async function invoke<T>(name: 'reply' | 'compose' | 'allowance' | 'translate' |
 type AnalyzeResponse = { analysis: Analysis; originalText: string; remaining: number; limit?: number };
 
 /**
- * /analyze with streaming: the server sends one JSON object per line, "delta" lines with the
- * answer as it is written, then "done" with the checked result (or "error"). Partial results
- * are only for display; the result returned here is always the server-validated one.
+ * /analyze and /form-guide with streaming: the server sends one JSON object per line, "delta"
+ * lines with the answer as it is written, then "done" with the checked result (or "error").
+ * What has arrived so far (`onRaw`) is only for display; the result returned here is always the
+ * server-validated one.
  *
  * Gives up after STALL_LIMIT_MS without any data, or ANALYZE_LIMIT_MS in total. Disconnecting
  * makes the server stop and refund the explanation, so giving up costs the user nothing.
  */
-async function analyzeStreaming(body: Record<string, unknown>, onPartial?: (p: PartialAnalysis) => void): Promise<AnalyzeResponse> {
+async function streamFunction<T extends object>(name: 'analyze' | 'form-guide', body: Record<string, unknown>, onRaw?: (raw: string) => void): Promise<T> {
   const token = await accessToken();
 
   const controller = new AbortController();
@@ -136,21 +140,19 @@ async function analyzeStreaming(body: Record<string, unknown>, onPartial?: (p: P
   };
 
   let raw = '';
-  let done: AnalyzeResponse | null = null;
-  let lastShown = 0;
+  let done: T | null = null;
   const handle = (line: string) => {
     if (!line.trim()) return;
-    const msg = JSON.parse(line) as
-      | { type: 'delta'; text: string }
-      | ({ type: 'done' } & AnalyzeResponse)
-      | { type: 'error'; code?: string; message?: string };
+    const msg = JSON.parse(line) as { type: 'delta'; text: string } | ({ type: 'done' } & T) | { type: 'error'; code?: string; message?: string };
     if (msg.type === 'delta') raw += msg.text;
-    else if (msg.type === 'done') done = { analysis: msg.analysis, originalText: msg.originalText, remaining: msg.remaining, limit: msg.limit };
-    else throw new AnalyzeError(codeFor(msg.code), msg.message ?? 'Something went wrong. Please try again.');
+    else if (msg.type === 'done') {
+      const { type: _type, ...result } = msg;
+      done = result as unknown as T;
+    } else throw new AnalyzeError(codeFor(msg.code), msg.message ?? 'Something went wrong. Please try again.');
   };
 
   try {
-    const res = await streamingFetch(`${functionsUrl}/analyze`, {
+    const res = await streamingFetch(`${functionsUrl}/${name}`, {
       method: 'POST',
       headers: functionHeaders(token),
       body: JSON.stringify({ ...body, stream: true }),
@@ -176,13 +178,7 @@ async function analyzeStreaming(body: Record<string, unknown>, onPartial?: (p: P
         const lines = buffer.split('\n');
         buffer = lines.pop() ?? '';
         lines.forEach(handle);
-        if (onPartial && Date.now() - lastShown >= PARTIAL_INTERVAL_MS) {
-          const partial = partialAnalysis(raw);
-          if (partial) {
-            lastShown = Date.now();
-            onPartial(partial);
-          }
-        }
+        onRaw?.(raw);
       }
       handle(buffer);
     }
@@ -235,7 +231,21 @@ export const liveClient: AIClient = {
     if (input.requestId) body.requestId = input.requestId;
     body.language = input.language ?? DEFAULT_LANGUAGE;
 
-    const data = await analyzeStreaming(body, input.onPartial);
+    // The screen is updated a few times a second as the explanation is written, not on every byte.
+    let lastShown = 0;
+    const onPartial = input.onPartial;
+    const data = await streamFunction<AnalyzeResponse>(
+      'analyze',
+      body,
+      onPartial &&
+        ((raw) => {
+          if (Date.now() - lastShown < PARTIAL_INTERVAL_MS) return;
+          const partial = partialAnalysis(raw);
+          if (!partial) return;
+          lastShown = Date.now();
+          onPartial(partial);
+        }),
+    );
     return { analysis: data.analysis, originalText: data.originalText, demo: null, remaining: data.remaining, limit: data.limit };
   },
 
@@ -267,6 +277,15 @@ export const liveClient: AIClient = {
       throw new AnalyzeError('unreadable', 'The photo couldn’t be opened. Try again.');
     }
     return invoke<QuickTranslation>('translate', { image, language: language ?? DEFAULT_LANGUAGE });
+  },
+
+  async formGuide(input: FormGuideInput): Promise<FormGuideResult> {
+    const body = await requestBody(input);
+    if (input.about) body.about = input.about;
+    body.language = input.language ?? DEFAULT_LANGUAGE;
+    // Counts the fields written so far, so a long form shows it is being worked through.
+    const onProgress = input.onProgress;
+    return streamFunction<FormGuideResult>('form-guide', body, onProgress && ((raw) => onProgress(raw.split('"label"').length - 1)));
   },
 
   async writingFeedback(input: WritingFeedbackInput): Promise<WritingFeedback> {
