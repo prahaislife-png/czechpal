@@ -197,9 +197,9 @@ export default function SettingsScreen() {
         CzechLocal {Constants.expoConfig?.version ?? ''}
         {isDemoMode ? ' · Demo' : ''}
       </Text>
-      {/* The Slovíčka screen carries no credit line; the licence still asks for one somewhere in the app. */}
+      {/* The Dictionary screen carries no credit line; the licence still asks for one somewhere in the app. */}
       <Text variant="caption" color="label3" align="center">
-        Word definitions in Slovíčka: Wiktionary, CC BY-SA.
+        Word definitions in the Dictionary: Wiktionary, CC BY-SA.
       </Text>
     </ScrollView>
   );

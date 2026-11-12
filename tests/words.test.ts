@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 
 import { allWords, ALPHABET, colourFor, formatCount, letterIndex, letterOf, railTarget, sortKey, spokenText, tagLabel, WORD_COUNT } from '../src/lib/words';
 
-describe('Slovíčka word list', () => {
+describe('the dictionary’s word list', () => {
   const words = allWords();
 
   it('has every word, each with a type and a meaning', () => {

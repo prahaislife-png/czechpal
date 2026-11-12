@@ -1,5 +1,5 @@
 /**
- * Slovíčka's word list: one word a line, as `word|type|meaning|example|example in English`
+ * The dictionary's word list: one word a line, as `word|type|meaning|example|example in English`
  * (the last two may be empty). Kept as one string and read on first use, so it costs nothing
  * until the screen is opened. See index.ts for the types and how it is sorted.
  */

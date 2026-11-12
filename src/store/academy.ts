@@ -28,7 +28,7 @@ export type SpeakingRun = { at: string; recorded: number; prompts: number };
 export type ExamResult = { examDate: string; result: 'passed' | 'failed' | 'waiting'; at: string };
 
 type State = {
-  /** When the A2 setup was finished. */
+  /** From before the journey needed no setup: when the setup was finished, and the starting check's result. Kept, not used. */
   setupAt?: string;
   diagnostic?: DiagnosticResult;
   attempts: Attempt[];
@@ -47,10 +47,8 @@ type State = {
 type Item = Pick<ContentMeta, 'id' | 'version' | 'skill' | 'objectives' | 'topic'>;
 
 type Actions = {
-  finishSetup: () => void;
   /** One answered item. */
   record: (item: Item, correct: boolean | null, source: AttemptSource) => void;
-  finishDiagnostic: (right: number, total: number) => void;
   startLesson: (id: string) => void;
   /** A lesson's check is finished: its marked items, right of total. */
   finishLesson: (id: string, right: number, total: number) => void;
@@ -80,15 +78,10 @@ export const useAcademy = create<State & Actions>()(
   persist(
     (set) => ({
       ...initial,
-      finishSetup: () => set((s) => ({ setupAt: s.setupAt ?? new Date().toISOString() })),
       record: (item, correct, source) => {
         set((s) => ({ attempts: addAttempts(s.attempts, [makeAttempt(item, correct, source, s.attempts)]) }));
         // The day's first answer starts it; finished lessons and sets add to it below.
         if (!today(useLearn.getState().days).study) studied();
-      },
-      finishDiagnostic: (right, total) => {
-        set({ diagnostic: { at: new Date().toISOString(), right, total } });
-        studied();
       },
       startLesson: (id) => set({ current: id }),
       finishLesson: (id, right, total) => {

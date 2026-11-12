@@ -3,10 +3,10 @@ import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ExamCheckIn, ReadinessRow } from '@/components/academy/academy-parts';
-import { SetupCard } from '@/components/academy/academy-card';
 import { Card, SectionHeader } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { longDate } from '@/lib/about';
 import { skillReadiness, weakObjectives } from '@/lib/academy/evidence';
@@ -19,32 +19,16 @@ import { radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
 /**
- * The A2 exam, for learners whose goal it is: the countdown, readiness by skill, what needs work,
- * exam practice, mock exams and the guide. For everyone else, one row to the guide.
+ * The exam itself: the date (or the way to add one), how ready each of its four parts is from
+ * the learner's own answers, what needs work, and the ways to practise and read about it.
  */
 export function ExamSection() {
   const { colors } = useTheme();
-  const profile = useLearn((s) => s.profile);
-  const setupAt = useAcademy((s) => s.setupAt);
+  const examDate = useLearn((s) => s.profile?.examDate);
   const attempts = useAcademy((s) => s.attempts);
   const mocks = useAcademy((s) => s.mocks);
   const readiness = useMemo(() => (['reading', 'listening', 'writing', 'speaking'] as Skill[]).map((s) => skillReadiness(attempts, s)), [attempts]);
   const weak = useMemo(() => weakObjectives(attempts).slice(0, 3), [attempts]);
-
-  if (profile?.goal !== 'exam' && !setupAt)
-    return (
-      <List>
-        <Row
-          icon="info"
-          title="The A2 exam"
-          subtitle="Needed for permanent residence: what it is, how to register, and practice when you want it"
-          chevron
-          onPress={() => router.push('/learn/exam')}
-        />
-      </List>
-    );
-
-  const examDate = profile?.examDate;
   const left = examDate ? daysToExam(examDate) : null;
   const lastMock = mocks[mocks.length - 1];
   const mockSubtitle = !lastMock
@@ -55,30 +39,35 @@ export function ExamSection() {
 
   return (
     <View style={styles.section}>
-      <SectionHeader title="The A2 exam" />
-      {left !== null && left >= 0 ? (
-        <View style={[styles.countdown, { backgroundColor: colors.accentSoft }]}>
+      <SectionHeader title="The exam" />
+      {left !== null && left < 0 ? (
+        <ExamCheckIn examDate={examDate!} />
+      ) : (
+        <PressableScale
+          onPress={() => router.push('/learn-plan')}
+          accessibilityRole="button"
+          accessibilityLabel={left === null ? 'Add your exam date' : `${left} days to your exam. Change the date.`}
+          style={[styles.date, { backgroundColor: colors.accentSoft }]}>
           <Icon name="calendar" size={18} color={colors.accent} />
           <Text variant="subhead" weight="600" color="accent" style={styles.flex}>
-            {left === 0 ? 'Your exam is today' : `${left} ${left === 1 ? 'day' : 'days'} to your exam · ${longDate(examDate!)}`}
+            {left === null
+              ? 'Add your exam date to count down to it'
+              : left === 0
+                ? 'Your exam is today. Good luck!'
+                : `${left} ${left === 1 ? 'day' : 'days'} to your exam · ${longDate(examDate!)}`}
           </Text>
-        </View>
-      ) : left !== null && left < 0 ? (
-        <ExamCheckIn examDate={examDate!} />
-      ) : null}
+          <Icon name="chevronRight" size={14} color={colors.accent} />
+        </PressableScale>
+      )}
 
-      {!setupAt ? <SetupCard /> : null}
-
-      {setupAt ? (
-        <Card style={styles.readiness}>
-          {readiness.map((r, i) => (
-            <View key={r.skill}>
-              {i > 0 ? <View style={[styles.rule, { backgroundColor: colors.separator }]} /> : null}
-              <ReadinessRow r={r} />
-            </View>
-          ))}
-        </Card>
-      ) : null}
+      <Card style={styles.readiness}>
+        {readiness.map((r, i) => (
+          <View key={r.skill}>
+            {i > 0 ? <View style={[styles.rule, { backgroundColor: colors.separator }]} /> : null}
+            <ReadinessRow r={r} />
+          </View>
+        ))}
+      </Card>
 
       {weak.length ? (
         <List>
@@ -105,13 +94,10 @@ export function ExamSection() {
         <Row icon="flag" title="Exam practice" subtitle="Every exam task, one at a time, marked at once" chevron onPress={() => router.push('/learn/practice')} />
         <Row icon="clock" title="Mock exam" subtitle={mockSubtitle} chevron onPress={() => router.push('/learn/mock')} />
         <Row icon="info" title="Everything about the A2 exam" subtitle="Registering, dates, the fee, the day, every task" chevron onPress={() => router.push('/learn/exam')} />
-        {setupAt ? <Row icon="refresh" title="Starting check" subtitle="Take it again any time" chevron onPress={() => router.push('/diagnostic')} /> : null}
       </List>
-      {setupAt ? (
-        <Text variant="footnote" color="label3" style={styles.note}>
-          Readiness comes from your own first-try answers in checks, practice and mocks. It isn’t an exam score; for the whole exam, take a mock.
-        </Text>
-      ) : null}
+      <Text variant="footnote" color="label3" style={styles.note}>
+        Readiness comes from your own first-try answers in checks, practice and mocks. It isn’t an exam score; for the whole exam, take a mock.
+      </Text>
     </View>
   );
 }
@@ -120,7 +106,7 @@ const styles = StyleSheet.create({
   section: { gap: space.md },
   flex: { flex: 1 },
   note: { paddingHorizontal: space.xs },
-  countdown: { flexDirection: 'row', alignItems: 'center', gap: space.sm, borderRadius: radius.tile, padding: space.md },
+  date: { flexDirection: 'row', alignItems: 'center', gap: space.sm, borderRadius: radius.tile, borderCurve: 'continuous', padding: space.md, minHeight: 48 },
   readiness: { paddingVertical: space.xs },
   rule: { height: StyleSheet.hairlineWidth, marginVertical: space.sm },
 });

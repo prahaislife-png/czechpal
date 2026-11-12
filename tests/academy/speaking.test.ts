@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { grammarById } from '../../src/lib/academy/grammar';
+import { buildJourney } from '../../src/lib/academy/journey';
 import { dailyPlan, type PlanInput } from '../../src/lib/academy/plan';
 import { taskSets } from '../../src/lib/academy/tasks';
 import { speakingPrompts, speakingTaskById, speakingTasks, spoken } from '../../src/lib/academy/tasks/speaking';
 import { writingTasks } from '../../src/lib/academy/tasks/writing';
 import { topicById } from '../../src/lib/academy/topics';
-import { contentById } from '../../src/lib/learn/content';
 import { examTasks } from '../../src/lib/learn/exam';
 
 const now = new Date(2026, 10, 6, 10);
@@ -86,27 +86,21 @@ describe('speaking tasks', () => {
 });
 
 describe('daily plan with speaking', () => {
-  const base: PlanInput = {
-    minutes: 30,
-    diagnosticDone: true,
-    log: { 'personal-1': [{ at: new Date(2026, 10, 6, 9).toISOString(), right: 3, total: 3 }] },
-    attempts: [],
-    wordsDue: 0,
-    unread: () => true,
-    storyTitle: (id) => contentById(id)?.title,
-    canListen: true,
-    now,
-  };
-
-  it('adds speaking practice for learners who find speaking hardest', () => {
-    const step = dailyPlan({ ...base, difficulty: 'speaking' }).find((s) => s.kind === 'speaking');
-    assert.ok(step && 'id' in step && speakingTaskById(step.id));
-    assert.equal(dailyPlan({ ...base, difficulty: 'speaking' })[0].kind, 'lesson');
+  it('reaches speaking practice once the unit’s lessons, reading, listening and writing are done', () => {
+    const journey = buildJourney({}, {}, { canListen: true, now });
+    const unit = journey.units[0];
+    const before = unit.nodes.filter((n) => !(n.kind === 'task' && n.part === 'speaking'));
+    const log = Object.fromEntries(before.filter((n) => n.kind === 'lesson').map((n) => [n.id, [{ at: new Date(2026, 10, 6, 9).toISOString(), right: 3, total: 3 }]]));
+    const tasksDone = Object.fromEntries(before.filter((n) => n.kind === 'task').map((n) => [n.id, 1]));
+    const input: PlanInput = { minutes: 10, log, attempts: [], wordsDue: 0, canListen: true, tasksDone, now };
+    const [step] = dailyPlan(input);
+    assert.equal(step.kind, 'speaking');
+    assert.ok('id' in step && speakingTaskById(step.id));
+    assert.equal(step.id, 's1-a');
   });
 
-  it('rotates to the speaking task done least', () => {
-    const done = Object.fromEntries(speakingTasks.slice(0, -1).map((t) => [t.id, 1]));
-    const step = dailyPlan({ ...base, difficulty: 'speaking', tasksDone: done }).find((s) => s.kind === 'speaking');
-    assert.ok(step && 'id' in step && step.id === speakingTasks[speakingTasks.length - 1].id);
+  it('every speaking task is on the journey', () => {
+    const ids = buildJourney({}, {}, { canListen: true, now }).units.flatMap((u) => u.nodes.filter((n) => n.kind === 'task' && n.part === 'speaking').map((n) => n.id));
+    assert.deepEqual([...ids].sort(), speakingTasks.map((t) => t.id).sort());
   });
 });

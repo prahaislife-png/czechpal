@@ -19,7 +19,7 @@ import { fonts } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
 /**
- * Slovíčka: every word in one wheel. No search, just scroll: the word in the middle is the one
+ * The dictionary: every word in one wheel. No search, just scroll: the word in the middle is the one
  * in focus, the rail on the right jumps by letter (and scrubs through a letter when dragged), and
  * the card below shows its meaning and an example. Saving a word puts it in My words, so it
  * comes back in reviews.
@@ -40,7 +40,7 @@ const web = process.env.EXPO_OS === 'web';
 
 const display = { semi: 'BricolageGrotesque_600SemiBold', bold: 'BricolageGrotesque_700Bold', extra: 'BricolageGrotesque_800ExtraBold' } as const;
 
-export default function SlovickaScreen() {
+export default function DictionaryScreen() {
   const [loaded, failed] = useFonts({ BricolageGrotesque_600SemiBold, BricolageGrotesque_700Bold, BricolageGrotesque_800ExtraBold });
   useFocusEffect(
     useCallback(() => {
@@ -193,8 +193,8 @@ function Wheel() {
       <View style={styles.head}>
         <Tool icon="chevronLeft" label="Back" colour={colour} onPress={() => (router.canGoBack() ? router.back() : router.replace('/learn'))} />
         <View style={styles.headText}>
-          <Text style={styles.title} accessibilityRole="header" lang="cs">
-            Slovíčka
+          <Text style={styles.title} accessibilityRole="header">
+            Dictionary
           </Text>
           <Text style={styles.sub}>{formatCount(all.length)} words. No search, just scroll.</Text>
         </View>

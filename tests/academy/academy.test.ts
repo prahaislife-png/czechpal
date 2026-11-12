@@ -6,7 +6,11 @@ import { addAttempts, makeAttempt, MIN_EVIDENCE, skillReadiness, weakObjectives,
 import { checkWrite, gradeChoice, gradeType, optionOrder } from '../../src/lib/academy/grade';
 import { grammar, grammarById } from '../../src/lib/academy/grammar';
 import { lessonById, lessons } from '../../src/lib/academy/lessons';
-import { dailyPlan, planMinutes, STEP_MINUTES, stepDoneToday, type EverydayFocus, type PlanInput, type TodayEvidence } from '../../src/lib/academy/plan';
+import { buildJourney, MOCK_AFTER_UNITS, upcomingSteps } from '../../src/lib/academy/journey';
+import { dailyPlan, planMinutes, STEP_MINUTES, stepDoneToday, type PlanInput, type TodayEvidence } from '../../src/lib/academy/plan';
+import { practiceSets } from '../../src/lib/academy/tasks';
+import { speakingTasks } from '../../src/lib/academy/tasks/speaking';
+import { writingTasks } from '../../src/lib/academy/tasks/writing';
 import { calendarDays, lessonSecure, nextLesson, retestDue, retestsDue, topicProgress, type LessonLog } from '../../src/lib/academy/roadmap';
 import { topicById, topics } from '../../src/lib/academy/topics';
 import type { ChoiceExercise, Exercise, TypeExercise, WriteExercise } from '../../src/lib/academy/types';
@@ -278,107 +282,134 @@ describe('roadmap and mastery', () => {
   });
 });
 
-describe('daily plan', () => {
-  const base: PlanInput = {
-    minutes: 10,
-    diagnosticDone: true,
-    log: {},
-    attempts: [],
-    wordsDue: 0,
-    unread: () => true,
-    storyTitle: (id) => contentById(id)?.title,
-    canListen: true,
-    now,
-  };
+describe('the A2 journey', () => {
+  const done = (ids: string[]): LessonLog => Object.fromEntries(ids.map((id) => [id, [{ at: daysAgo(1), right: 3, total: 3 }]]));
+  const fresh = buildJourney({}, {}, { canListen: true, now });
 
-  it('starts with the starting check', () => {
-    const plan = dailyPlan({ ...base, diagnosticDone: false, minutes: 5 });
-    assert.equal(plan[0].kind, 'diagnostic');
-    assert.equal(plan.length, 1);
+  it('is fourteen units: each topic’s lessons, then exam tasks from every part', () => {
+    assert.equal(fresh.units.length, topics.length);
+    for (const u of fresh.units) {
+      assert.deepEqual(
+        u.nodes.filter((n) => n.kind === 'lesson').map((n) => n.id),
+        u.topic.lessons,
+      );
+      // Lessons come first, exam practice after.
+      const kinds = u.nodes.map((n) => n.kind);
+      assert.ok(kinds.lastIndexOf('lesson') < kinds.indexOf('task') || !kinds.includes('task'), `unit ${u.n}`);
+      assert.ok(u.nodes.some((n) => n.kind === 'task' && n.part === 'reading') && u.nodes.some((n) => n.kind === 'task' && n.part === 'listening'), `unit ${u.n}`);
+    }
+    assert.equal(fresh.total, fresh.units.reduce((n, u) => n + u.nodes.length, 0));
+    assert.equal(fresh.done, 0);
+    assert.deepEqual(
+      fresh.units.filter((u) => u.mockAfter).map((u) => u.n),
+      MOCK_AFTER_UNITS,
+    );
+  });
+
+  it('uses every lesson and every exam task exactly once', () => {
+    const ids = fresh.units.flatMap((u) => u.nodes.map((n) => n.id));
+    assert.equal(new Set(ids).size, ids.length);
+    const everything = [...lessons.map((l) => l.id), ...practiceSets.map((s) => s.id), ...writingTasks.map((w) => w.id), ...speakingTasks.map((t) => t.id)];
+    assert.deepEqual([...ids].sort(), [...everything].sort());
+    // Nothing kept for the mock exam is on the path.
+    assert.ok(!ids.some((id) => id.endsWith('-m') || id.endsWith('-n')));
+  });
+
+  it('meets all five reading tasks before any repeats', () => {
+    const firstFive = fresh.units.slice(0, 5).map((u) => u.nodes.find((n) => n.kind === 'task' && n.part === 'reading')!.id);
+    assert.deepEqual(firstFive, ['r1-a', 'r2-a', 'r3-a', 'r4-a', 'r5-a']);
+    assert.equal(fresh.units[5].nodes.find((n) => n.kind === 'task' && n.part === 'reading')!.id, 'r1-b');
+  });
+
+  it('starts at lesson one, with nothing to set up, and moves on as steps are done', () => {
+    assert.equal(fresh.next?.node.id, 'personal-1');
+    assert.equal(fresh.next?.unit.n, 1);
+    const afterLessons = buildJourney(done(topics[0].lessons), {}, { canListen: true, now });
+    assert.equal(afterLessons.next?.node.kind, 'task');
+    assert.equal(afterLessons.next?.unit.n, 1);
+    assert.equal(afterLessons.done, topics[0].lessons.length);
+    const unit1 = afterLessons.units[0];
+    const tasks = Object.fromEntries(unit1.nodes.filter((n) => n.kind === 'task').map((n) => [n.id, 1]));
+    const moved = buildJourney(done(topics[0].lessons), tasks, { canListen: true, now });
+    assert.ok(moved.units[0].complete);
+    assert.equal(moved.next?.unit.n, 2);
+    assert.equal(moved.next?.node.id, topics[1].lessons[0]);
+  });
+
+  it('never makes a listening task next without a Czech voice', () => {
+    const log = done(topics[0].lessons);
+    const steps = upcomingSteps(buildJourney(log, {}, { canListen: false, now }), 20, false);
+    assert.ok(steps.length === 20 && !steps.some((s) => s.node.kind === 'task' && s.node.part === 'listening'));
+    assert.ok(upcomingSteps(buildJourney(log, {}, { canListen: true, now }), 20, true).some((s) => s.node.kind === 'task' && s.node.part === 'listening'));
+  });
+});
+
+describe('daily plan', () => {
+  const base: PlanInput = { minutes: 10, log: {}, attempts: [], wordsDue: 0, canListen: true, now };
+  const pass = (n: number) => [{ at: daysAgo(n), right: 3, total: 3 }];
+
+  it('on day one it is lesson one: nothing to set up, no starting check', () => {
+    const plan = dailyPlan({ ...base, minutes: 5 });
+    assert.deepEqual(
+      plan.map((s) => [s.kind, 'id' in s ? s.id : null]),
+      [['lesson', 'personal-1']],
+    );
+  });
+
+  it('follows the journey: the next lessons, then the unit’s exam practice', () => {
+    const plan = dailyPlan({ ...base, minutes: 30 });
+    assert.deepEqual(
+      plan.filter((s) => s.kind === 'lesson').map((s) => ('id' in s ? s.id : null)),
+      ['personal-1', 'personal-2', 'personal-3'],
+    );
+    const log: LessonLog = Object.fromEntries(topics[0].lessons.map((id) => [id, pass(0)]));
+    const after = dailyPlan({ ...base, minutes: 30, log });
+    assert.deepEqual(
+      after.map((s) => s.kind),
+      ['task', 'task', 'writing'],
+    );
+    assert.ok(after[0].title && after[0].why.startsWith('Unit 1'));
   });
 
   it('puts a due check before the next lesson and fits the minutes', () => {
-    const plan = dailyPlan({ ...base, log: { 'personal-1': [{ at: daysAgo(2), right: 3, total: 3 }] } });
-    assert.equal(plan[0].kind, 'retest');
-    assert.equal(plan[1].kind, 'lesson');
+    const plan = dailyPlan({ ...base, log: { 'personal-1': pass(2) } });
+    assert.deepEqual(
+      plan.map((s) => s.kind),
+      ['retest', 'lesson'],
+    );
     assert.ok(planMinutes(plan) <= 10);
   });
 
   it('always has at least one step, even when it’s longer than the time', () => {
-    const plan = dailyPlan({ ...base, minutes: 5 });
-    assert.equal(plan.length, 1);
-    assert.equal(plan[0].kind, 'lesson');
+    const log: LessonLog = Object.fromEntries(topics[0].lessons.map((id) => [id, pass(0)]));
+    const tasksDone = { 'r1-a': 1, 'l1-a': 1 };
+    const plan = dailyPlan({ ...base, minutes: 5, log, tasksDone });
+    assert.deepEqual(
+      plan.map((s) => s.kind),
+      ['writing'],
+    );
+    assert.ok(STEP_MINUTES.writing > 5);
   });
 
-  it('adds grammar that keeps being missed, and due words', () => {
-    const plan = dailyPlan({ ...base, minutes: 30, attempts: answers(4, 0), wordsDue: 7 });
+  it('adds mistakes, due words and grammar that keeps being missed, after the next step', () => {
+    const plan = dailyPlan({ ...base, minutes: 30, attempts: answers(4, 0), wordsDue: 7, mistakes: 4 });
+    assert.deepEqual(
+      plan.slice(0, 4).map((s) => s.kind),
+      ['lesson', 'mistakes', 'words', 'grammar'],
+    );
     assert.ok(plan.some((s) => s.kind === 'grammar' && s.id === 'past'));
     assert.ok(plan.some((s) => s.kind === 'words' && s.count === 7));
+    assert.ok(!dailyPlan({ ...base, minutes: 30, mistakes: 2 }).some((s) => s.kind === 'mistakes'));
     assert.ok(planMinutes(plan) <= 30);
-  });
-
-  it('the hardest skill comes first among the extras, and listening needs a voice', () => {
-    const reading = dailyPlan({ ...base, minutes: 30, difficulty: 'reading' });
-    assert.equal(reading[1].kind, 'story');
-    const listening = dailyPlan({ ...base, minutes: 30, difficulty: 'listening' });
-    assert.equal(listening[1].kind, 'listen');
-    assert.ok(!dailyPlan({ ...base, minutes: 30, difficulty: 'listening', canListen: false }).some((s) => s.kind === 'listen'));
-  });
-
-  it('suggests only stories that exist and aren’t read yet', () => {
-    const plan = dailyPlan({ ...base, minutes: 30, unread: (id) => id === 'v-kavarne' });
-    const story = plan.find((s) => s.kind === 'story');
-    assert.equal(story && 'id' in story ? story.id : null, 'v-kavarne');
-    assert.ok(!dailyPlan({ ...base, minutes: 30, unread: () => false }).some((s) => s.kind === 'story'));
-  });
-});
-
-describe('one daily plan for Learn', () => {
-  const base: PlanInput = {
-    minutes: 15,
-    diagnosticDone: true,
-    log: { 'personal-1': [{ at: daysAgo(10), right: 3, total: 3 }], 'personal-2': [{ at: daysAgo(10), right: 3, total: 3 }] },
-    attempts: [],
-    wordsDue: 5,
-    unread: () => false,
-    storyTitle: (id) => contentById(id)?.title,
-    canListen: true,
-    now,
-  };
-  const pick: EverydayFocus = { situation: 'doctor', title: 'At the doctor’s', reason: 'Today’s situation', soon: false };
-
-  it('before the A2 setup, the plan is the everyday session for all the minutes', () => {
-    const plan = dailyPlan({ ...base, academy: false, everyday: pick });
-    assert.deepEqual(
-      plan.map((s) => [s.kind, s.minutes]),
-      [['session', 15]],
-    );
-  });
-
-  it('after setup, the everyday session holds the words and listening, so they aren’t steps twice', () => {
-    const plan = dailyPlan({ ...base, minutes: 30, everyday: pick });
-    assert.ok(plan.some((s) => s.kind === 'session' && s.minutes === STEP_MINUTES.session));
-    assert.ok(!plan.some((s) => s.kind === 'words' || s.kind === 'listen'));
-    assert.ok(planMinutes(plan) <= 30);
-  });
-
-  it('something really coming up is practised straight after the lesson', () => {
-    const plan = dailyPlan({ ...base, minutes: 30, everyday: { ...pick, reason: 'Your permit ends in 3 weeks', soon: true } });
-    const kinds = plan.map((s) => s.kind);
-    assert.equal(kinds.indexOf('session'), kinds.indexOf('lesson') + 1);
-    // Today's pick, with nothing coming up, waits its turn: here after reading practice.
-    const later = dailyPlan({ ...base, minutes: 30, difficulty: 'reading', everyday: pick }).map((s) => s.kind);
-    assert.ok(later.indexOf('session') > later.indexOf('lesson') + 1);
   });
 
   it('ticks a step off only for what was done today', () => {
-    const none: TodayEvidence = { diagnostic: false, lessons: new Set(), sets: new Set(), grammar: new Set(), reviews: 0, chapters: 0, listening: 0, sessions: 0, reviewed: 0 };
-    const plan = dailyPlan({ ...base, minutes: 30, everyday: pick });
-    const lesson = plan.find((s) => s.kind === 'lesson')!;
-    const session = plan.find((s) => s.kind === 'session')!;
+    const none: TodayEvidence = { lessons: new Set(), sets: new Set(), grammar: new Set(), reviews: 0, reviewed: 0 };
+    const [lesson] = dailyPlan(base);
     assert.equal(stepDoneToday(lesson, none), false);
-    assert.equal(stepDoneToday(lesson, { ...none, lessons: new Set(['personal-3']) }), lesson.kind === 'lesson' && lesson.id === 'personal-3');
-    assert.equal(stepDoneToday(session, { ...none, sessions: 1 }), true);
-    assert.equal(stepDoneToday(session, { ...none, reviews: 4 }), false);
+    assert.equal(stepDoneToday(lesson, { ...none, lessons: new Set(['personal-1']) }), true);
+    assert.equal(stepDoneToday(lesson, { ...none, lessons: new Set(['personal-2']) }), false);
+    const words = dailyPlan({ ...base, minutes: 30, wordsDue: 2 }).find((s) => s.kind === 'words')!;
+    assert.equal(stepDoneToday(words, { ...none, reviews: 1 }), true);
   });
 });

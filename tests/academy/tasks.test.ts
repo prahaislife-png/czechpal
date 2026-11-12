@@ -8,7 +8,6 @@ import { dailyPlan, type PlanInput } from '../../src/lib/academy/plan';
 import { emailChecks, formChecks, gradeItem, itemExercise, itemMeta, itemOptions, scoreSet, taskSets } from '../../src/lib/academy/tasks';
 import { writingTasks } from '../../src/lib/academy/tasks/writing';
 import { topicById } from '../../src/lib/academy/topics';
-import { contentById } from '../../src/lib/learn/content';
 import { countWords, EMAIL_MIN_WORDS, examTasks, FORM_MIN_WORDS } from '../../src/lib/learn/exam';
 
 const now = new Date(2026, 10, 6, 10);
@@ -171,31 +170,28 @@ describe('writing coach', () => {
 });
 
 describe('daily plan with exam practice', () => {
-  const base: PlanInput = {
-    minutes: 30,
-    diagnosticDone: true,
-    log: { 'personal-1': [{ at: new Date(2026, 10, 6, 9).toISOString(), right: 3, total: 3 }] },
-    attempts: [],
-    wordsDue: 0,
-    unread: () => true,
-    storyTitle: (id) => contentById(id)?.title,
-    canListen: true,
-    now,
-  };
+  const at = new Date(2026, 10, 6, 9).toISOString();
+  const unit1 = Object.fromEntries(topicById('personal')!.lessons.map((id) => [id, [{ at, right: 3, total: 3 }]]));
+  const base: PlanInput = { minutes: 30, log: unit1, attempts: [], wordsDue: 0, canListen: true, now };
 
-  it('adds exam practice in the hardest skill once a lesson is done', () => {
-    assert.equal(dailyPlan({ ...base, difficulty: 'reading' }).find((s) => s.kind === 'task')?.title.startsWith('Reading'), true);
-    assert.equal(dailyPlan({ ...base, difficulty: 'listening' }).find((s) => s.kind === 'task')?.title.startsWith('Listening'), true);
-    assert.ok(dailyPlan({ ...base, difficulty: 'writing' }).some((s) => s.kind === 'writing'));
+  it('exam practice follows a unit’s lessons, never before them', () => {
+    assert.deepEqual(
+      dailyPlan(base).map((s) => [s.kind, 'id' in s ? s.id : null]),
+      [
+        ['task', 'r1-a'],
+        ['task', 'l1-a'],
+        ['writing', 'w1-a'],
+      ],
+    );
     assert.ok(!dailyPlan({ ...base, log: {} }).some((s) => s.kind === 'task' || s.kind === 'writing'));
   });
 
-  it('picks the set done least, and never listening without a voice', () => {
-    const plan = dailyPlan({ ...base, difficulty: 'reading', tasksDone: { 'r1-a': 2 } });
-    const task = plan.find((s) => s.kind === 'task');
-    assert.ok(task && 'id' in task && task.id !== 'r1-a');
-    const noVoice = dailyPlan({ ...base, difficulty: 'listening', canListen: false });
+  it('skips what is done, and never offers listening without a voice', () => {
+    const plan = dailyPlan({ ...base, tasksDone: { 'r1-a': 2 } });
+    assert.ok(!plan.some((s) => 'id' in s && s.id === 'r1-a'));
+    const noVoice = dailyPlan({ ...base, canListen: false });
     assert.ok(!noVoice.some((s) => s.kind === 'task' && 'id' in s && s.id.startsWith('l')));
+    assert.equal(noVoice[0].kind, 'task');
   });
 
   it('goes over mistakes when there are a few', () => {

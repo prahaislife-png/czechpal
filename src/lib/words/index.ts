@@ -1,7 +1,7 @@
 import { RAW } from './raw';
 
 /**
- * Slovíčka: every word in one long list to scroll through, in Czech alphabetical order, with a
+ * The dictionary: every word in one long list to scroll through, in Czech alphabetical order, with a
  * letter rail to jump along it. No React Native imports, so the tests can run it.
  */
 
