@@ -1,3 +1,4 @@
+import { SAMPLE_FORM_GUIDE } from './form-sample';
 import { matchSample, sampleById, samples } from './samples';
 import {
   AnalyzeError,
@@ -6,6 +7,7 @@ import {
   type AnalyzeResult,
   type ComposeInput,
   type ComposeResult,
+  type FormGuideResult,
   type QuickTranslation,
   type ReplyDraft,
   type ReplyInput,
@@ -80,6 +82,12 @@ export const mockClient: AIClient = {
   async quickTranslate(): Promise<QuickTranslation> {
     await wait(900);
     return DEMO_TRANSLATION;
+  },
+
+  /** The demo never reads the form: it shows the built-in example, labelled as one. */
+  async formGuide(): Promise<FormGuideResult> {
+    await wait(1200);
+    return { guide: SAMPLE_FORM_GUIDE, demo: true };
   },
 
   /** The demo can't judge someone's writing, and won't pretend to. */

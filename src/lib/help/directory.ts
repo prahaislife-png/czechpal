@@ -121,3 +121,13 @@ export const emergencyNumbers: { number: string; label: string; detail: string }
   { number: '158', label: 'Police', detail: 'Crime and danger' },
   { number: '156', label: 'City police', detail: 'Local issues like noise or parking' },
 ];
+
+/** The few sentences that get help moving when the operator answers in Czech. */
+export const emergencyPhrases: { cs: string; en: string }[] = [
+  { cs: 'Mluvíte anglicky?', en: 'Do you speak English?' },
+  { cs: 'Potřebuji sanitku.', en: 'I need an ambulance.' },
+  { cs: 'Potřebuji policii.', en: 'I need the police.' },
+  { cs: 'Hoří.', en: 'There is a fire.' },
+  { cs: 'Moje adresa je…', en: 'My address is…' },
+  { cs: 'Nemluvím česky.', en: 'I don’t speak Czech.' },
+];

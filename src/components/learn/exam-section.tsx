@@ -10,11 +10,13 @@ import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { longDate } from '@/lib/about';
 import { skillReadiness, weakObjectives } from '@/lib/academy/evidence';
-import { mockFinished } from '@/lib/academy/mock';
+import { mockFinished, mockOutcome } from '@/lib/academy/mock';
 import type { Skill } from '@/lib/academy/types';
 import { daysToExam } from '@/lib/learn/exam';
+import { mockLocked } from '@/lib/plus/access';
 import { useAcademy } from '@/store/academy';
 import { useLearn } from '@/store/learn';
+import { useAccess } from '@/store/plus';
 import { radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
@@ -31,10 +33,12 @@ export function ExamSection() {
   const weak = useMemo(() => weakObjectives(attempts).slice(0, 3), [attempts]);
   const left = examDate ? daysToExam(examDate) : null;
   const lastMock = mocks[mocks.length - 1];
+  const locked = mockLocked(useAccess());
+  const last = lastMock && mockFinished(lastMock) ? mockOutcome(lastMock) : null;
   const mockSubtitle = !lastMock
-    ? 'All four parts, timed, on new questions'
-    : mockFinished(lastMock)
-      ? `Last: reading ${lastMock.reading?.right} · listening ${lastMock.listening?.right} of 25`
+    ? `All four parts, timed, with a pass or not-yet result${locked ? ' · Plus' : ''}`
+    : last
+      ? `Last: ${last.verdict === 'pass' ? 'passed' : last.verdict === 'not-yet' ? 'not yet' : 'not fully scored'} · written ${last.written.score ?? '—'} of ${last.written.of} · speaking ${last.speaking.score ?? '—'} of ${last.speaking.of}`
       : 'In progress: carry on';
 
   return (

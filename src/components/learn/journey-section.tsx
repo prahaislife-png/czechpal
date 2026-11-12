@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { toneColors, type Tone } from '@/components/design/tone';
+import { openPlus } from '@/components/plus/gate';
 import { Badge } from '@/components/ui/badge';
 import { SectionHeader } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
@@ -11,7 +12,9 @@ import { Text } from '@/components/ui/text';
 import type { JourneyNode, JourneyUnit } from '@/lib/academy/journey';
 import { mockFinished } from '@/lib/academy/mock';
 import { nodeHref, partIcon, useJourney } from '@/lib/academy/use-plan';
+import { courseSize, FREE_UNITS, gated, mockLocked, unitLocked } from '@/lib/plus/access';
 import { useAcademy } from '@/store/academy';
+import { useAccess } from '@/store/plus';
 import { radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
 
@@ -20,10 +23,12 @@ const TONES: Tone[] = ['sky', 'sage', 'coral', 'lavender'];
 /**
  * The A2 journey as a path: fourteen units, the one the learner is in opened to show its
  * lessons and its exam practice, the others one tap away. Mock exams sit on the path as
- * milestones. Everything is open; nothing is locked.
+ * milestones. The first unit is free; with Plus on sale, the rest show what they hold and open
+ * the paywall until the learner has it.
  */
 export function JourneySection() {
   const journey = useJourney();
+  const access = useAccess();
   const mocksDone = useAcademy((s) => s.mocks.filter(mockFinished).length);
   const current = journey.next?.unit.n ?? 0;
   // null: the unit the learner is in. 0: all closed. Otherwise the unit they opened.
@@ -45,8 +50,17 @@ export function JourneySection() {
       <View style={styles.units}>
         {journey.units.map((u) => (
           <View key={u.n} style={styles.units}>
-            <UnitCard unit={u} tone={TONES[(u.n - 1) % TONES.length]} open={open === u.n} current={current === u.n} nextId={journey.next?.node.id} onToggle={() => setOpened(open === u.n ? 0 : u.n)} />
-            {u.mockAfter ? <MockRow n={u.mockAfter} done={mocksDone >= u.mockAfter} /> : null}
+            <UnitCard
+              unit={u}
+              tone={TONES[(u.n - 1) % TONES.length]}
+              open={open === u.n}
+              current={current === u.n}
+              locked={unitLocked(u.n, access)}
+              nextId={journey.next?.node.id}
+              onToggle={() => setOpened(open === u.n ? 0 : u.n)}
+            />
+            {u.n === FREE_UNITS && gated(access) ? <PlusBanner /> : null}
+            {u.mockAfter ? <MockRow n={u.mockAfter} done={mocksDone >= u.mockAfter} locked={mockLocked(access)} /> : null}
           </View>
         ))}
       </View>
@@ -54,7 +68,23 @@ export function JourneySection() {
   );
 }
 
-function UnitCard({ unit, tone, open, current, nextId, onToggle }: { unit: JourneyUnit; tone: Tone; open: boolean; current: boolean; nextId?: string; onToggle: () => void }) {
+function UnitCard({
+  unit,
+  tone,
+  open,
+  current,
+  locked,
+  nextId,
+  onToggle,
+}: {
+  unit: JourneyUnit;
+  tone: Tone;
+  open: boolean;
+  current: boolean;
+  locked: boolean;
+  nextId?: string;
+  onToggle: () => void;
+}) {
   const { colors } = useTheme();
   const { tint, ink } = toneColors(colors, tone);
   const done = unit.lessonsDone + unit.tasksDone;
@@ -68,7 +98,7 @@ function UnitCard({ unit, tone, open, current, nextId, onToggle }: { unit: Journ
         onPress={onToggle}
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
-        accessibilityLabel={`Unit ${unit.n}, ${unit.topic.title}. ${done} of ${total} steps done.`}
+        accessibilityLabel={`Unit ${unit.n}, ${unit.topic.title}. ${done} of ${total} steps done.${locked ? ' Part of Plus.' : ''}`}
         style={styles.unitHead}>
         <View style={[styles.number, { backgroundColor: unit.complete ? colors.successSoft : tint }]}>
           {unit.complete ? (
@@ -88,6 +118,7 @@ function UnitCard({ unit, tone, open, current, nextId, onToggle }: { unit: Journ
             {current ? ' · you are here' : ''}
           </Text>
         </View>
+        {locked ? <Icon name="lock" size={16} color={colors.label3} /> : null}
         <Icon name={open ? 'chevronDown' : 'chevronRight'} size={16} color={colors.label3} />
       </Pressable>
       <View style={[styles.track, { backgroundColor: colors.fill }]}>
@@ -97,7 +128,7 @@ function UnitCard({ unit, tone, open, current, nextId, onToggle }: { unit: Journ
       {open ? (
         <View style={styles.nodes}>
           {lessons.map((n) => (
-            <NodeRow key={n.id} node={n} next={n.id === nextId} />
+            <NodeRow key={n.id} node={n} next={n.id === nextId} locked={locked} />
           ))}
           {tasks.length ? (
             <Text variant="caption" weight="600" color="label3" style={styles.divider}>
@@ -105,7 +136,7 @@ function UnitCard({ unit, tone, open, current, nextId, onToggle }: { unit: Journ
             </Text>
           ) : null}
           {tasks.map((n) => (
-            <NodeRow key={n.id} node={n} next={n.id === nextId} />
+            <NodeRow key={n.id} node={n} next={n.id === nextId} locked={locked} />
           ))}
           <Pressable
             onPress={() => router.push({ pathname: '/learn/topic/[id]', params: { id: unit.topic.id } })}
@@ -123,14 +154,14 @@ function UnitCard({ unit, tone, open, current, nextId, onToggle }: { unit: Journ
   );
 }
 
-function NodeRow({ node, next }: { node: JourneyNode; next: boolean }) {
+function NodeRow({ node, next, locked }: { node: JourneyNode; next: boolean; locked: boolean }) {
   const { colors } = useTheme();
   const label = node.kind === 'lesson' ? `Lesson ${node.n}` : node.detail;
   return (
     <PressableScale
-      onPress={() => router.push(nodeHref(node))}
+      onPress={() => (locked ? openPlus('course') : router.push(nodeHref(node)))}
       accessibilityRole="button"
-      accessibilityLabel={`${label}: ${node.title}${node.done ? ', done' : next ? ', next' : ''}`}
+      accessibilityLabel={`${label}: ${node.title}${node.done ? ', done' : next ? ', next' : ''}${locked ? ', part of Plus' : ''}`}
       style={[styles.node, next && { backgroundColor: colors.accentSoft }]}>
       <View style={[styles.dot, { backgroundColor: node.done ? colors.successSoft : next ? colors.accentFill : colors.fill }]}>
         <Icon
@@ -148,19 +179,51 @@ function NodeRow({ node, next }: { node: JourneyNode; next: boolean }) {
           {node.kind === 'lesson' && node.secure ? ' · mastered' : ''}
         </Text>
       </View>
-      {node.kind === 'lesson' && node.retest ? <Badge label="Check again" tone="warning" /> : next ? <Badge label="Next" tone="accent" /> : null}
+      {locked ? (
+        <Icon name="lock" size={14} color={colors.label3} />
+      ) : node.kind === 'lesson' && node.retest ? (
+        <Badge label="Check again" tone="warning" />
+      ) : next ? (
+        <Badge label="Next" tone="accent" />
+      ) : null}
     </PressableScale>
   );
 }
 
 /** A mock exam on the path: all four parts, timed, on questions not seen in practice. */
-function MockRow({ n, done }: { n: number; done: boolean }) {
+/** Where the free part ends: what the rest holds, and the way to it. */
+function PlusBanner() {
   const { colors } = useTheme();
   return (
     <PressableScale
-      onPress={() => router.push('/learn/mock')}
+      onPress={() => openPlus('course')}
       accessibilityRole="button"
-      accessibilityLabel={`Mock exam ${n}${done ? ', done' : ''}. All four parts, timed.`}
+      accessibilityLabel={`Units 2 to ${courseSize.units} are part of CzechLocal Plus. See what it includes.`}
+      style={[styles.banner, { backgroundColor: colors.ink }]}>
+      <View style={styles.flex}>
+        <Text variant="headline" style={{ color: colors.onInk }}>
+          The rest of the way to the exam
+        </Text>
+        <Text variant="footnote" style={{ color: colors.onInk2 }}>
+          Units 2 to {courseSize.units}, every exam task and the mock exams are part of Plus.
+        </Text>
+      </View>
+      <View style={[styles.bannerButton, { backgroundColor: colors.onInk }]}>
+        <Text variant="subhead" weight="600" chrome style={{ color: colors.ink }}>
+          See Plus
+        </Text>
+      </View>
+    </PressableScale>
+  );
+}
+
+function MockRow({ n, done, locked }: { n: number; done: boolean; locked: boolean }) {
+  const { colors } = useTheme();
+  return (
+    <PressableScale
+      onPress={() => (locked ? openPlus('mock') : router.push('/learn/mock'))}
+      accessibilityRole="button"
+      accessibilityLabel={`Mock exam ${n}${done ? ', done' : ''}. All four parts, timed.${locked ? ' Part of Plus.' : ''}`}
       style={[styles.mock, { backgroundColor: colors.coralSoft }]}>
       <View style={[styles.number, { backgroundColor: colors.surface }]}>
         <Icon name={done ? 'check' : 'clock'} size={18} color={colors.coralInk} />
@@ -173,7 +236,7 @@ function MockRow({ n, done }: { n: number; done: boolean }) {
           {done ? 'Done. Take another any time.' : 'All four parts, timed, on new questions'}
         </Text>
       </View>
-      <Icon name="chevronRight" size={16} color={colors.coralInk} />
+      <Icon name={locked ? 'lock' : 'chevronRight'} size={16} color={colors.coralInk} />
     </PressableScale>
   );
 }
@@ -191,5 +254,7 @@ const styles = StyleSheet.create({
   dot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   divider: { letterSpacing: 0.6, paddingHorizontal: space.sm, paddingTop: space.md, paddingBottom: space.xs },
   more: { flexDirection: 'row', alignItems: 'center', gap: space.xs, paddingHorizontal: space.sm, paddingVertical: space.md },
+  banner: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg, borderRadius: radius.card, borderCurve: 'continuous' },
+  bannerButton: { minHeight: 36, justifyContent: 'center', paddingHorizontal: space.lg, borderRadius: radius.pill },
   mock: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg, borderRadius: radius.card, borderCurve: 'continuous' },
 });

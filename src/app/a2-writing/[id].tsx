@@ -1,3 +1,4 @@
+import { gatedStep } from '@/components/plus/gate';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
@@ -25,7 +26,7 @@ import { useTheme } from '@/theme/use-theme';
  */
 const WRITING_MINUTES = examParts.find((p) => p.id === 'writing')!.minutes;
 
-export default function WritingScreen() {
+function WritingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const task = writingTaskById(id);
   if (!task)
@@ -273,3 +274,5 @@ const styles = StyleSheet.create({
   pictures: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   picture: { width: '48%', flexGrow: 1, alignItems: 'center', gap: space.xs, padding: space.md, borderRadius: radius.tile, borderWidth: StyleSheet.hairlineWidth },
 });
+
+export default gatedStep(WritingScreen);

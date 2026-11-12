@@ -7,9 +7,10 @@ import { examParts, examTasks, passMarks } from '@/lib/learn/exam';
 
 /**
  * The mock exam: the four parts in the exam's order, with the exam's times, on sets kept unseen
- * for it. Reading and listening are marked by rules, one point an item. Writing and speaking are
- * not scored, because CzechLocal can't mark them reliably yet; the result says what reading and
- * listening mean for the written pass mark instead of inventing a writing score.
+ * for it. Reading and listening are marked by rules, one point an item. Writing gets an estimate
+ * from the AI feedback (the marking scale isn't published, so it is an estimate and is called
+ * one), and speaking is scored from the learner's own check of each task. Together they give a
+ * result by the exam's own rule: 42 of 70 in the written part and 24 of 40 in speaking.
  */
 
 export type MockSection = 'reading' | 'writing' | 'listening' | 'speaking';
@@ -58,8 +59,19 @@ export function mockSpeakingTasks(done: Record<string, number> = {}): string[] {
 }
 
 export type MarkedSection = { at: string; seconds: number; right: number; total: number; answers: Answers; byTask: Record<number, [number, number]> };
-export type WritingSection = { at: string; seconds: number; form: string[]; email: string; formShort: number; emailWords: number; emailZero: boolean };
-export type SpeakingSection = { at: string; tasks: Record<string, { recorded: number; prompts: number }> };
+export type WritingSection = {
+  at: string;
+  seconds: number;
+  form: string[];
+  email: string;
+  formShort: number;
+  emailWords: number;
+  emailZero: boolean;
+  /** The AI's estimate of the points, once feedback was asked for: the form of 8, the e-mail of 12. */
+  estimate?: { form?: number; email?: number };
+};
+/** `ticked` of `checks`: how many points of the task's checklist the learner ticked for themselves. */
+export type SpeakingSection = { at: string; tasks: Record<string, { recorded: number; prompts: number; ticked?: number; checks?: number }> };
 
 export type MockRun = {
   id: string;
@@ -141,3 +153,90 @@ export const clock = (seconds: number) => {
   const s = Math.max(0, Math.floor(seconds));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
+
+// ── The result of a whole mock ──────────────────────────────────────────────
+
+export type PartResult = {
+  /** Points so far; null while the part can't be scored yet. */
+  score: number | null;
+  of: number;
+  need: number;
+  state: 'passed' | 'failed' | 'open';
+};
+
+export type MockOutcome = {
+  /** Reading, listening and writing together. `estimated`: the writing points are the AI's estimate. */
+  written: PartResult & { writing: number | null; estimated: boolean };
+  /** From the learner's own check, of the 37 task points; pronunciation (3) can't be self-checked. */
+  speaking: PartResult;
+  verdict: 'pass' | 'not-yet' | 'open';
+};
+
+/** The writing estimate, when both tasks have one. An e-mail under 35 words is 0, whatever was estimated. */
+export function writingEstimate(run: MockRun): number | null {
+  const w = run.writing;
+  if (!w) return null;
+  const blankForm = w.form.every((f) => !f.trim());
+  const form = blankForm ? 0 : w.estimate?.form;
+  const email = w.emailZero || !w.email.trim() ? 0 : w.estimate?.email;
+  if (form === undefined || email === undefined) return null;
+  return Math.max(0, Math.min(writingPoints(1), form)) + Math.max(0, Math.min(writingPoints(2), email));
+}
+
+/** The writing tasks that still need the AI's estimate. */
+export function writingToMark(run: MockRun): ('form' | 'email')[] {
+  const w = run.writing;
+  if (!w) return [];
+  const out: ('form' | 'email')[] = [];
+  if (w.form.some((f) => f.trim()) && w.estimate?.form === undefined) out.push('form');
+  if (w.email.trim() && !w.emailZero && w.estimate?.email === undefined) out.push('email');
+  return out;
+}
+
+/**
+ * Speaking by the learner's own check: each task's points times the share of its checklist they
+ * ticked. Null until all four tasks are checked.
+ */
+export function speakingSelfScore(run: MockRun): number | null {
+  let total = 0;
+  for (const id of run.speakingTasks) {
+    const t = run.speaking?.tasks[id];
+    const task = speakingTasks.find((s) => s.id === id);
+    if (!t || !task || t.ticked === undefined || !t.checks) return null;
+    const points = examTasks.find((e) => e.part === 'speaking' && e.n === task.task)?.points ?? 0;
+    total += points * Math.min(1, t.ticked / t.checks);
+  }
+  return Math.round(total);
+}
+
+/**
+ * The mock's result by the exam's rule: the written part and speaking pass separately, and both
+ * must. A part that can't be scored yet leaves the result open, unless it is already decided
+ * (reading and listening alone reach 42, or even full writing marks couldn't).
+ */
+export function mockOutcome(run: MockRun): MockOutcome {
+  const outlook = writtenOutlook(run);
+  const writing = writingEstimate(run);
+  const marked = outlook.marked;
+  const writtenScore = marked === null ? null : writing === null ? marked : marked + writing;
+  const writtenState: PartResult['state'] =
+    marked === null
+      ? 'open'
+      : writing !== null
+        ? marked + writing >= passMarks.written.need
+          ? 'passed'
+          : 'failed'
+        : outlook.verdict === 'reached'
+          ? 'passed'
+          : outlook.verdict === 'out-of-reach'
+            ? 'failed'
+            : 'open';
+  const spoken = speakingSelfScore(run);
+  const speakingState: PartResult['state'] = spoken === null ? 'open' : spoken >= passMarks.speaking.need ? 'passed' : 'failed';
+  const verdict = writtenState === 'failed' || speakingState === 'failed' ? 'not-yet' : writtenState === 'passed' && speakingState === 'passed' ? 'pass' : 'open';
+  return {
+    written: { score: writtenScore, of: passMarks.written.of, need: passMarks.written.need, state: writtenState, writing, estimated: writing !== null && !!run.writing?.estimate },
+    speaking: { score: spoken, of: passMarks.speaking.of, need: passMarks.speaking.need, state: speakingState },
+    verdict,
+  };
+}

@@ -1,3 +1,7 @@
+import { looksLikeForm } from '@/lib/forms';
+import { useForms, type FormSource } from '@/store/forms';
+import { openPlus } from '@/components/plus/gate';
+import { useAccess } from '@/store/plus';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
@@ -110,6 +114,7 @@ function ResultView({
   const helpId = analysis.category ? helpForTextCategory(analysis.category) : undefined;
   const help = helpId ? categoryById(helpId) : undefined;
   const pages = pagesOf(item);
+  const { plus } = useAccess();
   // The translation tab is named after the language this was explained in.
   const tabs: { value: Tab; label: string }[] = [
     { value: 'summary', label: 'Summary' },
@@ -154,6 +159,15 @@ function ResultView({
     useStore.getState().remove(item.id);
   };
 
+  // A form to fill in gets its own guide, made from the same photo, PDF or text.
+  const source: FormSource | null =
+    item.source === 'example' ? null : pages.length ? { kind: 'image', uris: pages } : item.fileUri ? { kind: 'pdf', uri: item.fileUri } : item.text ? { kind: 'text', text: item.text } : null;
+  const fillable =
+    !!source && looksLikeForm({ typeLabel: analysis.typeLabel ?? '', title: analysis.title ?? '', kind: analysis.kind ?? 'document' }, result?.originalText ?? item.text ?? '');
+  const fillIn = () => {
+    if (source) router.push({ pathname: '/form/[id]', params: { id: useForms.getState().start(source) } });
+  };
+
   let section = 1;
 
   return (
@@ -190,6 +204,19 @@ function ResultView({
                 <CautionNotice kind={analysis.caution} />
               </Animated.View>
             )}
+            {!streaming && fillable ? (
+              <Animated.View entering={enter(section++)}>
+                <List>
+                  <Row
+                    icon="document"
+                    title="Fill it in, field by field"
+                    subtitle={plus ? 'What each field asks and what to write' : 'What each field asks and what to write · counts as 1 explanation'}
+                    chevron
+                    onPress={fillIn}
+                  />
+                </List>
+              </Animated.View>
+            ) : null}
             {analysis.lines?.length ? (
               <Animated.View entering={enter(section++)}>
                 <TranslatedLines lines={analysis.lines} />
@@ -310,6 +337,7 @@ const failureTitle: Record<NonNullable<CaseItem['errorCode']>, string> = {
 function Failed({ item }: { item: CaseItem }) {
   const analyze = useStore((s) => s.analyze);
   const code = item.errorCode ?? 'server';
+  const access = useAccess();
   const contentProblem = code === 'too_short' || code === 'unreadable' || code === 'too_large';
   const startOver = (route: '/paste' | '/scan') => {
     router.back();
@@ -328,7 +356,11 @@ function Failed({ item }: { item: CaseItem }) {
         </Text>
       </View>
       <View style={styles.failedActions}>
-        {code === 'limit' ? null : !contentProblem ? (
+        {code === 'limit' ? (
+          access.live && !access.plus ? (
+            <Button label="Explain everything with Plus" onPress={() => openPlus('explain')} />
+          ) : null
+        ) : !contentProblem ? (
           <Button label="Try again" icon="refresh" onPress={() => analyze(item.id)} />
         ) : item.source === 'text' ? (
           <Button label="Type it again" onPress={() => startOver('/paste')} />

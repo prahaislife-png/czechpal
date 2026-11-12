@@ -115,12 +115,12 @@ export async function callStructured(opts: {
   }
 }
 
-export type CallKind = 'analyze' | 'reply' | 'compose' | 'translate' | 'learn' | 'speak';
+export type CallKind = 'analyze' | 'reply' | 'compose' | 'translate' | 'learn' | 'speak' | 'form';
 
 const modelLabel = (config: ModelConfig) => `${config.model} ${config.effort}${config.thinking === 'off' ? ' no-thinking' : ''}`;
 
-/** Explanations, replies and new messages share one per-minute limit: they use the largest model. */
-export const SHARED_KINDS: CallKind[] = ['analyze', 'reply', 'compose'];
+/** Explanations, form guides, replies and new messages share one per-minute limit: they use the largest model. */
+export const SHARED_KINDS: CallKind[] = ['analyze', 'reply', 'compose', 'form'];
 
 /** A call that may go ahead: `id` is its row in ai_calls (null when it was allowed the older way). */
 export type Claim = { id: number | null };

@@ -1,3 +1,4 @@
+import { gatedStep } from '@/components/plus/gate';
 import {
   getRecordingPermissionsAsync,
   RecordingPresets,
@@ -46,7 +47,7 @@ const MAX_SECONDS = 120;
 
 type Mic = 'unknown' | 'granted' | 'denied' | 'blocked' | 'failed';
 
-export default function SpeakingScreen() {
+function SpeakingScreen() {
   const { id, mock } = useLocalSearchParams<{ id: string; mock?: string }>();
   const task = speakingTaskById(id);
   const voice = useCzechVoice();
@@ -513,6 +514,12 @@ function Review({
   const insets = useSafeAreaInsets();
   const prompts = speakingPrompts(task);
   const [ticks, setTicks] = useState<boolean[]>(() => task.checklist.map(() => false));
+  // In a mock the learner's own check is the task's score, so every change is kept.
+  const toggleTick = (i: number) => {
+    const next = ticks.map((x, j) => (j === i ? !x : x));
+    setTicks(next);
+    if (mock) useAcademy.getState().checkMockSpeaking(mock, task.id, next.filter(Boolean).length, next.length);
+  };
   const recorded = prompts.filter((p) => takes.takes[p.id]);
   const run = useAcademy((s) => (mock ? s.mocks.find((m) => m.id === mock) : undefined));
   const nextTask = run?.speakingTasks.find((t) => t !== task.id && !run.speaking?.tasks[t]);
@@ -566,7 +573,7 @@ function Review({
         {task.checklist.map((c, i) => (
           <Pressable
             key={c}
-            onPress={() => setTicks((t) => t.map((x, j) => (j === i ? !x : x)))}
+            onPress={() => toggleTick(i)}
             accessibilityRole="checkbox"
             accessibilityState={{ checked: ticks[i] }}
             style={styles.tick}>
@@ -579,13 +586,18 @@ function Review({
       </View>
 
       <Text variant="footnote" color="label3" style={styles.note}>
-        CzechLocal doesn’t score speaking.{points ? ` In the exam this task gives ${points} points, and pronunciation is marked across the whole speaking part.` : ''}{' '}
+        {mock ? 'In a mock, what you tick here is your score for this task: be as strict as an examiner.' : 'CzechLocal doesn’t score speaking.'}{points ? ` In the exam this task gives ${points} points, and pronunciation is marked across the whole speaking part.` : ''}{' '}
         {recorded.length ? `Your ${recorded.length === 1 ? 'recording is' : `${recorded.length} recordings are`} saved on this phone only.` : ''}
       </Text>
       {mock ? (
         <Button
           label={nextTask ? `Next: speaking ${speakingTaskById(nextTask)?.task}` : 'Back to the mock exam'}
-          onPress={() => (nextTask ? router.replace({ pathname: '/a2-speaking/[id]', params: { id: nextTask, mock } }) : router.back())}
+          onPress={() => {
+            // Moving on keeps the check as it stands, ticked or not: that is the task's score in this mock.
+            useAcademy.getState().checkMockSpeaking(mock, task.id, ticks.filter(Boolean).length, ticks.length);
+            if (nextTask) router.replace({ pathname: '/a2-speaking/[id]', params: { id: nextTask, mock } });
+            else router.back();
+          }}
         />
       ) : (
         <>
@@ -637,3 +649,5 @@ const styles = StyleSheet.create({
   tick: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 44 },
   note: { paddingHorizontal: space.xs },
 });
+
+export default gatedStep(SpeakingScreen);

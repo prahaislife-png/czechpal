@@ -63,6 +63,10 @@ type Actions = {
   saveMockSection: (id: string, section: 'reading' | 'listening', result: MarkedSection) => void;
   saveMockWriting: (id: string, result: WritingSection) => void;
   saveMockSpeaking: (id: string, task: string, recorded: number, prompts: number) => void;
+  /** The learner's own check of a mock speaking task: `ticked` of its `checks`. */
+  checkMockSpeaking: (id: string, task: string, ticked: number, checks: number) => void;
+  /** The AI's estimate for one writing task of a mock. */
+  setMockWritingEstimate: (id: string, task: 'form' | 'email', points: number) => void;
   discardMock: (id: string) => void;
   setExamResult: (examDate: string, result: ExamResult['result']) => void;
   /** Settings → Delete everything. */
@@ -129,6 +133,15 @@ export const useAcademy = create<State & Actions>()(
             m.id === id ? { ...m, speaking: { at: new Date().toISOString(), tasks: { ...(m.speaking?.tasks ?? {}), [task]: { recorded, prompts } } } } : m,
           ),
         })),
+      checkMockSpeaking: (id, task, ticked, checks) =>
+        set((s) => ({
+          mocks: s.mocks.map((m) => {
+            const t = m.id === id ? m.speaking?.tasks[task] : undefined;
+            return t && m.speaking ? { ...m, speaking: { ...m.speaking, tasks: { ...m.speaking.tasks, [task]: { ...t, ticked, checks } } } } : m;
+          }),
+        })),
+      setMockWritingEstimate: (id, task, points) =>
+        set((s) => ({ mocks: s.mocks.map((m) => (m.id === id && m.writing ? { ...m, writing: { ...m.writing, estimate: { ...m.writing.estimate, [task]: points } } } : m)) })),
       discardMock: (id) => set((s) => ({ mocks: s.mocks.filter((m) => m.id !== id) })),
       setExamResult: (examDate, result) => set({ examResult: { examDate, result, at: new Date().toISOString() } }),
       clear: () => set({ ...initial }),

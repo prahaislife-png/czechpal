@@ -5,6 +5,7 @@ import { FREE_LIMIT, LIMIT_REACHED_MESSAGE } from '../_shared/allowance.ts';
 import { aboutReader, parseInput, userContent, type Input } from '../_shared/analyze-input.ts';
 import { AiError, callStructured, claimCall, fail, logCall, type Claim, type Usage } from '../_shared/claude.ts';
 import { languageName } from '../_shared/languages.ts';
+import { hasPlus } from '../_shared/membership.ts';
 import { ANALYZE_SYSTEM } from '../_shared/prompts.ts';
 
 /**
@@ -13,7 +14,8 @@ import { ANALYZE_SYSTEM } from '../_shared/prompts.ts';
  * about ({ stay, expires, district } from the app's About you; fixed values only),
  * stream (true: NDJSON as the explanation is written)
  *
- * Reserves one free explanation first and refunds it if the explanation fails.
+ * Reserves one free explanation first and refunds it if the explanation fails. With CzechLocal
+ * Plus nothing is counted against the month; the per-minute and per-day limits still apply.
  */
 
 /** Explanations, replies and new messages together, per minute. */
@@ -66,7 +68,10 @@ export default {
       free = data === true;
     }
 
-    const { data: remaining, error: reserveError } = free
+    // Plus: no monthly count. Free retries and Plus reserve nothing, so there is nothing to refund.
+    const plus = await hasPlus(admin, userId);
+    const uncounted = free || plus;
+    const { data: left, error: reserveError } = uncounted
       ? await admin.rpc('remaining_analyses', { p_user: userId, p_limit: FREE_LIMIT })
       : await admin.rpc('reserve_analysis', { p_user: userId, p_limit: FREE_LIMIT });
     if (reserveError) {
@@ -74,6 +79,7 @@ export default {
       await logCall(admin, { userId, kind: 'analyze', ok: false, error: 'reserve_failed', claim });
       return fail(500, 'server', 'Something went wrong. Please try again.');
     }
+    const remaining = plus ? FREE_LIMIT : left;
     if (remaining < 0) {
       await logCall(admin, { userId, kind: 'analyze', ok: false, error: 'limit_reached', claim });
       return fail(402, 'limit_reached', LIMIT_REACHED_MESSAGE);
@@ -81,7 +87,7 @@ export default {
 
     // Gives the explanation back. A free retry reserved nothing, so there is nothing to give back.
     const refund = async () => {
-      if (free) return;
+      if (uncounted) return;
       await admin.rpc('refund_analysis', { p_user: userId });
       if (requestId) await admin.rpc('forget_charge', { p_user: userId, p_request: requestId });
     };
@@ -112,12 +118,12 @@ export default {
         }
 
         await logCall(admin, { userId, kind: 'analyze', ok: true, usage, error: free ? 'free_retry' : undefined, claim });
-        if (requestId && inputHash && !free) {
+        if (requestId && inputHash && !uncounted) {
           await admin.rpc('record_charge', { p_user: userId, p_request: requestId, p_hash: inputHash });
         }
         // Pasted text isn't echoed back by Claude (that would only slow it down); the server has it.
         const originalText = input.kind === 'text' ? input.text : out.originalText;
-        return { result: { analysis: out.analysis, originalText, remaining, limit: FREE_LIMIT } };
+        return { result: { analysis: out.analysis, originalText, remaining, limit: FREE_LIMIT, plus } };
       } catch (e) {
         await refund();
         const known = e instanceof AiError;
@@ -175,7 +181,7 @@ export default {
 };
 
 type Outcome =
-  | { result: { analysis: unknown; originalText: string; remaining: number; limit: number } }
+  | { result: { analysis: unknown; originalText: string; remaining: number; limit: number; plus: boolean } }
   | { error: { status: number; code: string; message: string } };
 
 /** One-way SHA-256 of what is being explained: recognises a retry without storing the content. */

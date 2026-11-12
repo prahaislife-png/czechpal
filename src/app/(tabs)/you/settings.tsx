@@ -7,8 +7,9 @@ import { Card, SectionHeader } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { List, Row } from '@/components/ui/list';
 import { Text } from '@/components/ui/text';
+import { openPlus } from '@/components/plus/gate';
 import { deleteServerData } from '@/lib/account';
-import { stayById } from '@/lib/about';
+import { longDate, stayById } from '@/lib/about';
 import { deleteRecordings } from '@/lib/academy/recordings';
 import { isDemoMode, languageByCode } from '@/lib/ai';
 import { confirm } from '@/lib/dialogs';
@@ -16,6 +17,8 @@ import { PRIVACY_URL, SUPPORT_URL } from '@/lib/links';
 import { testReminder } from '@/lib/reminders';
 import { allowanceRenewsOn, useFreeLimit, useRemainingAnalyses, useStore } from '@/store/cases';
 import { useAcademy } from '@/store/academy';
+import { useForms } from '@/store/forms';
+import { useAccess, usePlusStore } from '@/store/plus';
 import { useSpeak } from '@/store/speak';
 import { useLearn } from '@/store/learn';
 import { layout, radius, space } from '@/theme/tokens';
@@ -29,6 +32,10 @@ export default function SettingsScreen() {
   const remaining = useRemainingAnalyses();
   const limit = useFreeLimit();
   const used = limit - remaining;
+  const access = useAccess();
+  const plusUntil = usePlusStore((s) => s.until);
+  const plusEnding = usePlusStore((s) => s.ending);
+  const preview = usePlusStore((s) => s.preview);
   useFocusEffect(
     useCallback(() => {
       useStore.getState().syncAllowance();
@@ -59,6 +66,7 @@ export default function SettingsScreen() {
       clearAll();
       useLearn.getState().clear();
       useAcademy.getState().clear();
+      useForms.getState().clear();
       useSpeak.getState().clear();
       deleteRecordings();
       useStore.getState().setAiConsent(false);
@@ -73,6 +81,25 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+      {access.live ? (
+        <List>
+          <Row
+            icon="star"
+            title={access.plus ? 'CzechLocal Plus is on' : 'CzechLocal Plus'}
+            subtitle={
+              access.plus
+                ? plusUntil
+                  ? `${plusEnding ? 'Stays on until' : 'Renews on'} ${longDate(plusUntil.slice(0, 10))}`
+                  : 'The whole A2 course and unlimited explanations'
+                : 'The whole A2 course, mock exams and unlimited explanations'
+            }
+            chevron
+            onPress={() => openPlus('settings')}
+          />
+        </List>
+      ) : null}
+
+      {access.plus ? null : (
       <Card style={styles.plan}>
         <Text variant="title3">Free explanations</Text>
         <View style={styles.meter}>
@@ -89,6 +116,7 @@ export default function SettingsScreen() {
           Renews on {allowanceRenewsOn()}. Examples, replies and messages you write are always free.
         </Text>
       </Card>
+      )}
 
       <View>
         <SectionHeader title="Preferences" />
@@ -124,6 +152,21 @@ export default function SettingsScreen() {
                 onPress={() => testReminder()}
               />
             )}
+            {__DEV__ ? (
+              <Row
+                icon="lock"
+                title="Paywall preview"
+                subtitle="Locks what Plus opens, without the App Store"
+                accessory={<Switch value={!!preview?.live} onValueChange={(live) => usePlusStore.getState().setPreview(live ? { live: true, plus: false } : undefined)} />}
+              />
+            ) : null}
+            {__DEV__ && preview?.live ? (
+              <Row
+                icon="star"
+                title="Pretend Plus is bought"
+                accessory={<Switch value={preview.plus} onValueChange={(plus) => usePlusStore.getState().setPreview({ live: true, plus })} />}
+              />
+            ) : null}
             <Row
               icon="star"
               title="Show the welcome screen again"
