@@ -271,11 +271,17 @@ function MarkWriting({ run }: { run: MockRun }) {
 
   return (
     <View style={styles.mark}>
-      <Button label={busy ? 'Marking your writing…' : 'Get your writing marked'} icon="compose" variant="secondary" loading={busy} onPress={mark} />
+      <Button
+        label={busy ? 'Marking your writing…' : !isDemoMode && !aiConsent ? 'Agree and get it marked' : 'Get your writing marked'}
+        icon="compose"
+        variant="secondary"
+        loading={busy}
+        onPress={mark}
+      />
       <Text variant="footnote" color={error ? 'danger' : 'label3'} align="center" accessibilityLiveRegion="polite">
         {error ??
           (!isDemoMode && !aiConsent
-            ? 'CzechLocal sends what you wrote to Anthropic’s Claude AI for an estimate of the points. CzechLocal doesn’t keep it.'
+            ? 'CzechLocal sends what you wrote to Anthropic’s Claude AI for an estimate of the points. CzechLocal doesn’t keep it, and Anthropic doesn’t use it to train AI models.'
             : 'An AI estimate of your form and e-mail, to complete the written part.')}
       </Text>
     </View>

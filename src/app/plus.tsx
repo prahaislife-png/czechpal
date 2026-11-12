@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -36,7 +36,7 @@ export default function PlusScreen() {
   const { from } = useLocalSearchParams<{ from?: PlusReason }>();
   const reason: PlusReason = from && from in plusHeadline ? from : 'settings';
   const { colors } = useTheme();
-  const { plus } = useAccess();
+  const { live, plus } = useAccess();
   const until = usePlusStore((s) => s.until);
   const ending = usePlusStore((s) => s.ending);
   const preview = !purchasesConfigured && __DEV__;
@@ -92,6 +92,9 @@ export default function PlusScreen() {
     setBusy(null);
     if (!found) setMessage('No earlier purchase was found for this Apple Account.');
   };
+
+  // A build that doesn't sell Plus has nothing to show here, even when a link leads to it.
+  if (!live) return <Redirect href="/" />;
 
   const head = plusHeadline[reason];
 

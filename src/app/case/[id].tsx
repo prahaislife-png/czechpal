@@ -164,8 +164,18 @@ function ResultView({
     item.source === 'example' ? null : pages.length ? { kind: 'image', uris: pages } : item.fileUri ? { kind: 'pdf', uri: item.fileUri } : item.text ? { kind: 'text', text: item.text } : null;
   const fillable =
     !!source && looksLikeForm({ typeLabel: analysis.typeLabel ?? '', title: analysis.title ?? '', kind: analysis.kind ?? 'document' }, result?.originalText ?? item.text ?? '');
-  const fillIn = () => {
-    if (source) router.push({ pathname: '/form/[id]', params: { id: useForms.getState().start(source) } });
+  const fillIn = async () => {
+    if (!source) return;
+    if (!isDemoMode && !useStore.getState().aiConsent) {
+      const agreed = await confirm({
+        title: 'Send this form to the AI?',
+        message: 'To guide you through it, CzechLocal sends the form securely to Anthropic’s Claude AI. CzechLocal doesn’t keep it, and Anthropic doesn’t use it to train AI models.',
+        confirmLabel: 'Agree and continue',
+      });
+      if (!agreed) return;
+      useStore.getState().setAiConsent(true);
+    }
+    router.push({ pathname: '/form/[id]', params: { id: useForms.getState().start(source) } });
   };
 
   let section = 1;
