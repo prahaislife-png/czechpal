@@ -67,3 +67,23 @@ export const plusBenefits: { icon: 'school' | 'flag' | 'clock' | 'compose' | 'ca
   { icon: 'camera', title: 'Unlimited explanations', detail: 'Every letter, bill, sign and message, no monthly count' },
   { icon: 'document', title: 'Form filling', detail: 'Any Czech form, field by field' },
 ];
+
+/**
+ * Whether a store key may be used in this build. RevenueCat's Test Store keys (`test_…`) make
+ * the SDK crash on purpose in any release build, TestFlight included, so one is only ever used
+ * in development; a release build with one behaves as if Plus weren't on sale.
+ */
+export function usableStoreKey(key: string | undefined, isDev: boolean): string | undefined {
+  const k = key?.trim();
+  if (!k) return undefined;
+  if (k.startsWith('test_') && !isDev) return undefined;
+  return k;
+}
+
+/** How each kind of plan is named on the paywall. */
+export const planWords = {
+  year: { name: 'Yearly', every: 'a year', renews: 'Renews every year until you cancel.' },
+  month: { name: 'Monthly', every: 'a month', renews: 'Renews every month until you cancel.' },
+  lifetime: { name: 'Lifetime', every: 'once', renews: 'Paid once. Yours for good, with no renewal.' },
+  other: { name: 'Plus', every: '', renews: 'Renews until you cancel.' },
+} as const;

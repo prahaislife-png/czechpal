@@ -5,7 +5,7 @@ import { buildJourney } from '../src/lib/academy/journey';
 import { mockOutcome, speakingSelfScore, writingEstimate, writingToMark, type MockRun } from '../src/lib/academy/mock';
 import { SAMPLE_FORM_GUIDE } from '../src/lib/ai/form-sample';
 import { allFields, czechDate, fieldsToFill, formProgress, looksLikeForm, yoursValue } from '../src/lib/forms';
-import { courseSize, FREE_UNITS, gated, mockLocked, plusBenefits, plusHeadline, stepLocked, unitLocked } from '../src/lib/plus/access';
+import { courseSize, FREE_UNITS, gated, mockLocked, planWords, plusBenefits, plusHeadline, stepLocked, unitLocked, usableStoreKey } from '../src/lib/plus/access';
 
 const journey = buildJourney({}, {}, { canListen: true });
 const free = { live: true, plus: false };
@@ -57,6 +57,25 @@ describe('what CzechLocal Plus opens', () => {
     assert.ok(courseSize.examTasks >= 40);
     assert.ok(plusBenefits.length >= 5);
     for (const reason of ['course', 'mock', 'explain', 'form', 'settings'] as const) assert.ok(plusHeadline[reason].title && plusHeadline[reason].lead);
+  });
+});
+
+describe('the store key', () => {
+  it('never lets a Test Store key into a release build, where the store SDK crashes on purpose', () => {
+    assert.equal(usableStoreKey('test_abc123', false), undefined);
+    assert.equal(usableStoreKey('test_abc123', true), 'test_abc123');
+  });
+
+  it('uses a real store key in any build, and nothing when there is none', () => {
+    assert.equal(usableStoreKey('appl_abc123', false), 'appl_abc123');
+    assert.equal(usableStoreKey(' appl_abc123 ', true), 'appl_abc123');
+    assert.equal(usableStoreKey(undefined, false), undefined);
+    assert.equal(usableStoreKey('', true), undefined);
+  });
+
+  it('names every kind of plan the store can offer', () => {
+    for (const p of ['year', 'month', 'lifetime', 'other'] as const) assert.ok(planWords[p].name && planWords[p].renews);
+    assert.ok(/no renewal/.test(planWords.lifetime.renews));
   });
 });
 

@@ -5,7 +5,7 @@
 
 export const purchasesConfigured = false;
 
-export type Plan = { id: string; period: 'year' | 'month' | 'other'; price: string; perMonth?: string };
+export type Plan = { id: string; period: 'year' | 'month' | 'lifetime' | 'other'; price: string; perMonth?: string };
 export type Membership = { plus: boolean; until?: string; ending?: boolean };
 export type BuyResult = { status: 'bought'; membership: Membership } | { status: 'cancelled' } | { status: 'failed'; message: string };
 
@@ -18,6 +18,8 @@ export async function loadPlans(): Promise<Plan[]> {
 export async function buy(_planId: string): Promise<BuyResult> {
   return { status: 'failed', message: 'CzechLocal Plus is bought in the iPhone app.' };
 }
+
+export async function linkUser(_userId: string): Promise<void> {}
 
 export async function restore(): Promise<Membership | null> {
   return null;

@@ -1,6 +1,6 @@
 import Purchases, { PACKAGE_TYPE, PURCHASES_ERROR_CODE, type CustomerInfo, type PurchasesPackage } from 'react-native-purchases';
 
-import { PLUS_ENTITLEMENT } from './access';
+import { PLUS_ENTITLEMENT, usableStoreKey } from './access';
 
 /**
  * The App Store (and Google Play) side of CzechLocal Plus, through RevenueCat. The rest of the app
@@ -8,16 +8,20 @@ import { PLUS_ENTITLEMENT } from './access';
  * (purchases.web.ts) sells nothing.
  *
  * The key is public by design (it only identifies the app to the store SDK). With no key in the
- * build, nothing is configured and nothing in the app is locked.
+ * build, nothing is configured and nothing in the app is locked. A Test Store key is used only in
+ * development (see usableStoreKey).
  */
 
-const KEY = process.env.EXPO_OS === 'ios' ? process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY : process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY;
+const KEY = usableStoreKey(
+  process.env.EXPO_OS === 'ios' ? process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY : process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
+  __DEV__,
+);
 
 export const purchasesConfigured = !!KEY;
 
 export type Plan = {
   id: string;
-  period: 'year' | 'month' | 'other';
+  period: 'year' | 'month' | 'lifetime' | 'other';
   /** The price as the store prints it for this person's country: "999 Kč". */
   price: string;
   /** For a yearly plan, the same price by the month: "83,25 Kč". */
@@ -47,7 +51,8 @@ export async function startPurchases(userId: string | undefined, onChange: (m: M
   onChange(membershipOf(await Purchases.getCustomerInfo()));
 }
 
-const periodOf = (p: PurchasesPackage): Plan['period'] => (p.packageType === PACKAGE_TYPE.ANNUAL ? 'year' : p.packageType === PACKAGE_TYPE.MONTHLY ? 'month' : 'other');
+const periodOf = (p: PurchasesPackage): Plan['period'] =>
+  p.packageType === PACKAGE_TYPE.ANNUAL ? 'year' : p.packageType === PACKAGE_TYPE.MONTHLY ? 'month' : p.packageType === PACKAGE_TYPE.LIFETIME ? 'lifetime' : 'other';
 
 /** The plans on sale, yearly first. Empty when the store can't be reached or nothing is set up. */
 export async function loadPlans(): Promise<Plan[]> {
@@ -55,7 +60,7 @@ export async function loadPlans(): Promise<Plan[]> {
   const offerings = await Purchases.getOfferings();
   const available = offerings.current?.availablePackages ?? [];
   packages.clear();
-  const rank = { year: 0, month: 1, other: 2 };
+  const rank = { year: 0, month: 1, lifetime: 2, other: 3 };
   return available
     .map((p) => {
       packages.set(p.identifier, p);
@@ -81,6 +86,19 @@ export async function buy(planId: string): Promise<BuyResult> {
     if (code === PURCHASES_ERROR_CODE.NETWORK_ERROR || code === PURCHASES_ERROR_CODE.OFFLINE_CONNECTION_ERROR)
       return { status: 'failed', message: 'No connection to the store. Check your internet and try again.' };
     return { status: 'failed', message: 'The purchase didn’t go through. You haven’t been charged. Please try again.' };
+  }
+}
+
+/**
+ * Makes sure the store knows this person by their account id, which is what the server asks the
+ * store about. Needed when the app started offline and the store gave them a temporary id.
+ */
+export async function linkUser(userId: string): Promise<void> {
+  if (!configured) return;
+  try {
+    if ((await Purchases.getAppUserID()) !== userId) await Purchases.logIn(userId);
+  } catch {
+    // Offline: the next launch links it.
   }
 }
 

@@ -152,12 +152,14 @@
       ],
       "expo-asset",
       [
-      "@config-plugins/react-native-webrtc",
-      {
-        "cameraPermission": "CzechLocal uses the camera to read Czech text you point it at.",
-        "microphonePermission": "CzechLocal uses the microphone when you practise speaking Czech: to record answers you play back on your phone, and in Speak Czech, to talk with its AI conversation partner."
-      }
-    ]
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "CzechLocal uses the camera to read Czech text you point it at.",
+          "microphonePermission": "CzechLocal uses the microphone when you practise speaking Czech: to record answers you play back on your phone, and in Speak Czech, to talk with its AI conversation partner."
+        }
+      ],
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
