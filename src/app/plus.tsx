@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -11,7 +11,7 @@ import { Text } from '@/components/ui/text';
 import { longDate } from '@/lib/about';
 import { announce } from '@/lib/a11y';
 import { PRIVACY_URL } from '@/lib/links';
-import { buyPlan, loadPlans, plusBenefits, plusHeadline, purchasesConfigured, restorePlus, type Plan, type PlusReason } from '@/lib/plus';
+import { buyPlan, loadPlans, planWords, plusBenefits, plusHeadline, purchasesConfigured, restorePlus, type Plan, type PlusReason } from '@/lib/plus';
 import { useAccess, usePlusStore } from '@/store/plus';
 import { layout, radius, space } from '@/theme/tokens';
 import { useTheme } from '@/theme/use-theme';
@@ -25,7 +25,6 @@ const SAMPLE_PLANS: Plan[] = [
   { id: 'sample-month', period: 'month', price: '149 Kč' },
 ];
 
-const periodLabel = { year: 'a year', month: 'a month', other: '' } as const;
 
 /**
  * CzechLocal Plus: what it opens, what it costs, one button. It leads with whatever the person
@@ -36,7 +35,7 @@ export default function PlusScreen() {
   const { from } = useLocalSearchParams<{ from?: PlusReason }>();
   const reason: PlusReason = from && from in plusHeadline ? from : 'settings';
   const { colors } = useTheme();
-  const { plus } = useAccess();
+  const { live, plus } = useAccess();
   const until = usePlusStore((s) => s.until);
   const ending = usePlusStore((s) => s.ending);
   const preview = !purchasesConfigured && __DEV__;
@@ -92,6 +91,9 @@ export default function PlusScreen() {
     setBusy(null);
     if (!found) setMessage('No earlier purchase was found for this Apple Account.');
   };
+
+  // A build that doesn't sell Plus has nothing to show here, even when a link leads to it.
+  if (!live) return <Redirect href="/" />;
 
   const head = plusHeadline[reason];
 
@@ -168,13 +170,21 @@ export default function PlusScreen() {
                       onPress={() => setPicked(p.id)}
                       accessibilityRole="radio"
                       accessibilityState={{ selected: on }}
-                      accessibilityLabel={`${p.price} ${periodLabel[p.period]}${p.perMonth ? `, ${p.perMonth} a month` : ''}`}
+                      accessibilityLabel={`${planWords[p.period].name}: ${p.price} ${planWords[p.period].every}${p.perMonth ? `, ${p.perMonth} a month` : ''}`}
                       style={[styles.plan, { backgroundColor: colors.surface, borderColor: on ? colors.accentFill : colors.separator }, on && styles.planOn]}>
                       <Icon name={on ? 'checkCircle' : 'circle'} size={22} color={on ? colors.accentFill : colors.label3} />
                       <View style={styles.flex}>
-                        <Text variant="headline">{p.period === 'year' ? 'Yearly' : p.period === 'month' ? 'Monthly' : 'Plus'}</Text>
+                        <Text variant="headline">{planWords[p.period].name}</Text>
                         <Text variant="footnote" color="label2">
-                          {p.period === 'year' ? (p.perMonth ? `${p.perMonth} a month, paid once a year` : 'Paid once a year') : p.period === 'month' ? 'Paid every month' : ''}
+                          {p.period === 'year'
+                            ? p.perMonth
+                              ? `${p.perMonth} a month, paid once a year`
+                              : 'Paid once a year'
+                            : p.period === 'month'
+                              ? 'Paid every month'
+                              : p.period === 'lifetime'
+                                ? 'Paid once, no subscription'
+                                : ''}
                         </Text>
                       </View>
                       <Text variant="headline" tabular>
@@ -186,9 +196,15 @@ export default function PlusScreen() {
               </View>
 
               <View style={styles.actions}>
-                <Button label={chosen ? `Get Plus · ${chosen.price} ${periodLabel[chosen.period]}` : 'Get Plus'} onPress={start} loading={busy === 'buy'} disabled={!chosen || busy !== null} />
+                <Button
+                  label={chosen ? `Get Plus · ${chosen.price}${planWords[chosen.period].every ? ` ${planWords[chosen.period].every}` : ''}` : 'Get Plus'}
+                  onPress={start}
+                  loading={busy === 'buy'}
+                  disabled={!chosen || busy !== null}
+                />
                 <Text variant="footnote" color="label2" align="center">
-                  {chosen?.period === 'month' ? 'Renews every month' : 'Renews every year'} until you cancel. Cancel any time in your App Store settings, at least a day before it renews.
+                  {planWords[chosen?.period ?? 'year'].renews}
+                  {chosen?.period === 'lifetime' ? '' : ' Cancel any time in your App Store settings, at least a day before it renews.'}
                 </Text>
               </View>
             </>

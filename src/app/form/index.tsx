@@ -45,7 +45,6 @@ export default function FormStartScreen() {
 
   const begin = (source: FormSource | null) => {
     if (!source) return;
-    if (needsConsent) useStore.getState().setAiConsent(true);
     router.push({ pathname: '/form/[id]', params: { id: useForms.getState().start(source) } });
   };
 
@@ -102,6 +101,15 @@ export default function FormStartScreen() {
           </Text>
           {access.live ? <Button label="Fill in every form with Plus" onPress={() => openPlus('form')} /> : null}
         </View>
+      ) : needsConsent ? (
+        // Apple requires explicit permission before personal data goes to a third-party AI.
+        <View style={styles.actions}>
+          <Text variant="footnote" color="label2" align="center">
+            To read a form, CzechLocal sends its photo or PDF securely to Anthropic’s Claude AI. CzechLocal doesn’t keep it, and Anthropic doesn’t use it to train AI models. You can
+            change this in Settings.
+          </Text>
+          <Button label="Agree and continue" onPress={() => useStore.getState().setAiConsent(true)} />
+        </View>
       ) : (
         <View style={styles.actions}>
           <Button label="Photograph the form" icon="camera" onPress={fromCamera} />
@@ -114,12 +122,6 @@ export default function FormStartScreen() {
               ? 'Unlimited with Plus. Up to 5 pages at a time.'
               : `Counts as 1 of your free explanations: ${remaining} of ${limit} left this month. Up to ${MAX_PAGES} pages at a time.`}
           </Text>
-          {needsConsent ? (
-            <Text variant="footnote" color="label3" align="center">
-              To read the form, CzechLocal sends the photo securely to Anthropic’s Claude AI. CzechLocal doesn’t keep it, and Anthropic doesn’t use it to train AI models. Choosing a
-              photo means you agree.
-            </Text>
-          ) : null}
           {problem ? (
             <Text variant="callout" color="danger" align="center" accessibilityLiveRegion="polite">
               {problem}

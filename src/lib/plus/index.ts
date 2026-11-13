@@ -2,7 +2,7 @@ import { ensureSession, isBackendConfigured, supabase } from '@/lib/supabase';
 import { useStore } from '@/store/cases';
 import { usePlusStore } from '@/store/plus';
 
-import { buy, purchasesConfigured, restore, startPurchases, type BuyResult, type Membership } from './purchases';
+import { buy, linkUser, purchasesConfigured, restore, startPurchases, type BuyResult, type Membership } from './purchases';
 
 export * from './access';
 export { loadPlans, purchasesConfigured, type Plan } from './purchases';
@@ -20,7 +20,9 @@ async function tellServer(m: Membership) {
   const stamp = `${m.plus}:${m.until ?? ''}`;
   if (!isBackendConfigured || !supabase || stamp === lastSynced) return;
   try {
-    await ensureSession();
+    const session = await ensureSession();
+    // The server asks the store about this account id, so the store must know the purchase by it.
+    await linkUser(session.user.id);
     const { error } = await supabase.functions.invoke('membership', { body: {} });
     if (error) return;
     lastSynced = stamp;
