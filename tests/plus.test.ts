@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
 import { buildJourney } from '../src/lib/academy/journey';
 import { mockOutcome, speakingSelfScore, writingEstimate, writingToMark, type MockRun } from '../src/lib/academy/mock';
 import { SAMPLE_FORM_GUIDE } from '../src/lib/ai/form-sample';
 import { allFields, czechDate, fieldsToFill, formProgress, looksLikeForm, yoursValue } from '../src/lib/forms';
-import { courseSize, FREE_UNITS, gated, mockLocked, planWords, plusBenefits, plusHeadline, stepLocked, unitLocked, usableStoreKey } from '../src/lib/plus/access';
+import { courseSize, FREE_UNITS, gated, mockLocked, planWords, PLUS_ENTITLEMENT, plusBenefits, plusHeadline, stepLocked, unitLocked, usableStoreKey } from '../src/lib/plus/access';
 
 const journey = buildJourney({}, {}, { canListen: true });
 const free = { live: true, plus: false };
@@ -61,6 +62,12 @@ describe('what CzechLocal Plus opens', () => {
 });
 
 describe('the store key', () => {
+  it('asks the store for the entitlement the dashboard has, the same one the server asks for', () => {
+    assert.equal(PLUS_ENTITLEMENT, 'czechpal_pro');
+    const server = readFileSync(new URL('../supabase/functions/_shared/membership.ts', import.meta.url), 'utf8');
+    assert.ok(server.includes(`?? '${PLUS_ENTITLEMENT}'`), 'the server’s default entitlement matches the app’s');
+  });
+
   it('never lets a Test Store key into a release build, where the store SDK crashes on purpose', () => {
     assert.equal(usableStoreKey('test_abc123', false), undefined);
     assert.equal(usableStoreKey('test_abc123', true), 'test_abc123');

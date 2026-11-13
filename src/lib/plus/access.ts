@@ -17,8 +17,11 @@ import { writingTasks } from '@/lib/academy/tasks/writing';
 /** Units of the journey that are free. */
 export const FREE_UNITS = 1;
 
-/** The entitlement's id in the store dashboard. */
-export const PLUS_ENTITLEMENT = 'plus';
+/**
+ * The entitlement's identifier in the RevenueCat dashboard, where it can't be renamed. It must
+ * match PLUS_ENTITLEMENT in supabase/functions/_shared/membership.ts.
+ */
+export const PLUS_ENTITLEMENT = 'czechpal_pro';
 
 /** `live`: Plus can be bought in this build. `plus`: this person has it. */
 export type Access = { live: boolean; plus: boolean };
