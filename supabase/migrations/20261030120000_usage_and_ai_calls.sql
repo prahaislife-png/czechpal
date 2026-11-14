@@ -1,4 +1,4 @@
--- CzechPal: server-side free allowance and AI cost log.
+-- CzechLocal: server-side free allowance and AI cost log.
 -- Document content is never stored here: only who, when, which model, and token counts.
 
 -- Free explanations per user per calendar month (UTC). Only the server changes this table.

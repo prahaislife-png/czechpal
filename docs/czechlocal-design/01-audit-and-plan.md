@@ -1,9 +1,10 @@
 # CzechLocal 2.0 redesign: audit and migration plan
 
-Branch: `feature/czechpal-2-redesign` (from `master` at a3ba305, 2026-11-08). The app was renamed
-from CzechPal to **CzechLocal** on 2026-11-08 (display name and all text; the bundle id
-`com.czechpal.app`, the `czechpal` URL scheme, the EAS project and storage keys stay, so existing
-installs, TestFlight and saved data carry on).
+Branch: the 2.0 redesign branch (from `master` at a3ba305, 2026-11-08). The app took the name
+**CzechLocal** on 2026-11-08 (display name and all text). On 2026-11-14, before launch, the
+internal names followed: the bundle id is `com.czechlocal.app`, the URL scheme `czechlocal`, the
+Plus entitlement `czechlocal_pro`, and storage keys start with `czechlocal`. Only the Expo slug stays
+`czechpal`: an EAS project's slug can never change, and users never see it.
 
 ## 1. Repository audit
 
@@ -17,7 +18,7 @@ installs, TestFlight and saved data carry on).
 | Animation | Reanimated 4.7 + react-native-worklets, Gesture Handler 3, expo-haptics. Reduce Motion respected through `useReducedMotion`. |
 | Fonts / icons | System font only (web: a CSS stack). Icons through `src/components/ui/icon.tsx` (SF Symbols on iOS, Material on Android/web). `expo-font` installed, no custom font loaded. |
 | Tokens | `src/theme/tokens.ts`: one cool-grey palette with a Czech-cobalt accent (light/dark/high contrast), a separate warm Explore palette, type ramp, spacing, radii, motion. Screens read colours only through `useTheme()`, so a palette change restyles the whole app. |
-| Storage | zustand + AsyncStorage, local first: `czechpal` (items, reminders, consent, About you), `czechpal-learn`, `czechpal-academy`, `czechpal-speak`, Explore saved places and cache. Settings → Delete everything clears all. |
+| Storage | zustand + AsyncStorage, local first: `czechlocal` (items, reminders, consent, About you), `czechlocal-learn`, `czechlocal-academy`, `czechlocal-speak`, Explore saved places and cache. Settings → Delete everything clears all. |
 | Learn | Learn home (A2 Academy card, Speak Czech card, daily session, situations, missions, words/FSRS flashcards, progress, library); A2 Academy (plan, readiness, roadmap, practice, mocks, writing coach with AI feedback, speaking); Speak Czech tutor (GPT-Live). |
 | AI consent / share | AI consent stored on the phone and asked before the first send; Speak Czech has its own consent. Share extension → `+native-intent.ts` → `/handle-share`. Reminders deep-link to `/case/[id]` or `/about`. |
 

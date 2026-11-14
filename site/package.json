@@ -1,5 +1,5 @@
 {
-  "name": "czechpal-site",
+  "name": "czechlocal-site",
   "private": true,
   "type": "module",
   "description": "The animated hero on CzechLocal's website (docs/, GitHub Pages). Builds into docs/hero/.",

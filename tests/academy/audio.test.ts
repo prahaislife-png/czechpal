@@ -1,10 +1,20 @@
 import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
 import { collectRecordings } from '../../scripts/audio/collect';
 import { checkVoices, genderCue, speakersFor, VOICE } from '../../scripts/audio/speakers';
 import { audioHash, turnsOf } from '../../src/lib/academy/audio-key';
-import { recordings } from '../../src/lib/academy/audio-manifest';
+
+/**
+ * The manifest, read as text: its entries `require` mp3 files, which only the app's bundler can
+ * load. Each entry gives the recording's key, its file and the fingerprint of its text.
+ */
+const recordings = Object.fromEntries(
+  [...readFileSync('src/lib/academy/audio-manifest.ts', 'utf8').matchAll(/'([^']+)': \{ src: require\('\.\.\/\.\.\/\.\.\/([^']+)'\), hash: '([0-9a-f]+)' \}/g)].map(
+    ([, key, file, hash]) => [key, { file, hash }],
+  ),
+);
 
 describe('Recorded Czech audio (Azure voices)', () => {
   it('fingerprints the text, ignoring spacing but not wording', () => {
@@ -39,5 +49,11 @@ describe('Recorded Czech audio (Azure voices)', () => {
       assert.ok(texts.has(key), `${key} is no longer in the app`);
       assert.equal(r.hash, audioHash(texts.get(key)!), `${key} changed since its audio was made: run scripts/audio/generate.ps1`);
     }
+  });
+
+  it('ships a file for every recording in the manifest', () => {
+    const entries = Object.entries(recordings);
+    assert.ok(entries.length >= 100, 'the manifest lists the recordings');
+    for (const [key, r] of entries) assert.ok(existsSync(r.file), `${key}: ${r.file} is missing`);
   });
 });

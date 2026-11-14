@@ -10,10 +10,10 @@ Product name in code, store listing and website: **CzechLocal** (the brief says 
 | Framework | Expo SDK 58 (`expo ~58.0.23`), React Native 0.88, React 19.3, TypeScript 6, React Compiler on |
 | Navigation | Expo Router, typed routes, `src/app/`. Tabs: NativeTabs (iOS/Android), custom tab bar on web (`src/components/app-tabs*.tsx`): Home `(home)`, Learn `learn`, Find `help`, Explore `explore` |
 | Learn routes | `(tabs)/learn/{index,words,missions,progress}`, `lesson/[id]`, `mission/[id]`, `flashcards` (full-screen modal), `listen` (full-screen modal), `learn-plan` (modal), `session` (full-screen modal), `prepare/[id]` |
-| State | zustand 5 + `persist` on AsyncStorage. Stores: `czechpal` (cases, settings, About you, reminders, AI consent), `czechpal-learn` (Learn, version 1), `czechpal-explore` (saved places), `czechpal-explore-places-v2` (cached place list) |
+| State | zustand 5 + `persist` on AsyncStorage. Stores: `czechlocal` (cases, settings, About you, reminders, AI consent), `czechlocal-learn` (Learn, version 1), `czechlocal-explore` (saved places), `czechlocal-explore-places-v2` (cached place list) |
 | Backend | Supabase (project utsmmdggvbsyelcsmvyo): anonymous auth; Edge Functions `analyze`, `reply`, `compose`, `translate`, `allowance`, `delete-account`, `report-office`, `report-provider`; tables for usage/allowance, places, practices, explore_places. Secrets server-side only; the app ships the publishable key |
 | AI | Anthropic Claude via Edge Functions only (`supabase/functions/_shared/claude.ts`), Haiku 5.5 by default, per-user rate limits (`isRateLimited`), 20 free explanations/month (`_shared/allowance.ts`, `FREE_ANALYSES_PER_MONTH`); Translate has its own limits and doesn't count |
-| Consent | `aiConsent` in the `czechpal` store; asked before the first AI request (Home, review, reply, compose); withdrawable in Settings; privacy policy names Anthropic |
+| Consent | `aiConsent` in the `czechlocal` store; asked before the first AI request (Home, review, reply, compose); withdrawable in Settings; privacy policy names Anthropic |
 | Deletion | Settings → Delete everything: clears all stores (Learn's `clear()` included) and calls `delete-account` |
 | Audio | **Playback only**: `expo-speech` (device text-to-speech, Czech voice when installed: `src/lib/learn/voice.ts`). **No recording library** (no expo-audio/expo-av), **no speech-to-text** |
 | Design | Tokens in `src/theme/tokens.ts` (cool palette + Explore's warm palette), `Text`/`Button`/`Card`/`List`/`Row`/`Chip`/`Icon` in `src/components/ui`, Reanimated 4, Gesture Handler 3 (hook API) |
@@ -59,7 +59,7 @@ Product name in code, store listing and website: **CzechLocal** (the brief says 
 
 | Risk | Mitigation |
 |---|---|
-| Migrating the persisted Learn store loses progress | New data goes in a **new** store (`czechpal-academy`); the Learn store only gains optional fields, so its version stays 1 |
+| Migrating the persisted Learn store loses progress | New data goes in a **new** store (`czechlocal-academy`); the Learn store only gains optional fields, so its version stays 1 |
 | Unreviewed AI-written Czech presented as checked | Every content item carries `review: 'ai-checked' \| 'teacher-reviewed'`; only the 9 stories are teacher-reviewed; the UI never claims a review that didn't happen |
 | Exam claims that aren't true | All exam rules live in `exam.ts`, sourced from `exam-spec-2026.md`; unverified details aren't encoded |
 | Fake "AI examiner" | Speaking is shipped as record/replay/self-review until real transcription exists; no score is shown without a rubric and evidence |

@@ -1,6 +1,6 @@
 # CzechLocal website hero
 
-The animated scenes on https://prahaislife-png.github.io/czechpal/: the hero (a Czech bill and the
+The animated scenes on https://prahaislife-png.github.io/czechlocal/: the hero (a Czech bill and the
 app explaining it) and one for each feature (writing in Czech, signs and menus, Find). It is built with the Stageshow kit (`kit/`, MIT,
 by Benji Taylor; see `kit/LICENSE`) and compiled into `docs/hero/`, which GitHub Pages serves.
 

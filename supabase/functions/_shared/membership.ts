@@ -11,7 +11,7 @@ import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
 const SECRET = Deno.env.get('REVENUECAT_SECRET_KEY');
 /** The entitlement's identifier in the RevenueCat dashboard; must match PLUS_ENTITLEMENT in src/lib/plus/access.ts. */
-const ENTITLEMENT = Deno.env.get('PLUS_ENTITLEMENT') ?? 'czechpal_pro';
+const ENTITLEMENT = Deno.env.get('PLUS_ENTITLEMENT') ?? 'czechlocal_pro';
 /** A purchase with no end date (a granted or lifetime entitlement). */
 const NO_END = '9999-12-31T00:00:00Z';
 

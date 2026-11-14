@@ -1,8 +1,8 @@
--- CzechPal: a live directory of Prague GPs, dentists, children's doctors and gynaecologists.
+-- CzechLocal: a live directory of Prague GPs, dentists, children's doctors and gynaecologists.
 --
 -- The list comes from the official National Register of Healthcare Providers (NRPZS, ÚZIS ČR,
 -- CC BY 4.0), imported by scripts/import-providers.mjs. What makes it useful for foreigners comes
--- from CzechPal users: whether a practice is taking new patients, how good its English is, and
+-- from CzechLocal users: whether a practice is taking new patients, how good its English is, and
 -- whether it charges foreigners extra, each with the date it was reported.
 --
 -- Reports hold no free text (no reviews, nothing defamatory, no health details) and are never

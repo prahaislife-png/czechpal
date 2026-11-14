@@ -211,7 +211,7 @@ on conflict (id) do update set
   'commit;',
 ].join('\n');
 
-const file = join(mkdtempSync(join(tmpdir(), 'czechpal-')), 'providers.sql');
+const file = join(mkdtempSync(join(tmpdir(), 'czechlocal-')), 'providers.sql');
 writeFileSync(file, sql);
 console.log(`Writing ${providers.length} providers to Supabase…`);
 // One quoted command string: works through the Windows shell (needed for npx.cmd) and with spaces in the path.

@@ -1,4 +1,4 @@
--- CzechPal: a retry of an explanation the user was charged for but never received is free.
+-- CzechLocal: a retry of an explanation the user was charged for but never received is free.
 --
 -- If the connection dies after the server finished, the user saw nothing but the explanation
 -- was counted. When the app retries the same case with the same content within 15 minutes,

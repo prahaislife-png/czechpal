@@ -8,8 +8,8 @@ import { COLUMNS, fromRow, type Row } from './rows';
 import type { ExplorePlace } from './types';
 
 // v2: the 3 November re-import fixed places matched to the wrong kind; older copies are dropped.
-const KEY = 'czechpal-explore-places-v2';
-const OLD_KEYS = ['czechpal-explore-places'];
+const KEY = 'czechlocal-explore-places-v2';
+const OLD_KEYS = ['czechlocal-explore-places'];
 /** Parks don't move: a week-old copy is fine, and Explore opens at once from it. */
 const FRESH_MS = 7 * 24 * 3600 * 1000;
 const PAGE = 1000;

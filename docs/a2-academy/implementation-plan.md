@@ -19,7 +19,7 @@ src/lib/academy/           pure TypeScript, tested with node:test
   roadmap.ts               evidence → topic state NOT_STARTED | LEARNING | PRACTISED | MASTERED
   mistakes.ts              mistake patterns → explanation, remediation, retest schedule   (Phase 2)
   plan.ts                  today's plan: rule-based, from weakness, backlog, minutes, exam date
-src/store/academy.ts       new persisted store `czechpal-academy` (attempts, mistakes, onboarding,
+src/store/academy.ts       new persisted store `czechlocal-academy` (attempts, mistakes, onboarding,
                            diagnostic result); cleared by Delete everything
 src/app/academy/*          screens (stack inside Learn)
 src/lib/learn/exam.ts      the single source of exam rules (extended from exam-spec-2026.md)

@@ -108,7 +108,7 @@ export const useForms = create<State & Actions>()(
       };
     },
     {
-      name: 'czechpal-forms',
+      name: 'czechlocal-forms',
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
       // A guide that was being written when the app closed can't be finished: its photo is gone.

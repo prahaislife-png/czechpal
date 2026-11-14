@@ -21,7 +21,7 @@ Last updated 6 November 2026 (Phase 2).
 | Evidence, readiness per skill, what needs work | `src/lib/academy/evidence.ts` | Done, tested |
 | Roadmap and mastery (two passes ≥ 2 days apart) | `src/lib/academy/roadmap.ts` | Done, tested |
 | Rule-based daily plan, 5–30 minutes, hardest skill first | `src/lib/academy/plan.ts`, `use-plan.ts` | Done, tested |
-| Private store, cleared by Delete everything | `src/store/academy.ts` (`czechpal-academy` v1) | Done |
+| Private store, cleared by Delete everything | `src/store/academy.ts` (`czechlocal-academy` v1) | Done |
 | Setup (level, exam date, minutes, hardest skill) | `src/app/a2-setup.tsx` | Done |
 | A2 Academy home, Learn card, topics, topic, lesson player, exam info | `src/app/...` | Done |
 
@@ -73,7 +73,7 @@ Last updated 6 November 2026 (Phase 2).
 | Daily plan: mistakes (3 or more), exam practice in the hardest skill once a lesson is done, least-done set first | `src/lib/academy/plan.ts` | Done, tested |
 | Lessons for topics 4–8 (one each: my day, free time, work, health, shopping) | `src/lib/academy/lessons.ts` | Done, AI-checked |
 
-Store: `czechpal-academy` stays version 1; `tasks` and `writing` were added as fields that default to
+Store: `czechlocal-academy` stays version 1; `tasks` and `writing` were added as fields that default to
 empty, so existing progress loads unchanged.
 
 ### Quality gate
