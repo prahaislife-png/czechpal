@@ -147,7 +147,7 @@ export const useAcademy = create<State & Actions>()(
       clear: () => set({ ...initial }),
     }),
     {
-      name: 'czechpal-academy',
+      name: 'czechlocal-academy',
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
       // Version 1 is the first; later versions add their steps here so no one's progress is lost.

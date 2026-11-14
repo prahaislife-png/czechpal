@@ -63,7 +63,7 @@ describe('what CzechLocal Plus opens', () => {
 
 describe('the store key', () => {
   it('asks the store for the entitlement the dashboard has, the same one the server asks for', () => {
-    assert.equal(PLUS_ENTITLEMENT, 'czechpal_pro');
+    assert.equal(PLUS_ENTITLEMENT, 'czechlocal_pro');
     const server = readFileSync(new URL('../supabase/functions/_shared/membership.ts', import.meta.url), 'utf8');
     assert.ok(server.includes(`?? '${PLUS_ENTITLEMENT}'`), 'the server’s default entitlement matches the app’s');
   });

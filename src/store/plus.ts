@@ -39,7 +39,7 @@ export const usePlusStore = create<State & Actions>()(
       setPreview: (preview) => set({ preview }),
       clear: () => set({ plus: false, until: undefined, ending: undefined, preview: undefined }),
     }),
-    { name: 'czechpal-plus', storage: createJSONStorage(() => AsyncStorage), version: 1 },
+    { name: 'czechlocal-plus', storage: createJSONStorage(() => AsyncStorage), version: 1 },
   ),
 );
 

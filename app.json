@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "czechpal",
+    "scheme": "czechlocal",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": {
@@ -13,7 +13,7 @@
         "dark": "./assets/images/icon-dark.png",
         "tinted": "./assets/images/icon-tinted.png"
       },
-      "bundleIdentifier": "com.czechpal.app",
+      "bundleIdentifier": "com.czechlocal.app",
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -58,7 +58,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.czechpal.app",
+      "package": "com.czechlocal.app",
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
@@ -178,10 +178,10 @@
               "appExtensions": [
                 {
                   "targetName": "expo-sharing-extension",
-                  "bundleIdentifier": "com.czechpal.app.expo-sharing-extension",
+                  "bundleIdentifier": "com.czechlocal.app.expo-sharing-extension",
                   "entitlements": {
                     "com.apple.security.application-groups": [
-                      "group.com.czechpal.app"
+                      "group.com.czechlocal.app"
                     ]
                   }
                 }

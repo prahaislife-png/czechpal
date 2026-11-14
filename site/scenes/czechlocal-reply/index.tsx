@@ -1,6 +1,6 @@
 import { ChevronLeft } from 'lucide-react'
 import { Bar, Phone, Spinner, Stage, Stream, type Act } from '../../kit'
-import { useDark } from '../czechpal-app/ui'
+import { useDark } from '../czechlocal-app/ui'
 import './reply.css'
 
 // "Write in Czech, from your own words": CzechLocal's Write in Czech screen,

@@ -57,7 +57,7 @@ export const MAX_PAGES = 5;
 export const pagesOf = (item: Pick<CaseItem, 'imageUri' | 'morePages'>) =>
   item.imageUri ? [item.imageUri, ...(item.morePages ?? [])] : [];
 
-const STORAGE_KEY = 'czechpal';
+const STORAGE_KEY = 'czechlocal';
 /** The app was called CzechReply; saved data from before the rename is read once, then moved. */
 const LEGACY_STORAGE_KEY = 'czechreply';
 

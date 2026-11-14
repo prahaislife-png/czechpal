@@ -291,7 +291,7 @@ on conflict (id) do update set
   `update public.places set removed = true where checked_on < ${q(today)}::date and not removed;`,
   'commit;',
 ].join('\n');
-const dir = mkdtempSync(join(tmpdir(), 'czechpal-places-'));
+const dir = mkdtempSync(join(tmpdir(), 'czechlocal-places-'));
 const file = join(dir, 'places.sql');
 writeFileSync(file, sql);
 execSync(`npx supabase db query --linked --file "${file}"`, { stdio: 'inherit' });

@@ -163,7 +163,7 @@ export const useLearn = create<State & Actions>()(
       };
     },
     {
-      name: 'czechpal-learn',
+      name: 'czechlocal-learn',
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
       partialize: ({ progress, lastContentId, deck, reviews, direction, showTranslation, rate, profile, days, missionListening, phrases }) => ({

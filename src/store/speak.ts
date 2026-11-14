@@ -54,7 +54,7 @@ export const useSpeak = create<State & Actions>()(
       clear: () => set({ ...initial }),
     }),
     {
-      name: 'czechpal-speak',
+      name: 'czechlocal-speak',
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
       migrate: (persisted) => persisted as State,

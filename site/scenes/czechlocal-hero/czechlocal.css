@@ -1,6 +1,6 @@
 /* The hero: a bill on the page's own ground with the phone straddling its
    right margin. One gutter for the bill's top and left and the phone's top
-   and right. App tokens and screen parts come from czechpal-app/app.css. */
+   and right. App tokens and screen parts come from czechlocal-app/app.css. */
 .cp-hero-stage .ss-stage {
   --gutter: 40px;
 }

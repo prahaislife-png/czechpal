@@ -1,8 +1,8 @@
 import type { CSSProperties } from 'react'
 import { ChevronLeft, CircleAlert, CircleCheck, ReceiptText } from 'lucide-react'
 import { Bar, Connector, Phone, Spinner, Stage, type Act } from '../../kit'
-import { Lines, useDark } from '../czechpal-app/ui'
-import './czechpal.css'
+import { Lines, useDark } from '../czechlocal-app/ui'
+import './czechlocal.css'
 
 // CzechLocal's website hero: a device pair where the "desktop" is paper. A
 // Czech electricity bill sits top-left and runs off the bottom; the phone

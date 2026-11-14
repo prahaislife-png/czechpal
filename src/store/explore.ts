@@ -31,7 +31,7 @@ export const useExplore = create<ExploreState>()(
       requestFocus: (focusRequest) => set({ focusRequest }),
     }),
     {
-      name: 'czechpal-explore',
+      name: 'czechlocal-explore',
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
       partialize: ({ saved }) => ({ saved }),

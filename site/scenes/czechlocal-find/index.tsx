@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, Clock, FileText, HeartPulse, House, Landmark, MapPin, Phone as PhoneIcon, Scale, Search } from 'lucide-react'
 import { Bar, Phone, Stage, type Act } from '../../kit'
-import { useDark } from '../czechpal-app/ui'
+import { useDark } from '../czechlocal-app/ui'
 import './find.css'
 
 // "Find who you need": CzechLocal's Find tab, phone only. Story: someone types

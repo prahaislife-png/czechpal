@@ -19,7 +19,7 @@ describe('a saved letter’s files', () => {
     const after = 'file:///var/mobile/Containers/Data/Application/BBBB-2222/Documents/case-files/mhx3k2abcde/page-1.jpg';
     assert.deepEqual(keptParts(before), { caseId: 'mhx3k2abcde', name: 'page-1.jpg' });
     assert.deepEqual(keptParts(after), keptParts(before));
-    assert.deepEqual(keptParts('file:///data/user/0/com.czechpal.app/files/case-files/abc/document.pdf'), { caseId: 'abc', name: 'document.pdf' });
+    assert.deepEqual(keptParts('file:///data/user/0/com.czechlocal.app/files/case-files/abc/document.pdf'), { caseId: 'abc', name: 'document.pdf' });
   });
 
   it('leaves anything else alone', () => {

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Pill, Signpost, UtensilsCrossed } from 'lucide-react'
 import { Bar, Stage, Swap, type Act } from '../../kit'
-import '../czechpal-app/app.css'
+import '../czechlocal-app/app.css'
 import './anything.css'
 
 // "Not just letters": the things people meet every day in Czech. A conveyor

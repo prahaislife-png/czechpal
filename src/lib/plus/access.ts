@@ -21,7 +21,7 @@ export const FREE_UNITS = 1;
  * The entitlement's identifier in the RevenueCat dashboard, where it can't be renamed. It must
  * match PLUS_ENTITLEMENT in supabase/functions/_shared/membership.ts.
  */
-export const PLUS_ENTITLEMENT = 'czechpal_pro';
+export const PLUS_ENTITLEMENT = 'czechlocal_pro';
 
 /** `live`: Plus can be bought in this build. `plus`: this person has it. */
 export type Access = { live: boolean; plus: boolean };

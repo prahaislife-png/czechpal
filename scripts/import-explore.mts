@@ -361,7 +361,7 @@ function write(places: ExplorePlace[], checkedOn: string) {
   // Anything not in this list is gone from OpenStreetMap (or now left out): hidden, not deleted.
   const gone = `update public.explore_places set removed = true where not removed and not (id = any(${arr(places.map((p) => p.id))}));`;
   const sql = ['begin;', ...chunks, gone, 'commit;'].join('\n');
-  const dir = mkdtempSync(join(tmpdir(), 'czechpal-explore-'));
+  const dir = mkdtempSync(join(tmpdir(), 'czechlocal-explore-'));
   const file = join(dir, 'explore.sql');
   writeFileSync(file, sql);
   // Writing to the hosted project needs an explicit yes when run by an agent; running this script is that yes.
